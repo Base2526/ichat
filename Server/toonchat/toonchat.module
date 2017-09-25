@@ -354,6 +354,26 @@ function toonchat_services_resources()
         ),
       ),
     ),
+    'update_picture_profile'=>array(
+      'create' =>array(
+        'help'=>'Update Profile',
+        'callback'=>'update_picture_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
   );
   
   return $services;
@@ -438,6 +458,73 @@ function _patumwan_test() {
   global $user;
 
   dpm($user);
+}
+
+function update_picture_profile(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['image'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  if($_REQUEST['image'] != ""){
+
+    $image = $_POST['image'];
+
+    // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+    $binary = base64_decode($image);
+
+    //Create the directory if it does not already exist, otherwise check the permissions
+    $directory = 'public://';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+    $currentDate = date("Ymd");
+    $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+    
+    //Saves a file to the specified destination and creates a database entry.
+    $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+    // save รูป profile
+    $profile->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
+
+    $result['url'] = file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']);;//file_create_url((array)$file);
+  }
+
+  profile2_save($profile);
+
+  /*
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+    
+    //   จะได้ เพือนมาทั้งหมด
+    
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // Load profile ของเพือนแต่ละคน เพื่อที่เราจะ update รูปของเราที่เป้นเพือนด้วย
+    $fprofile = profile2_by_uid_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
+    foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $fkey => $fvalue) {
+      $fdata_item_load = field_collection_item_load($fvalue['value']);
+
+      
+      //   เราต้องเช็ดว่า เพื่อนคนใหน uid ตรงกันเรา ถึงจะ update image
+      
+      if($fdata_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $fdata_item_load);
+            
+        $wrapper->field_friend_image->set((array)$file);
+        $wrapper->save();
+
+        break;
+      }
+    }
+  }
+  */
+  $result['result'] = TRUE;  
+
+  return $result;
 }
 
 
