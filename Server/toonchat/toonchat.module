@@ -1,0 +1,448 @@
+<?php
+
+require_once ( dirname(__FILE__) . '/includes/toonchat.inc');
+require_once ( dirname(__FILE__) . '/includes/configs.inc');
+
+require_once ( dirname(__FILE__) . '/includes/utility.inc');
+
+// libraries firebase
+require ( dirname(__FILE__) . '/libraries/firebase/autoload.php'); 
+
+function toonchat_init()
+{
+  // dpm("k init");
+}
+
+/*
+ * hook_help()
+ * */
+function toonchat_help($path, $arg)
+{
+  switch ($path) {
+    case 'admin/help#toonchat':
+      return t('toonchat module');
+    default:
+      break;
+  }
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function toonchat_permission() {
+  return array(
+    'toonchat_test' => array(
+      'title' => t('toonchat Test Function.'),
+    )
+  );
+}
+
+/*
+ * hook_user_insert()
+ * this hook triggered when a user registered . you can implement it in your custom module.
+*/
+function toonchat_user_insert(&$edit, $account, $category) {
+  // watchdog(TAG, 'Add New User = %uid', array('%uid' => $account->uid), WATCHDOG_INFO);
+
+  if (!empty($_REQUEST['platform']) && !empty($_REQUEST['bundleidentifier'])) {
+    switch ($_REQUEST['platform']) {
+      case 'ios':
+      case 'android':{
+          $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+          // add profile ให้กับ user
+          $values = array("profiles"=>array(
+                          "name"            => $account->name,
+                          "mail"            => $account->mail,
+                          "udid"            => $_REQUEST['udid'],
+                          "platform"        => $_REQUEST['platform'],
+                          "bundleidentifier"=> $_REQUEST['bundleidentifier'],
+                          "version"         => $_REQUEST['version'],
+                          "create"          => time(),
+                          "update"          => time()
+                        ));
+          
+          $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/', $values);
+
+          // Check is Friend ?, if is not is add friend 
+          foreach (load_user() as $key => $value){
+            if ($account->uid != $key) {
+
+              $chat_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
+
+              if($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/friends/' + $key +"/") == 'null') {
+                  $values = array(
+                    "status"       => 'friend',
+                    "chat_id"      => $chat_id,
+                    "create"       => time()
+                  );
+                  $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/friends/' . $key . "/", $values);
+              }
+
+              if($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/friends/' + $account->uid +"/") == 'null') {
+                  $values = array(
+                    "status"       => 'friend',
+                    "chat_id"      => $chat_id,
+                    "create"       => time()
+                  );
+                  $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/friends/' . $account->uid . "/", $values);
+              }
+            }
+          }  
+        }
+        break;
+      
+      default:
+        # code...
+        break;
+    }
+  }else{
+      // เกิดจากเราใช้ระบบหลังบ้านเราสร้างขึ้น
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+      // add profile ให้กับ user
+      $values = array("profiles"=>array(
+                          "name"            => $account->name,
+                          "mail"            => $account->mail,
+                          "udid"            => 'auto-udid',
+                          "platform"        => 'auto-platform',
+                          "bundleidentifier"=> 'auto-bundleidentifier',
+                          "version"         => 'auto-version',
+                          "create"          => time(),
+                          "update"          => time()
+                        ));
+          
+      $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/', $values);
+
+      // Check is Friend ?, if is not is add friend 
+      foreach (load_user() as $key => $value){
+        if ($account->uid != $key) {
+
+          $chat_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
+
+          if($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/friends/' + $key +"/") == 'null') {
+              $values = array(
+                "status"       => 'friend',
+                "chat_id"      => $chat_id,
+                "create"       => time()
+              );
+              $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/friends/' . $key . "/", $values);
+          }
+
+          if($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/friends/' + $account->uid +"/") == 'null') {
+              $values = array(
+                "status"       => 'friend',
+                "chat_id"      => $chat_id,
+                "create"       => time()
+              );
+              $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/friends/' . $account->uid . "/", $values);
+          }
+        }
+      }  
+  }
+}
+
+/*
+ hook_user_delete($account)
+*/
+function toonchat_user_delete($account){
+  // dpm($account);
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  if ($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid) != 'null') {
+    // 
+
+    /*  
+      เรา้ต้อง scan หาเพือนเพื่อจะไปลบ คนที่เราเป้นเพือนด้วย
+    */
+    $json = $firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/friends/');
+    // dpm(gettype($values));
+    $obj = json_decode($json, TRUE);
+  
+    foreach($obj as $key => $value) {
+      $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/friends/' . $account->uid);
+    }
+    $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid);
+  }
+}
+
+/*
+ * hook_menu()
+ */
+function toonchat_menu() 
+{ 
+
+  // $items['toonchat/delete'] = array(
+  //   'title' => t('ทดสอบ function delete'),
+  //   'page callback' => '_delete',
+  //   'access arguments' => array('toonchat_test'),
+  //   // 'access callback' => TRUE,
+  //   'type' => MENU_NORMAL_ITEM,
+  // );
+  $items['toonchat/test'] = array(
+    'title' => t('ทดสอบ function'),
+    'page callback' => '_toonchat_test',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['toonchat/upload_file'] = array(
+    'title' => t('ทดสอบ การ upload file'),
+    'page callback' => '_toonchat_upload_file',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+
+   $items['toonchat/test_create_friend'] = array(
+    'title' => t('ทดสอบ function'),
+    'page callback' => 'test_create_friend',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+
+    $items['toonchat/test_create_message'] = array(
+    'title' => t('ทดสอบ สร้าง message'),
+    'page callback' => 'test_create_message',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+     $items['toonchat/test_create_group'] = array(
+    'title' => t('ทดสอบ สร้างกลุ่ม'),
+    'page callback' => 'test_create_group',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+    
+
+  return $items;
+}
+
+
+/*
+ * 
+*/
+function  _toonchat_test(){
+
+  global $user;
+
+  dpm($user);
+
+  return "_toonchat_test";
+}
+
+function  test_create_friend(){
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  foreach (load_user() as $key => $value){
+    // echo $value->uid . "</br>"; 
+
+    foreach (load_user() as $key2 => $value2){
+
+        if($key != $key2){
+          $values = array(
+            "status"       => 'friend',
+            "create"       => time()
+          );
+    
+          $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/friends/' . $key2 . "/", $values);
+        }
+    }
+  }
+  return "_toonchat_test";
+}
+
+function test_create_group(){
+  $user = 802;
+
+  // invite_groups
+
+  $name_group = generateRandomString(10);
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  foreach (load_user() as $key => $value){
+    if ($user != $key) {
+        # code...
+
+        $values = array(
+          "status"       => 'padding',
+          "create"       => time()
+        );
+    
+        $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user . '/groups/' . $name_group . "/" . $key. "/", $values);
+
+        $values = array(
+          "status"       => 'invite',
+          "create"       => time()
+        );
+        $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key . '/invite_group/' . $name_group . "/", $values);
+
+    }
+  }
+
+
+  return "test_create_group";
+}
+
+
+function load_user(){
+  $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', 0, '!=')
+        ->condition('ur.uid', 1, '!=')
+        ->execute()
+        ->fetchCol();
+
+  $mul_users =  user_load_multiple($uids);
+
+  return $mul_users;
+}
+
+function generateRandomString($length = 10) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
+
+/*
+ * Implemantation of hook_services_resources()
+ * 
+*/
+function toonchat_services_resources()
+{
+  $services = array(
+    'annmousu'=>array(
+      'create' =>array(
+        'help'=>'Services User anonymous',
+        'callback'=>'annmousu',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'toonchat_user_logout'=>array(
+      'create' =>array(
+        'help'=>'Services Custom User logout',
+        'callback'=>'_toonchat_user_logout',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        'args' => array(
+          array(
+              'name' => 'uid',
+              'type' => 'string',
+              'description' => 'A valid username',
+              'source' => array('data' => 'uid'),
+              'optional' => FALSE,
+            ),
+        ),
+      ),
+    ),
+  );
+  
+  return $services;
+}
+
+function annmousu(){
+  $result = array();
+
+  if (empty($_REQUEST['udid'])) {
+    $result['result']   = FALSE;
+    $result['message']  = "Empty Parameter.";
+    return $result;
+  }
+
+  // เช็กว่ามี  user ที่มี email แล้วหรือไม
+  if (user_load_by_mail($_REQUEST['udid'] . '@annmousu') == "") {
+    // add new user
+    $new_user = array(
+      'name' => generate_name_annmousu($_REQUEST['udid']),
+      'pass' => DEFUALT_PASSWORD, // note: do not md5 the password
+      'mail' => $_REQUEST['udid'] . '@annmousu',
+      'status' => 1,
+      'init' => $_REQUEST['udid'] . '@annmousu',
+      'roles' => array(
+        DRUPAL_AUTHENTICATED_RID => 'authenticated user'
+      ),
+    );
+
+    // The first parameter is sent blank so a new user is created.
+    user_save('', $new_user);    
+  }
+
+  module_load_include('inc', 'services', 'resources/user_resource');
+  
+
+  $result['result']   = TRUE;
+
+  $u = _user_resource_login(generate_name_annmousu($_REQUEST['udid']), DEFUALT_PASSWORD);
+  $result['data']     =   $u;
+  $result['uid']      =   $u->user;
+
+  return $result;
+}
+
+function _toonchat_user_logout($uid)
+{
+  	$result = array();
+
+	if ($uid > 0 && $uid != "") {
+	  	# code...
+	  	$user_fields = user_load($uid);
+
+	  	if (!$user_fields->uid) {
+	    	// User is not logged in
+	    	//services_error(t('User is not logged in.'), 406);
+
+	    	$result['result'] = FALSE;
+  			$result['output'] = "uid not match is user";
+	  	}
+
+	  	watchdog('user', 'Service : Session closed for %name.', array('%name' => $user_fields->name));
+
+	  	// Destroy the current session.
+	 	  module_invoke_all('user_logout', $user_fields);
+	  	session_destroy();
+
+  		// Load the anonymous user.
+  		// $user_fields = drupal_anonymous_user();
+
+  		$result['result'] = TRUE;
+  		$result['output'] = "";
+  	}else{
+
+  		$result['result'] = FALSE;
+  		$result['output'] = "$uid > 0 && $uid != '' == FALSE";
+  	}
+	return $result;
+}
+
+
+function _patumwan_test() {
+  global $user;
+
+  dpm($user);
+}
+
+
+
+
+
+
+

@@ -1,0 +1,314 @@
+<?php
+
+// require_once ( dirname(__FILE__) . '/includes/toonchat.inc');
+// require_once ( dirname(__FILE__) . '/includes/configs.inc');
+
+// require_once ( dirname(__FILE__) . '/includes/utility.inc');
+
+// libraries firebase
+//require ( dirname(__FILE__) . '/libraries/firebase/autoload.php'); 
+
+function toonchat_init()
+{
+  // dpm("k init");
+}
+
+/*
+ * hook_help()
+ * */
+function toonchat_help($path, $arg)
+{
+  switch ($path) {
+    case 'admin/help#toonchat':
+      return t('toonchat module');
+    default:
+      break;
+  }
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function toonchat_permission() {
+  return array(
+    'toonchat_test' => array(
+      'title' => t('toonchat Test Function.'),
+    )
+  );
+}
+
+/*
+ * hook_user_insert()
+ * this hook triggered when a user registered . you can implement it in your custom module.
+*
+function toonchat_user_insert(&$edit, $account, $category) {
+  watchdog(TAG, 'Add New User = %uid', array('%uid' => $account->uid), WATCHDOG_INFO);
+
+  if (!empty($_REQUEST['platform']) && !empty($_REQUEST['bundleidentifier'])) {
+    switch ($_REQUEST['platform']) {
+      case 'ios':{
+        // Firebase add new user Login
+        $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+        $values = array(
+          "create"          => time(),
+          "update"          => time()
+        );
+  
+        $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/', $values);
+      }
+        break;
+      
+      default:
+        # code...
+        break;
+    }
+  }
+}
+
+/*
+ hook_user_delete($account)
+*
+function toonchat_user_delete($account){
+  // dpm($account);
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  if ($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid) != 'null') {
+    $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid);
+  }
+}
+
+/*
+ * hook_menu()
+ *
+function toonchat_menu() 
+{ 
+
+  // $items['toonchat/delete'] = array(
+  //   'title' => t('ทดสอบ function delete'),
+  //   'page callback' => '_delete',
+  //   'access arguments' => array('toonchat_test'),
+  //   // 'access callback' => TRUE,
+  //   'type' => MENU_NORMAL_ITEM,
+  // );
+  $items['toonchat/test'] = array(
+    'title' => t('ทดสอบ function'),
+    'page callback' => '_toonchat_test',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['toonchat/upload_file'] = array(
+    'title' => t('ทดสอบ การ upload file'),
+    'page callback' => '_toonchat_upload_file',
+    'access arguments' => array('toonchat_test'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/*
+ * Implemantation of hook_services_resources()
+ * 
+*
+function toonchat_services_resources()
+{
+  $services = array(
+    'annmousu'=>array(
+      'create' =>array(
+        'help'=>'Services User anonymous',
+        'callback'=>'annmousu',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'toonchat_user_logout'=>array(
+      'create' =>array(
+        'help'=>'Services Custom User logout',
+        'callback'=>'_toonchat_user_logout',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        'args' => array(
+          array(
+              'name' => 'uid',
+              'type' => 'string',
+              'description' => 'A valid username',
+              'source' => array('data' => 'uid'),
+              'optional' => FALSE,
+            ),
+        ),
+      ),
+    ), 
+    'toonchat_public_relations'=>array(
+      'create' =>array(
+        'help'=>'Services Get Public Relations',
+        'callback'=>'_toonchat_public_relations',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+     'toonchat_subpublic_relations'=>array(
+      'create' =>array(
+        'help'=>'Services Get Sub Public Relations',
+        'callback'=>'toonchat_subpublic_relations',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+     'toonchat_get_category_update'=>array(
+      'create' =>array(
+        'help'=>'Services Get Category Update',
+        'callback'=>'toonchat_get_category_update',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+     'toonchat_get_html'=>array(
+      'create' =>array(
+        'help'=>'Services Get HTML',
+        'callback'=>'toonchat_get_html',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+ 
+    'toonchat_update_profile'=>array(
+      'create' =>array(
+        'help'=>'Services Custom User logout',
+        'callback'=>'_toonchat_update_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    // ประมวลภาพกิจกรรม
+    'toonchat_photo_gallery'=>array(
+      'create' =>array(
+        'help'=>'Services GET ประมวลภาพกิจกรรม',
+        'callback'=>'toonchat_photo_gallery',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+  );
+  
+  return $services;
+}
+
+function annmousu(){
+  $result = array();
+
+  if (empty($_REQUEST['udid'])) {
+    $result['result']   = FALSE;
+    $result['message']  = "Empty Parameter.";
+    return $result;
+  }
+
+  // เช็กว่ามี  user ที่มี email แล้วหรือไม
+  if (user_load_by_mail($_REQUEST['udid'] . '@annmousu') == "") {
+    // add new user
+    $new_user = array(
+      'name' => generate_name_annmousu($_REQUEST['udid']),
+      'pass' => DEFUALT_PASSWORD, // note: do not md5 the password
+      'mail' => $_REQUEST['udid'] . '@annmousu',
+      'status' => 1,
+      'init' => $_REQUEST['udid'] . '@annmousu',
+      'roles' => array(
+        DRUPAL_AUTHENTICATED_RID => 'authenticated user'
+      ),
+    );
+
+    // The first parameter is sent blank so a new user is created.
+    user_save('', $new_user);    
+  }
+
+  module_load_include('inc', 'services', 'resources/user_resource');
+  
+
+  $result['result']   = TRUE;
+
+  $u = _user_resource_login(generate_name_annmousu($_REQUEST['udid']), DEFUALT_PASSWORD);
+  $result['data']     =   $u;
+  $result['uid']      =   $u->user;
+
+  return $result;
+}
+
+function _toonchat_user_logout($uid)
+{
+  	$result = array();
+
+	if ($uid > 0 && $uid != "") {
+	  	# code...
+	  	$user_fields = user_load($uid);
+
+	  	if (!$user_fields->uid) {
+	    	// User is not logged in
+	    	//services_error(t('User is not logged in.'), 406);
+
+	    	$result['result'] = FALSE;
+  			$result['output'] = "uid not match is user";
+	  	}
+
+	  	watchdog('user', 'Service : Session closed for %name.', array('%name' => $user_fields->name));
+
+	  	// Destroy the current session.
+	 	  module_invoke_all('user_logout', $user_fields);
+	  	session_destroy();
+
+  		// Load the anonymous user.
+  		// $user_fields = drupal_anonymous_user();
+
+  		$result['result'] = TRUE;
+  		$result['output'] = "";
+  	}else{
+
+  		$result['result'] = FALSE;
+  		$result['output'] = "$uid > 0 && $uid != '' == FALSE";
+  	}
+	return $result;
+}
+
+
+function _patumwan_test() {
+  global $user;
+
+  dpm($user);
+}
+
+
+
+
+
+
+

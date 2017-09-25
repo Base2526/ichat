@@ -1,0 +1,5840 @@
+<?php
+
+require_once ( dirname(__FILE__) . '/includes/configs.inc');
+require_once ( dirname(__FILE__) . '/includes/utility.inc');
+
+// qrcode
+require_once ( dirname(__FILE__) . '/libraries/qrcode/qrlib.php');
+
+// libraries firebase
+require ( dirname(__FILE__) . '/libraries/firebase/autoload.php'); //'firebase/autoload.php';
+
+
+
+// const FIREBASE_DEFAULT_URL   = 'https://basic-614bd.firebaseio.com/';//'https://heart-id.firebaseio.com/';
+// const FIREBASE_DEFAULT_PATH  = '/heart-id/';
+// // const FIREBASE_REGISTER_PATH = 'user-register/';
+// const FIREBASE_LOGIN_PATH = 'user-login/';
+
+
+
+function basic_init(){
+  // echo "<pre>";
+  // var_dump(user_password(6));
+  // echo "</pre>";
+
+  // $iPod = stripos($_SERVER['HTTP_USER_AGENT'],"iPod");
+  // $iPhone = stripos($_SERVER['HTTP_USER_AGENT'],"iPhone");
+  // $iPad = stripos($_SERVER['HTTP_USER_AGENT'],"iPad");
+  // $Android= stripos($_SERVER['HTTP_USER_AGENT'],"Android");
+
+  // // //check if user is using ipod, iphone or ipad...
+  // if( $iPod || $iPhone || $iPad ){
+  //   echo "$iPod || $iPhone || $iPad";
+  // }else if($Android){
+  //   echo "$Android";
+  // }
+
+  // echo $pid = pcntl_fork();
+
+  // $pid = pcntl_fork(); // fork
+  // if ($pid > 0) { // child
+
+  //     $sid = posix_setsid();
+  //     if ($sid > 0) {
+  //         $daemon->run();
+  //     }
+  // }
+
+  // $pid = pcntl_fork();
+}
+
+
+
+/*
+ * hook_help()
+ * */
+function basic_help($path, $arg)
+{
+  switch ($path) {
+    case 'admin/help#basic':
+      return t('Module Basic');
+    default:
+      break;
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function basic_permission() {
+  return array(
+    'basic_permission' => array(
+      'title' => t('Basic Permissions.'),
+    ),
+    'basic_reset_heart_permission' => array(
+      'title' => t('Reset Heart.'),
+    )
+  );
+}
+
+/*
+ * hook_menu()
+ * */
+function basic_menu() { 
+  $items['basic/test_funtion'] = array(
+    'title' => t('ทดสอบ function test'),
+    'page callback' => 'test_funtion',
+    'access arguments' => array('basic_permission'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['basic/test_add_data'] = array(
+    'title' => t('ทดสอบ function add data'),
+    'page callback' => 'test_add_data',
+    'access arguments' => array('basic_permission'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['basic/reset_heart'] = array(
+    'title' => t('ทดสอบ Reset Heart'),
+    'page callback' => 'reset_heart',
+    'access arguments' => array('basic_reset_heart_permission'),
+    // 'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['basic/URL_STORE'] = array(
+    'page callback' => 'URL_STORE',
+    'access arguments' => array('basic_permission'),
+    // 'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/*
+  hook_mail
+  Refer : http://drupal.stackexchange.com/questions/103892/passing-variables-in-drupal-mail
+*/
+function basic_mail($key, &$message, $params) {
+  // global $user;
+
+  // Each message is associated with a language, which may or may not be the
+  // current user's selected language, depending on the type of e-mail being
+  // sent. This $options array is used later in the t() calls for subject
+  // and body to ensure the proper translation takes effect.
+  $options = array(
+    'langcode' => LANGUAGE_NONE/*$message['language']->language*/,
+  );
+
+  switch ($key) {
+    // Send a simple message from the contact form.
+    case 'contact_message':{
+      $message['subject'] = t('E-mail sent from @site-name', array('@site-name' => variable_get('site_name', 'Drupal')), $options);
+      // Note that the message body is an array, not a string.
+      $message['body'][] = t('Code verify = @key', array('@key' => $params['verify_key']), $options);
+      $message['body'][] = t('Password    = @key', array('@key' => $params['verify_key']), $options);
+      $message['body'][] = t('--  @site-name team', array('@site-name' => variable_get('site_name', 'Drupal')), $options);
+      // Because this is just user-entered text, we do not need to translate it.
+      // Since user-entered text may have unintentional HTML entities in it like
+      // '<' or '>', we need to make sure these entities are properly escaped,
+      // as the body will later be transformed from HTML to text, meaning
+      // that a normal use of '<' will result in truncation of the message.
+      $message['body'][] = check_plain($params['message']);
+    }
+      break;
+
+    case 'user_forgot_password':{
+      $message['subject'] = t('Replacement login information for @name at @site-name', array('@name' => $params['name'], '@site-name' => variable_get('site_name', 'Drupal')), $options);
+      // Note that the message body is an array, not a string.
+      $message['body'][] = t('New Password    = @key', array('@key' => $params['verify_key']), $options);
+      $message['body'][] = t('--  @site-name team', array('@site-name' => variable_get('site_name', 'Drupal')), $options);
+      // Because this is just user-entered text, we do not need to translate it.
+      // Since user-entered text may have unintentional HTML entities in it like
+      // '<' or '>', we need to make sure these entities are properly escaped,
+      // as the body will later be transformed from HTML to text, meaning
+      // that a normal use of '<' will result in truncation of the message.
+      $message['body'][] = check_plain($params['message']);
+
+    }
+    break;
+  }
+}
+
+/*
+  hook_user_login()
+  $bundleidentifier : heart.basic or heart.dna
+  $platform         : ios, android
+*/
+function basic_user_login(&$edit, $account) {
+  watchdog(TAG, 'User Login : %account', array('%account'=> serialize($account)), WATCHDOG_INFO);
+
+  if (empty($_REQUEST['platform']) && empty($_REQUEST['bundleidentifier'])) {
+    # code...
+  }else{
+    // $user_fields = user_load($account->uid);
+    // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+    // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+    $profile = profile2_by_uid_load($account->uid, 'main');
+
+    /*
+    Check ว่าเคยใช้ Device udid ตรงเข้าใช้งานระบบหรือไม่ ซึ่งจะมี 1 กรณีที่ user ลบ application ออกโดยไม่ลบ logout Device udid จะยังค้างอยู่ในระบบ
+    */
+    $array_ids = field_get_items('profile2', $profile, 'field_device_access');
+    $is_duplicate = FALSE;
+    // http://drupal.stackexchange.com/questions/167014/how-to-add-values-to-field-collection-fields-within-user-profiles
+    foreach ($array_ids as $key => $id) {
+      $data = field_collection_item_load($id['value']);
+      if($data->field_udid[LANGUAGE_NONE][0]['value'] == $_REQUEST['udid']){
+        $is_duplicate = TRUE;
+        break;
+      } 
+    }
+
+    //เช็กว่า ซ้ำซ้อนกันหรือไม่ ถ้าไม่จะเพิ่ม
+    if (!$is_duplicate) {
+      # code...
+      $values = array();
+      $values['field_name'] = 'field_device_access'; 
+      $values['field_udid'][LANGUAGE_NONE][0]['value'] = $_REQUEST['udid'];
+      $values['field_platform'][LANGUAGE_NONE][0]['value'] = $_REQUEST['platform'];
+      $values['field_bundle_identifier'][LANGUAGE_NONE][0]['value'] = $_REQUEST['bundleidentifier'];
+
+      // Create the field collection entry and associate it with the profile
+      $field_entity = entity_create('field_collection_item', $values);
+      $field_entity->setHostEntity('profile2', $profile);
+      $field_entity->save();
+    }
+
+    /*
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    $values = array(
+      "platform"=>$_REQUEST['platform'],
+      "bundleidentifier" =>$_REQUEST['bundleidentifier'],
+      "online"=>'1',
+      "update" => time()
+    );
+
+    $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid .'/data/profile/devices/' . $_REQUEST['udid'], $values);
+    */
+  }
+}
+
+/*
+ * hook_user_insert()
+ * this hook triggered when a user registered . you can implement it in your custom module.
+*/
+function basic_user_insert(&$edit, $account, $category) {
+  watchdog(TAG, 'Add New User = %uid', array('%uid' => $account->uid), WATCHDOG_INFO);
+
+  if (!empty($_REQUEST['platform']) && !empty($_REQUEST['bundleidentifier'])) {
+    generatorQRCode($account, $_REQUEST['platform'], $_REQUEST['bundleidentifier']);
+  }else{
+    generatorQRCode($account, $account->field_platform[LANGUAGE_NONE][0]['value'], $account->field_bundle_identifier[LANGUAGE_NONE][0]['value']);
+  }
+}
+
+/*
+ *  hook_user_delete()
+ *  this hook triggered when delete user
+*/
+function basic_user_delete($account) {  
+  watchdog('user', 'basic_user_delete : %userid deleted, Firebase Delete User', array('%userid' => $account->uid), WATCHDOG_NOTICE, $link = NULL);
+
+  $profile = profile2_by_uid_load($account->uid, 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+    
+    // ดึงเพือนมาทั้งหมด
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // load uid ของ friend ที่เป็นเพือนของเรา เพือ่เราจะไปลบเรา ออกจากเพือนด้วย
+    $fprofile = profile2_by_uid_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
+    foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $fkey => $fvalue) {
+      $fdata_item_load = field_collection_item_load($fvalue['value']);
+
+      if($fdata_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $account->uid){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $fdata_item_load);    
+        entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+        break;
+      }
+    }
+  }
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid);
+}
+
+/*
+ *  hook_user_update()
+ *  this hook triggered when update user
+*/
+// function basic_user_update(&$edit, $account, $category) {
+//   watchdog(TAG, 'User Update = %uid', array('%uid' => $account->uid), WATCHDOG_INFO);
+// }
+
+/*
+ * function hook_profile2_update($profile) {
+ *
+*/
+function basic_profile2_update($profile) {
+  watchdog(TAG, 'basic_profile2_update => %profile', array('%profile' => serialize($profile)), WATCHDOG_INFO);
+
+  try {
+
+    // ชื่อ
+    $profile_name ="";
+    if(isset($profile->field_profile_name)){
+      if (!empty($profile->field_profile_name[LANGUAGE_NONE])) {
+        $profile_name = $profile->field_profile_name[LANGUAGE_NONE][0]['value'];
+      }
+    }
+
+    // นามสกุล
+    $profile_subname ="";
+    if(isset($profile->field_profile_subname)){
+      if (!empty($profile->field_profile_subname[LANGUAGE_NONE])) {
+        $profile_subname = $profile->field_profile_subname[LANGUAGE_NONE][0]['value'];
+      }
+    }
+
+    // นามสกุล
+    $profile_display_name ="";
+    if(isset($profile->field_profile_display_name)){
+      if (!empty($profile->field_profile_display_name[LANGUAGE_NONE])) {
+        $profile_display_name = $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'];
+      }
+    }
+
+    // รูปโปรไฟล์
+    $profile_picture = array();
+    if(isset($profile->field_profile_image)){
+      if (!empty($profile->field_profile_image[LANGUAGE_NONE])) {
+        $profile_picture = file_load($profile->field_profile_image[LANGUAGE_NONE][0]['fid']);
+      }
+    }
+
+    // My ID
+    $my_id ="";
+    if(isset($profile->field_profile_heart_id)){
+      if (!empty($profile->field_profile_heart_id[LANGUAGE_NONE])) {
+        $my_id = $profile->field_profile_heart_id[LANGUAGE_NONE][0]['value'];
+      }
+    }
+
+    // เบอร์โทร
+    $profile_multi_phone = array();
+    if(isset($profile->field_profile_multi_phone)){
+      if (!empty($profile->field_profile_multi_phone[LANGUAGE_NONE])) {
+        foreach ($profile->field_profile_multi_phone[LANGUAGE_NONE] as $key => $value) {
+          $item = field_collection_item_load($value['value']);
+
+          $tmp = array();
+          $tmp["name"] = $item->field_phone_number[LANGUAGE_NONE][0]['value'];
+
+          // array_push($profile_multi_phone, $item->field_phone_number[LANGUAGE_NONE][0]['value']);
+
+          $profile_multi_phone[$value['value']] = $tmp;
+        }
+      }
+    }
+
+    // email
+    $profile_multi_email = array();
+    if(isset($profile->field_profile_multi_email)){
+      if (!empty($profile->field_profile_multi_email[LANGUAGE_NONE])) {
+        foreach ($profile->field_profile_multi_email[LANGUAGE_NONE] as $key => $value) {
+          $item = field_collection_item_load($value['value']);
+
+          $tmp = array();
+          $tmp["name"] = $item->field_email_text[LANGUAGE_NONE][0]['value'];
+
+          // array_push($profile_multi_email, $item->field_email_text[LANGUAGE_NONE][0]['value']);
+          $profile_multi_email[$value['value']] = $tmp;
+        }
+      }
+    }
+
+    $status_message ="";
+    if(isset($profile->field_profile_status_message)){
+      if (!empty($profile->field_profile_status_message[LANGUAGE_NONE])) {
+        $status_message = $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'];
+      }
+    }
+
+    // อุปกรณ์ที่ User Access
+    $device_access = array();
+    if(isset($profile->field_device_access)){
+      if (!empty($profile->field_device_access[LANGUAGE_NONE])) {
+        foreach ($profile->field_device_access[LANGUAGE_NONE] as $key => $value) {
+          $items = field_collection_item_load($value['value']);
+          // array_push($device_access, $item->field_email_text[LANGUAGE_NONE][0]['value']);
+
+          // field_udid
+          // field_token
+          // field_platform
+          // field_bundle_identifier
+
+          $item = array();
+          $item['bundleidentifier'] =$items->field_bundle_identifier[LANGUAGE_NONE][0]['value'];
+          $item['online'] ='1';
+          $item['platform'] =$items->field_platform[LANGUAGE_NONE][0]['value'];
+
+          $device_access[$items->field_udid[LANGUAGE_NONE][0]['value']] = $item;
+        }
+      }
+    }
+
+    $contacts = array();
+    if(isset($profile->field_profile_friends)){
+      if (!empty($profile->field_profile_friends[LANGUAGE_NONE])) {
+        foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+          $items = field_collection_item_load($value['value']);
+          // array_push($device_access, $item->field_email_text[LANGUAGE_NONE][0]['value']);
+
+          // UID ของเพื่อน                       : field_friend_uid
+          // จำนวน Heart ที่เราได้รับจากเพือนคนนี้ : field_heart_receive
+          // เวลาที่เราได้รับจากเพือนคนนี้         : field_datetime_receive
+          // จำนวน Heart ที่เราส่งถึงเพือนคนนี้    : field_heart_send
+          // เวลาที่เราส่งถึงเพือนคนนี้            : field_datetime_send
+          // สถานะ เพือน                        : field_heart_friend_status
+          // ชื่อเพือน                           : field_friend_name
+          // ชื่อของเพื่อนที่เราตั้ง                : field_display_name
+          // ปิดเสียง notifications             : field_turn_off_notifications
+
+          /*
+          create        : 1489474238
+          display_name  : "2D6885A66E"
+          friend_status : "3"
+          picture
+          receive       : "0"
+          send          : "0"
+          status_message: "status message"
+          turn_off_notifications: "0"
+          uid           : "298"
+          update        : 1489474238
+          */
+          
+          $item = array();
+          $item['uid']            = $items->field_friend_uid[LANGUAGE_NONE][0]['value'];
+          $item['friend_name']    = $items->field_friend_name[LANGUAGE_NONE][0]['value'];
+          $item['default_name']   = $items->field_display_name[LANGUAGE_NONE][0]['value'];
+          $item['friend_status']  = $items->field_heart_friend_status[LANGUAGE_NONE][0]['value'];
+          $item['status_message'] = $items->field_profile_status_message[LANGUAGE_NONE][0]['value'];
+          $item['platform']       = $items->field_platform[LANGUAGE_NONE][0]['value'];
+          $item['send']           = $items->field_heart_send[LANGUAGE_NONE][0]['value'];
+          $item['receive']        = $items->field_heart_receive[LANGUAGE_NONE][0]['value'];
+          $item['notifications_status']  = $items->field_turn_off_notifications[LANGUAGE_NONE][0]['value'];
+
+          // field_turn_off_notifications
+
+          $item['picture'] = array();
+          $fprofile = profile2_by_uid_load($items->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
+          if (isset($fprofile->field_profile_image)) {
+            # code...
+            if (!empty($fprofile->field_profile_image[LANGUAGE_NONE])) {
+              $item['picture'] = $fprofile->field_profile_image[LANGUAGE_NONE][0];
+            }
+          }
+          $contacts[$items->field_friend_uid[LANGUAGE_NONE][0]['value']] = $item;
+        }
+      }
+    }
+
+    $qrcodes = array();
+    // My QRCode (Heart App) ios
+    $profile_my_qrcode = array();
+    if(isset($profile->field_profile_my_qrcode)){
+      if (!empty($profile->field_profile_my_qrcode[LANGUAGE_NONE])) {
+        $item = array();
+        $qrcodes['ios'][str_replace('.', '_', BI_IOS_BASIC)] = file_load($profile->field_profile_my_qrcode[LANGUAGE_NONE][0]['fid']) ;
+      }
+    }
+
+    // My QRCode (DNA App) ios 
+    $profile_my_qrcode_dna = array();
+    if(isset($profile->field_profile_my_qrcode_dna)){
+      if (!empty($profile->field_profile_my_qrcode_dna[LANGUAGE_NONE])) {
+        $item = array();
+
+        $qrcodes['ios'][str_replace('.', '_', BI_IOS_IDNA)] = file_load($profile->field_profile_my_qrcode_dna[LANGUAGE_NONE][0]['fid']) ;
+      }
+    }
+
+    // My QRCode Android (Heart app) android
+    $profile_my_qrcode_android = array();
+    if(isset($profile->field_profile_my_qrcode_android)){
+      if (!empty($profile->field_profile_my_qrcode_android[LANGUAGE_NONE])) {
+        $item = array();
+
+        $qrcodes['android'][str_replace('.', '_', BI_ANDROID_BASIC)] = file_load($profile->field_profile_my_qrcode_android[LANGUAGE_NONE][0]['fid']) ;
+      }
+    }
+
+    // My QRCode DNA Android (DNA App)  
+    $profile_my_qrcode_dna_andr = array();
+    if(isset($profile->field_profile_my_qrcode_dna_andr)){
+      if (!empty($profile->field_profile_my_qrcode_dna_andr[LANGUAGE_NONE])) {
+        $item = array();
+
+        $qrcodes['android'][str_replace('.', '_', BI_ANDROID_IDNA)] = file_load($profile->field_profile_my_qrcode_dna_andr[LANGUAGE_NONE][0]['fid']) ;
+      }
+    }
+
+    // My Application : field_my_application
+    $my_applications = array();
+    if(isset($profile->field_my_application)){
+      if (!empty($profile->field_my_application[LANGUAGE_NONE])) {
+        foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+          $items = field_collection_item_load($value['value']);
+          
+          $item = array();
+          $item['item_id']        = $value['value'];
+          $item['name']           = $items->field_my_app_name[LANGUAGE_NONE][0]['value'];
+          $item['category']       = $items->field_my_app_category[LANGUAGE_NONE][0]['tid'];
+          $item['picture']        = file_load($items->field_image[LANGUAGE_NONE][0]['fid']);
+
+          /* field_my_app_update */
+          $posts = array();
+          if(isset($items->field_my_app_update)){
+            if (!empty($items->field_my_app_update[LANGUAGE_NONE])) {
+              foreach ($items->field_my_app_update[LANGUAGE_NONE] as $pkey => $pvalue) {
+
+                  $pitems = field_collection_item_load($pvalue['value']);
+                  $posts[$pvalue['value']]["title"]    = $pitems->field_my_app_title[LANGUAGE_NONE][0]['value'];
+                  $posts[$pvalue['value']]["message"]  = $pitems->field_my_app_message_udate[LANGUAGE_NONE][0]['value'];
+                  $posts[$pvalue['value']]['picture']  = file_load($pitems->field_image[LANGUAGE_NONE][0]['fid']);
+
+                  $comments =array();
+                  
+                  if(isset($pitems->field_my_app_update_comment)){
+                    if (!empty($pitems->field_my_app_update_comment[LANGUAGE_NONE])) {
+                      foreach ($pitems->field_my_app_update_comment[LANGUAGE_NONE] as $ckey => $cvalue) {
+                          $citems = field_collection_item_load($cvalue['value']);
+
+                          $comments[$cvalue['value']]['message'] = $citems->field_comment_message[LANGUAGE_NONE][0]['value'];
+                      }
+                    }
+                  }
+                  
+                  $posts[$pvalue['value']]['comments']  = $comments;
+              }
+            }
+          }
+
+          $item['posts']  = $posts;
+      
+          $my_applications[$value['value']] = $item;
+        }
+      }
+    }
+  
+    /*
+    create   : $profile->created;
+    devices  : array()
+    display_name: "2D6885A66Ehh"
+    heart    : "50"
+    mails    : array()
+    picture  : array()
+    qr       : array()
+    status_message: "status message"
+    update   : 1489458633
+    */
+    $val = array();
+    $val['create']        = $profile->created;
+    $val['name']          = $profile_name;
+    $val['subname']       = $profile_subname;
+    $val['display_name']  = $profile_display_name;
+    $val['devices']       = $device_access;
+    $val['mails']         = $profile_multi_email;
+    $val['phones']        = $profile_multi_phone;
+    $val['picture']       = $profile_picture;
+    $val['my_id']         = $my_id;
+    $val['status_message']= $status_message;
+    $val['qr']            = $qrcodes;
+    $val['contacts']       = $contacts;
+    $val['my_applications']       = $my_applications;
+    
+    $val['update']        = time();
+
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    $output = $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $profile->uid .'/data/', $val);
+   
+
+    watchdog(TAG, 'Firebase hook_node_insert = %qrcodes, %val', array('%qrcodes' => $qrcodes), WATCHDOG_INFO);
+
+    // update image ของเราที่เราเป้นเพื่อน
+    // foreach ($contacts as $key => $value) {
+    //     $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $key .'/data/friends/' . $profile->uid .'/picture/', $profile_picture);
+    // }
+  } catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "\n";
+    watchdog(TAG, 'ERROR hook_node_insert = %node', array('%node' => serialize($e->getMessage())), WATCHDOG_INFO);
+  } finally {
+    watchdog(TAG, 'Finally hook_node_insert', array(), WATCHDOG_INFO);
+  }
+}
+
+/*
+  hook_profile2_delete
+*/
+function hook_profile2_delete($profile){
+
+}
+
+/*
+hook_node_insert($node)
+*/
+function basic_node_insert($node){
+  watchdog(TAG, 'hook_node_insert = %node', array('%node' => serialize($node)), WATCHDOG_INFO);
+
+  /**
+   เราต้องเช็ก type = 'slide_store' และ status = 1 เท่านั้นถึงจะ ไป update ที่  firebase
+  */
+  if ($node->type == 'slide_store' && $node->status == 1) {
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+    $item = array();
+    $item['picture'] =  file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
+    $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_CENTER_SLIDE . 'data/' . $node->nid, $item);
+  }
+}
+
+/*
+hook_node_update($node)
+*/
+function basic_node_update($node){
+  watchdog(TAG, 'hook_node_update = %node', array('%node' => serialize($node)), WATCHDOG_INFO);
+
+  /**
+   เราต้องเช็ก type = 'slide_store' และ status = 1 เท่านั้นถึงจะ ไป update ที่  firebase
+  */
+  if ($node->type == 'slide_store') {
+
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    if ($node->status == 0) {
+      // ต้องลบ slide ออกจาก firebase ด้วย
+      $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_CENTER_SLIDE . 'data/' . $node->nid);
+    }else if($node->status == 1){
+      // ต้องเพิ่ม slide ออกจาก firebase ด้วย
+      $item = array();
+      $item['picture'] =  file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_CENTER_SLIDE . 'data/' . $node->nid, $item);
+    }
+  }
+}
+
+/*
+ hook_node_delete($node)
+*/
+function basic_node_delete($node){
+  watchdog(TAG, 'hook_node_delete = %node', array('%node' => serialize($node)), WATCHDOG_INFO);
+  if ($node->type == 'slide_store') {
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    // ต้องลบ slide ออกจาก firebase ด้วย
+    $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_CENTER_SLIDE . 'data/' . $node->nid);
+  }
+}
+
+/*
+  hook_field_collection_item_insert
+*/
+function basic_field_collection_item_insert(FieldCollectionItemEntity $field_collection_item) {
+  watchdog(TAG, 'basic_field_collection_item_insert = %field_collection_item', array('%field_collection_item' => serialize($field_collection_item)), WATCHDOG_INFO);
+
+  dpm("basic_field_collection_item_insert");
+
+  switch (mb_strtolower($field_collection_item->op)) {
+    case 'save':{
+      # code...
+      //dpm("basic_field_collection_item_update");
+      // dpm($field_collection_item);
+      switch ($field_collection_item->field_name) {
+        case 'field_my_application':{
+
+          break;
+        }
+        case 'field_my_app_update':{
+          if(!empty($_REQUEST['a_id'])) {
+            
+          }
+          break;
+        }
+        case 'field_my_app_update_comment':{
+          if(!empty($_REQUEST['a_id']) && !empty($_REQUEST['p_id'])) {
+            
+          }
+          break;
+        }
+        
+        default:
+          # code...
+          break;
+      }
+
+      break;
+    }
+    
+    default:
+      # code...
+      break;
+  }
+}
+
+
+/*
+  hook_field_collection_item_update
+*/
+function basic_field_collection_item_update(FieldCollectionItemEntity $field_collection_item) {
+  watchdog(TAG, 'basic_field_collection_item_update = %field_collection_item', array('%field_collection_item' => serialize($field_collection_item)), WATCHDOG_INFO);
+
+  dpm("basic_field_collection_item_update");
+
+  switch (mb_strtolower($field_collection_item->op)) {
+    case 'save':{
+      switch ($field_collection_item->field_name) {
+        case 'field_my_application':{
+
+          break;
+        }
+        case 'field_my_app_update':{
+          if(!empty($_REQUEST['a_id'])) {
+            
+          }
+          break;
+        }
+        case 'field_my_app_update_comment':{
+          if(!empty($_REQUEST['a_id']) && !empty($_REQUEST['p_id'])) {
+            
+          }
+          break;
+        }
+        
+        default:
+          # code...
+          break;
+      }
+      break;
+    }
+    
+    default:
+      # code...
+      break;
+  }
+}
+
+/*
+  hook_field_collection_item_delete
+*/
+function basic_field_collection_item_delete(FieldCollectionItemEntity $field_collection_item) {
+  watchdog(TAG, 'basic_field_collection_item_delete = %field_collection_item, $_REQUEST = %REQUEST', array('%field_collection_item' => serialize($field_collection_item), '%REQUEST' => serialize($_REQUEST)), WATCHDOG_INFO);
+
+  dpm("basic_field_collection_item_delete");
+
+  switch ($field_collection_item->field_name) {
+    case "field_my_application":{
+      # My Application
+
+    }
+      break;
+    case 'field_my_app_update':{
+      # Post
+
+    }
+      break;
+    case 'field_my_app_update_comment':{
+      # Comment
+
+    }
+      break;
+    
+    default:
+      # code...
+      break;
+  }
+}
+
+/*
+ * Implemantation of hook_services_resources()
+ * 
+ $platform, $bundleidentifier
+*/
+function basic_services_resources()
+{
+  $services = array(
+    // 
+    'basic_user_logout_1'=>array(
+      'create' =>array(
+        'help'=>'Services User Logout',
+        'callback'=>'basic_user_logout_1',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'annmousu'=>array(
+      'create' =>array(
+        'help'=>'Services User anonymous',
+        'callback'=>'annmousu',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'annmousu_register'=>array(
+      'create' =>array(
+        'help'=>'Services Anonymous Register',
+        'callback'=>'annmousu_register',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    // 
+     'annmousu_verify'=>array(
+      'create' =>array(
+        'help'=>'Services Anonymous Verify',
+        'callback'=>'annmousu_verify',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'application_category'=>array(
+      'create' =>array(
+        'help'=>'Services ดึง Category ของ Application',
+        'callback'=>'application_category',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'delete_my_application'=>array(
+      'create' =>array(
+        'help'=>'Services ลบ My Application',
+        'callback'=>'delete_my_application',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'user_friends'=>array(
+      'create' =>array(
+        'help'=>'Fetch User Profile',
+        'callback'=>'user_friends',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+              'name' => 'uid',
+              'type' => 'string',
+              'description' => 'A valid username',
+              'source' => array('data' => 'uid'),
+              'optional' => FALSE,
+            ),
+        ),
+      ),
+    ),
+      'user_friends_heart'=>array(
+      'create' =>array(
+        'help'=>'Fetch User Friend heart',
+        'callback'=>'user_friends_heart',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+              'name' => 'uid',
+              'type' => 'string',
+              'description' => 'A valid username',
+              'source' => array('data' => 'uid'),
+              'optional' => FALSE,
+            ),
+        ),
+      ),
+    ),
+     'list_friends'=>array(
+      'create' =>array(
+        'help'=>'Fetch List Friends',
+        'callback'=>'list_friends',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+              'name' => 'uid',
+              'type' => 'string',
+              'description' => 'A valid username',
+              'source' => array('data' => 'uid'),
+              'optional' => FALSE,
+            ),
+        ),
+      ),
+    ),
+
+    'user_forgot_password'=>array(
+      'create' =>array(
+        'help'=>'Services Forgot password.',
+        'callback'=>'user_forgot_password',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'add_friend'=>array(
+      'create' =>array(
+        'help'=>'Services เพิ่ม Friend',
+        'callback'=>'add_friend',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    // 
+    'accept_friend'=>array(
+      'create' =>array(
+        'help'=>'Services ตอบรับคำเชิญขอเป็นเพือน',
+        'callback'=>'accept_friend',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'not_accept_friend'=>array(
+      'create' =>array(
+        'help'=>'Services ปฎิเสธคำเชิญขอเป็นเพือน',
+        'callback'=>'not_accept_friend',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'delete_friend'=>array(
+      'create' =>array(
+        'help'=>'Services ลบเพือน',
+        'callback'=>'delete_friend',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+     'send_heart_to_friends'=>array(
+      'create' =>array(
+        'help'=>'Services ส่ง heart to friend',
+        'callback'=>'send_heart_to_friends',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'search_friend_by_id'=>array(
+      'create' =>array(
+        'help'=>'Services ค้นหาเพือนโดย uid',
+        'callback'=>'search_friend_by_id',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    // 
+
+    'people_you_may_know'=>array(
+      'create' =>array(
+        'help'=>'Services ค้นหาเพือน ที่คุณอาจรุ็จัก',
+        'callback'=>'people_you_may_know',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'shby_class'=>array(
+      'create' =>array(
+        'help'=>'Services Send Heart by Class',
+        'callback'=>'shby_class',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'edit_display_name'=>array(
+      'create' =>array(
+        'help'=>'Services แก้ไข Display Name ของ User',
+        'callback'=>'edit_display_name',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'turn_off_notifications'=>array(
+      'create' =>array(
+        'help'=>'Services ปิดเสียง  notication โดยสามารถแยกปิดเป็นรายบุคคล',
+        'callback'=>'turn_off_notifications',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'hide_friend'=>array(
+      'create' =>array(
+        'help'=>'Services hide friend โดยสามารถแยกปิดเป็นรายบุคคล',
+        'callback'=>'hide_friend',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'set_class_friend'=>array(
+      'create' =>array(
+        'help'=>'Services Class friend โดยสามารถแยกปิดเป็นรายบุคคล',
+        'callback'=>'set_class_friend',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'cancel_wait_to_accept'=>array(
+      'create' =>array(
+        'help'=>'Services Cancel Wait to Accept โดยสามารถแยกปิดเป็นรายบุคคล',
+        'callback'=>'cancel_wait_to_accept',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'edit_friend_display_name'=>array(
+      'create' =>array(
+        'help'=>'Services แก้ไข Display Name ของ Friend',
+        'callback'=>'edit_friend_display_name',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'edit_phone_v1_0'=>array(
+      'create' =>array(
+        'help'=>'Services แก้ไข Phone v 1.0 ของ User',
+        'callback'=>'edit_phone_v1_0',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'edit_phone'=>array(
+      'create' =>array(
+        'help'=>'Services แก้ไข Phone ของ User',
+        'callback'=>'edit_phone',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'edit_multi_phone'=>array(
+      'create' =>array(
+        'help'=>'Services เพิ่ม, แก้ไข, ลบ Phone ของ User',
+        'callback'=>'edit_multi_phone',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+    'edit_multi_email'=>array(
+      'create' =>array(
+        'help'=>'Services เพิ่ม, แก้ไข, ลบ Email ของ User',
+        'callback'=>'edit_multi_email',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ), 
+    'edit_status_message'=>array(
+      'create' =>array(
+        'help'=>'Services status message ของ User',
+        'callback'=>'edit_status_message',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'set_my_id'=>array(
+      'create' =>array(
+        'help'=>'Services my id ของ User',
+        'callback'=>'set_my_id',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'token_notication'=>array(
+      'create' =>array(
+        'help'=>'Services Set Token notication',
+        'callback'=>'token_notication',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'get_profiles'=>array(
+      'create' =>array(
+        'help'=>'Services Get profiles ตาม array uid ที่ส่งมา',
+        'callback'=>'get_profiles',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'update_my_application_profile'=>array(
+      'create' =>array(
+        'help'=>'Basic Update My Application Profile',
+        'callback'=>'update_my_application_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    'update_picture_profile'=>array(
+      'create' =>array(
+        'help'=>'Basic Update Profile',
+        'callback'=>'update_picture_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    'create_my_card'=>array(
+      'create' =>array(
+        'help'=>'Basic Create My Card',
+        'callback'=>'create_my_card',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    'create_my_application'=>array(
+      'create' =>array(
+        'help'=>'Basic Create My Application',
+        'callback'=>'create_my_application',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    // add_post
+    'AED_post'=>array(
+      'create' =>array(
+        'help'=>'Add Edit Delete Post ในส่วนของ My Application',
+        'callback'=>'AED_post',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'delete_post'=>array(
+      'create' =>array(
+        'help'=>'Delete Post ในส่วนของ My Application',
+        'callback'=>'delete_post',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    // comment_post
+    'comment_post'=>array(
+      'create' =>array(
+        'help'=>'Comment Post ในส่วนของ My Application',
+        'callback'=>'comment_post',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'update_new_password'=>array(
+      'create' =>array(
+        'help'=>'Update New Password',
+        'callback'=>'update_new_password',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'basic_fetch_profile'=>array(
+      'create' =>array(
+        'help'=>'Fetch User Profile',
+        'callback'=>'basic_fetch_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+              'name' => 'uid',
+              'type' => 'string',
+              'description' => 'A valid username',
+              'source' => array('data' => 'uid'),
+              'optional' => FALSE,
+            ),
+        ),
+      ),
+    ),
+    'basic_update_profile'=>array(
+      'create' =>array(
+        'help'=>'Basic Update Profile',
+        'callback'=>'basic_update_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'get_store'=>array(
+      'create' =>array(
+        'help'=>'Services Get Store',
+        'callback'=>'get_store',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+    'get_app_detail'=>array(
+      'create' =>array(
+        'help'=>'Services detail application',
+        'callback'=>'get_app_detail',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
+  );
+  
+  return $services;
+}
+
+function test_funtion()
+{
+
+  // $token = "e1C_IUHJPrc:APA91bFL-FClL1mvRmAMWxPZX91GeCRnoQWht2f5LkJcOaxuOB3uaWxnJZIA83ajyO8ftw-WOxPKeG7PbtXtK3WJRAILQHuFbBZPLVvI1BihOGUozYu17xb01qb1-uWqVQXDcuEzqS6w";
+
+  // // klovers_firebase_push($token, $title="KLOVERS", $message="MESSAGE", $sound = 1, $vibrate = 0)
+  // basic_send_push_notification($token);
+
+  /*
+$firebase = new Firebase('http://myfirebasename.firebaseio.com', TOKEN);
+$users = $firebase->get('/users');
+  */
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  // $users = $firebase->get('/users');
+
+  $count_receive = 0;
+
+  // echo "<pre>";
+  $friends = json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  '101' ."/friends"), true);
+  // echo "</pre>";
+
+  foreach ($friends as $key => $value) {
+    
+    if ($key != 0) {
+      
+      if (array_key_exists('receive_heart', $value)) {
+        $receive_heart = $value['receive_heart'];
+
+        foreach ($receive_heart as $receive_heart_key => $receive_heart_value) {
+            if ($receive_heart[$receive_heart_key]["is_read"] == 0) {
+              # code...
+              $count_receive++;
+            }
+        }
+      }
+    }
+  }
+
+  echo $count_receive;
+
+  return "_klovers_test";
+}
+
+
+function test_add_data(){
+
+   $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', 0, '!=')
+        ->condition('ur.uid', 1, '!=')
+        ->execute()
+        ->fetchCol();
+
+  $mul_users =  user_load_multiple($uids);
+
+  // $data = array();
+  foreach ($mul_users as $account) {
+    # code...
+    
+    // $tmp['uid'] = $account->uid;
+    // $tmp['name'] = $account->name;
+    // $tmp['mail'] = $account->mail;
+
+    // // $path= file_create_url($uri)  uri
+    // if(!is_null($account->picture)){
+    //   $tmp['url_image'] = file_create_url($account->picture->uri); 
+    // }else{
+    //   $tmp['url_image'] = "";
+    // }
+
+    /*
+    // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+    $user_fields = user_load($account->uid);
+
+    if (!$user_fields->uid) {
+      // User is not logged in
+      //services_error(t('User is not logged in.'), 406);
+
+      $result['result'] = FALSE;
+      $result['output'] = "uid not match is user";
+
+      return $result;
+    }
+    */
+
+    $profile = profile2_by_uid_load($account->uid, 'main');
+
+    if(isset($profile->field_my_application)){
+      if (!empty($profile->field_my_application[LANGUAGE_NONE])) {
+        foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+          $items = field_collection_item_load($value['value']);
+          
+          $item = array();
+          $item['item_id']        = $value['value'];
+          $item['owner_id']       = $account->uid;
+          $item['name']           = $items->field_my_app_name[LANGUAGE_NONE][0]['value'];
+          $item['category']       = $items->field_my_app_category[LANGUAGE_NONE][0]['tid'];
+          $item['picture']        = file_load($items->field_image[LANGUAGE_NONE][0]['fid']);
+
+          /*
+          $item = array();
+          $item['item_id']        = $field_entity->item_id;
+          $item['owner_id']       = $_REQUEST['uid'];
+          $item['name']           = $_REQUEST['name'];
+          $item['category']       = $_REQUEST['category'];
+          $item['picture']        = (array)$file;
+          */
+
+          /* 
+            เราต้อง ไป add my_application ไว้ที่ firebase ด้วย แยกตาม category
+          */
+          $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+          $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_CENTER . 'data/' . $items->field_my_app_category[LANGUAGE_NONE][0]['tid'] . '/' . $value['value'], $item);
+
+
+        }
+      }
+    }
+
+    /*
+    // My Application : field_my_application
+    $my_applications = array();
+    if(isset($profile->field_my_application)){
+      if (!empty($profile->field_my_application[LANGUAGE_NONE])) {
+        foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+          $items = field_collection_item_load($value['value']);
+          
+          $item = array();
+          $item['item_id']        = $value['value'];
+          $item['name']           = $items->field_my_app_name[LANGUAGE_NONE][0]['value'];
+          $item['category']       = $items->field_my_app_category[LANGUAGE_NONE][0]['tid'];
+          $item['picture']        = file_load($items->field_image[LANGUAGE_NONE][0]['fid']);
+
+          $posts = array();
+          if(isset($items->field_my_app_update)){
+            if (!empty($items->field_my_app_update[LANGUAGE_NONE])) {
+              foreach ($items->field_my_app_update[LANGUAGE_NONE] as $pkey => $pvalue) {
+
+                  $pitems = field_collection_item_load($pvalue['value']);
+                  $posts[$pvalue['value']]["title"]    = $pitems->field_my_app_title[LANGUAGE_NONE][0]['value'];
+                  $posts[$pvalue['value']]["message"]  = $pitems->field_my_app_message_udate[LANGUAGE_NONE][0]['value'];
+                  $posts[$pvalue['value']]['picture']  = file_load($pitems->field_image[LANGUAGE_NONE][0]['fid']);
+
+                  $comments =array();
+                  
+                  if(isset($pitems->field_my_app_update_comment)){
+                    if (!empty($pitems->field_my_app_update_comment[LANGUAGE_NONE])) {
+                      foreach ($pitems->field_my_app_update_comment[LANGUAGE_NONE] as $ckey => $cvalue) {
+                          $citems = field_collection_item_load($cvalue['value']);
+
+                          $comments[$cvalue['value']]['message'] = $citems->field_comment_message[LANGUAGE_NONE][0]['value'];
+                      }
+                    }
+                  }
+                  
+                  $posts[$pvalue['value']]['comments']  = $comments;
+              }
+            }
+          }
+
+          $item['posts']  = $posts;
+      
+          $my_applications[$value['value']] = $item;
+        }
+      }
+    }
+    */
+  }
+
+
+  return "test_add_data";
+}
+
+function _klovers_mail()
+{
+    $to = "myemail@domaine.com";
+    $subject = "Hi!";
+    $body = "Hi,\n\nHow are you?";
+    if (mail($to, $subject, $body)) {
+            echo("<p>Message successfully sent!</p>");
+    } else {
+            echo("<p>Message delivery failed...</p>");
+    }
+
+  return "_klovers_mail";
+}
+
+function ​fetch_data_firebase()
+{
+
+    global $user;
+
+    // Firebase increment new HW Login
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+    /*
+    $data = array(
+      "HW"      => $new_value,
+      "update"  => time()
+    );
+    */
+  
+
+    dpm($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/'));
+    dpm(gettype(json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/'))));
+
+    $obj = json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/'));
+    foreach ($obj as $key => $val) {
+      dpm($key);
+      dpm($val);
+    }
+
+    // KWs2Xl9d9EbW_k_myjm
+
+    return "​fetch_data_firebase";
+}
+
+function ​delete_data_firebase()
+{
+
+    global $user;
+
+    // Firebase increment new HW Login
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+    /*
+    $data = array(
+      "HW"      => $new_value,
+      "update"  => time()
+    );
+    */
+  
+
+    // dpm($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/'));
+    // dpm(gettype(json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/'))));
+
+    $obj = json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/'));
+    foreach ($obj as $key => $val) {
+      dpm($key);
+      dpm($val);
+      dpm($val->token);
+    }
+
+    $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . 267 .'/HW/-KWs2Xl9d9EbW_k_myjm');
+
+    // KWs2Xl9d9EbW_k_myjm
+
+    return "​fetch_data_firebase";
+}
+
+function _klovers_upload_file()
+{
+
+  /*
+	  //Create the directory if it does not already exist, otherwise check the permissions
+    $directory = 'public://my-image-folder';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+    //Saves a file to the specified destination and creates a database entry.
+    $file = file_save_data($image, 'public://my-image-folder/im.png', FILE_EXISTS_RENAME);
+
+    //Set the file status to permanent so it is not deleted in next cron run
+    $file->status = FILE_STATUS_PERMANENT;
+    file_save($file);
+
+    dpm((array)$file);
+  */
+
+  dpm(___test());
+    
+	return "_klovers_upload_file";
+}
+
+// http://drupal.stackexchange.com/questions/182660/json-fromat-for-user-login-with-email-address-services
+/**
+ * Implements hook_services_resources_alter().
+ */
+function basic_services_resources_alter(&$resources, &$endpoint) {
+  // Override the normal user login callback.
+  if (isset($resources['user']['actions']['login']['callback'])) {
+    $resources['user']['actions']['login']['callback'] = 'basic_services_login';
+  }
+}
+
+/**
+ * Replacement callback for the Services user login resource. Optionally use the email address to login.
+ *
+ * @see _user_resource_login().        
+ * @see https://drupal.org/node/1431724
+ */
+function basic_services_login() {
+
+  if (valid_email_address($_REQUEST['username'])){
+    $account = user_load_by_mail($_REQUEST['username']);
+    $username = $account->name;
+  } else {
+    $username = $username_email;
+  }
+  
+  //Pass through to the existing services callback
+  module_load_include('inc', 'services', 'resources/user_resource');
+
+  $result['result']   = TRUE;
+  $result['data']     = _user_resource_login($username, $_REQUEST['password']);
+  return $result;
+}
+
+function basic_user_logout_1()
+{
+  $result = array();
+  if (empty($_REQUEST['uid'])) {
+
+    $result['result'] = FALSE;
+    $result['output'] = "Empty user.";
+
+    return $result;
+  }
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  $field_collection_item_values = array();
+
+  // http://drupal.stackexchange.com/questions/68765/how-to-properly-delete-a-field-collection
+  foreach ($profile->field_device_access[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // if($value['value'] == 16){ 
+    if($data->field_udid[LANGUAGE_NONE][0]['value'] == $_REQUEST['udid']){
+      // เก็บค่าที่ต้องการลบ
+      $field_collection_item_values[] = $value['value'];
+    }
+  }
+
+  // Delete field collection items.  ลบ
+  entity_delete_multiple('field_collection_item', $field_collection_item_values);
+  // เก็บ  Device Access แบบใหม่
+
+	watchdog('user', 'Service : Session closed for %name.', array('%name' => $user_fields->name));
+
+	// Destroy the current session.
+	module_invoke_all('user_logout', $user_fields);
+
+	// session_destroy();
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  // $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_REQUEST['uid'] .'/profile/' . $_REQUEST['platform'] .'/'. str_replace('.', '_', $_REQUEST['bundleidentifier']) .'/hw/' . $_REQUEST['udid']);
+
+  $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_REQUEST['uid'] .'/data/devices/' . $_REQUEST['udid']);
+
+	$result['result'] = TRUE;
+	$result['output'] = "";
+
+	return $result;
+}
+
+function annmousu()
+{
+  $result = array();
+
+  if (empty($_REQUEST['udid'])) {
+    $result['result']   = FALSE;
+    $result['message']  = "Empty Parameter.";
+    return $result;
+  }
+
+  // เช็กว่ามี  user ที่มี email แล้วหรือไม
+  if (user_load_by_mail($_REQUEST['udid'] . '@annmousu') == "") {
+    // add new user
+    $new_user = array(
+      'name' => generate_name_annmousu($_REQUEST['udid']),
+      'pass' => DEFUALT_PASSWORD, // note: do not md5 the password
+      'mail' => $_REQUEST['udid'] . '@annmousu',
+      'status' => 1,
+      'init' => $_REQUEST['udid'] . '@annmousu',
+      'roles' => array(
+        DRUPAL_AUTHENTICATED_RID => 'authenticated user'
+      ),
+    );
+
+    // The first parameter is sent blank so a new user is created.
+    user_save('', $new_user);    
+  }
+
+  module_load_include('inc', 'services', 'resources/user_resource');
+
+  $result['result']   = TRUE;
+  $result['data']     =   _user_resource_login(generate_name_annmousu($_REQUEST['udid']), DEFUALT_PASSWORD);
+
+  return $result;
+}
+
+function annmousu_register(){
+
+  $result = array();
+
+  if(empty($_POST['email']) || empty($_POST['UDID'])) {
+    $result['result']   = FALSE;
+    $result['function'] = "Email | UDID empty.";
+    return $result;
+  }
+
+  // เช็กว่ามี  user ที่มี email แล้วหรือไม
+  /*
+  กรณีที่ email ยังไม่ถูกนำไปใช้งานจะสามารถ register ได้ตลอด โดยระบบจะ update เฉพาะ verify key เท่านั้น
+  */
+  if (user_load_by_mail($_POST['email']) == "") {
+
+    $content_type  = 'annmousu_verify_token';
+    try {
+
+      $output = db_select('node', 'n')
+          ->fields('n', array('nid', 'title'))
+          ->condition('title', generate_name_annmousu($_POST['UDID']), '=')
+          ->execute()
+          ->fetchCol();
+    
+      $verify_key = generateKey();
+
+      if (empty($output)) {
+        # code...
+        $result['status'] = 'add';
+
+        $node = new stdClass();
+        $node->title = generate_name_annmousu($_POST['UDID']);
+        $node->type  = $content_type;
+        $node->body[LANGUAGE_NONE][0]['value']  = "";
+        $node->field_verify_token[LANGUAGE_NONE][0]['value']  = $_POST['UDID'];
+        $node->field_verify_key[LANGUAGE_NONE][0]['value']    = $verify_key;
+        
+        $node->language = LANGUAGE_NONE;
+        $node->revision = 0;
+
+        $node = node_submit($node);
+        node_save($node);
+      }else{        
+        $result['status'] = 'update';
+
+        // การ update verify key
+        $node = node_load($output[0]);
+   
+        $node_wrapper = entity_metadata_wrapper('node', $node);
+        $node_wrapper->field_verify_key->set($verify_key);
+
+
+        $node_wrapper->save();
+
+      }
+    } catch (Exception $e) {
+        $result['result']   = FALSE;
+        $result['message']   = $e->getMessage();
+        return $result;
+    }
+
+    basic_mail_send("contact_message", $_POST['email'], '', $verify_key);
+
+    $result['result']   = TRUE;
+  }else{
+    $result['result']   = FALSE;
+    $result['message']  = "Email duplicate.";
+  }
+
+  return $result;
+}
+
+function annmousu_verify(){
+  $result = array();
+
+  if(empty($_POST['UDID']) || empty($_POST['key']) || empty($_POST['email'])) {
+    $result['result']   = FALSE;
+    $result['function'] = "UDID | KEY | email empty.";
+    return $result;
+  }
+
+  try {
+
+    $query = db_select('node', 'n');
+    $query->leftJoin('field_data_field_verify_key', 'k', 'k.entity_id = n.nid');
+    $query->leftJoin('field_data_field_verify_token', 't', 't.entity_id = n.nid');
+
+    $query->fields('n', array('nid'));
+    $query->fields('k', array('field_verify_key_value'));
+    $query->fields('t', array('field_verify_token_value'));
+    $query->condition('n.title', generate_name_annmousu($_POST['UDID']), '=');
+    $query->condition('k.field_verify_key_value', $_POST['key'], '=');
+
+    $output = $query->execute();
+ 
+    if ($output->rowCount() > 0) {
+      # code...
+      while($row = $output->fetchAssoc())
+      {
+        // $result['data']= $row['nid'];
+
+
+        // #1
+        // load user object ขึ้นมาเพือแก้ไข mail
+        $existingUser = user_load_by_mail($_POST['UDID'] . '@annmousu');
+        // update some user property
+
+        // กรณี user ยังไม่ได้ตั้งชือใหม่ เราจะกำหนดให้ชือเท่ากัน email
+        if (strcasecmp($existingUser->name, $_POST['UDID'] . '@annmousu') != 0) { // 
+          # code...
+          $existingUser->name = $_POST['email'];
+        }
+
+        $existingUser->mail = $_POST['email'];
+        $existingUser->pass = $_POST['key'];
+
+        // save existing user
+        user_save((object) array('uid' => $existingUser->uid), (array) $existingUser);
+
+        // #2
+        // เราต้องลบ ข้อมูล verify token เพราะเราได้ verify ได้ถุกต้องแล้ว
+        node_delete($row['nid']);
+
+        // #3
+        // เราต้องไป update ที่ firebase
+        $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+        // update email
+        $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $existingUser->uid . "/data/profile/", array("mail"   =>$_POST['email']));
+
+
+
+        // <!---------- update email ที่ drupal 
+
+        // #4
+        // เป้นการโหลดข้อมูลของ  user uid เพอื่จะ แก้ไข สถานะ เพือน (field_heart_friend_status = 1)
+        $user_fields = user_load($existingUser->uid);
+
+        if (!$user_fields->uid) {
+          // User is not logged in
+          //services_error(t('User is not logged in.'), 406);
+
+          $result['result'] = FALSE;
+          $result['output'] = "uid not match is user";
+
+          return $result;
+        }
+
+        $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+        // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+        $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+        foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+          // Build array of field collection values.
+
+          $data = field_collection_item_load($value['value']);
+
+          // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+          // if($value['value'] == 16){
+          /*if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+            $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+            
+            // $value_update = $data->field_heart_receive[LANGUAGE_NONE][0]['value'] + 1;
+
+            // watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+            //Update value
+            $wrapper->field_heart_friend_status->set('2');
+            $wrapper->save();
+            */
+
+
+            // Firebase increment new HW Login
+            $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+            $data_update = array(
+              "mail"   =>$_POST['email'],
+              "update"  => time()
+            );
+
+            $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $data->field_friend_uid[LANGUAGE_NONE][0]['value'] ."/friends/" . $existingUser->uid . "/", $data_update);
+          }
+
+        // }
+
+        // ------------> update email ที่ drupal
+
+
+        $result['result']   = TRUE;
+        break;
+      }
+    }else{
+      $result['result']   = FALSE;
+      $result['message'] = "Code verify no match.";
+    }
+  } catch (Exception $e) {
+    $result['result']   = FALSE;
+    $result['message']   = $e->getMessage();
+    return $result;
+  }
+  return $result;
+}
+
+function shby_class()
+{
+  $result = array();
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+     // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user = user_load($_POST['uid']);
+
+  if (!$user->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user, NULL);
+
+  // $profile2_load_by_user->field_profile_heart[LANGUAGE_NONE][0]['value'] = 99;
+
+  // profile2_save($profile2_load_by_user);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile_user =  profile2_load($profile2_load_by_user['main']->pid);
+
+
+
+  foreach ($_POST['uids'] as $key => $uid) {
+    # code...
+
+    $user_fields = user_load($uid);
+
+    if (!$user_fields->uid) {
+      // User is not logged in
+      //services_error(t('User is not logged in.'), 406);
+
+      $result['result'] = FALSE;
+      $result['output'] = "uid not match is user";
+
+      return $result;
+    }
+
+    $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+    // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+    $profile_friend =  profile2_load($profile2_load_by_user['main']->pid);
+
+    
+    foreach ($profile_friend->field_device_access[LANGUAGE_NONE] as $key => $value) {
+      // Build array of field collection values.
+
+      $data_friend = field_collection_item_load($value['value']);
+
+
+      $token   = $data_friend->field_token[LANGUAGE_NONE][0]['value'];
+      $title   = "HEART";
+      $message = $profile_user->field_profile_name[LANGUAGE_NONE][0]['value'] . " send heart to you.";
+      // $sound   = ;// turn_off_notifications
+
+      $result['sound'] = $sound = $firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/".  $_POST['uid']. '/turn_off_notifications/');//$firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/".  $_POST['uid']. '/turn_off_notifications/');
+
+      $count_receive = 0;
+      $friends = json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $uid ."/friends"), true);
+
+      foreach ($friends as $key => $value) {
+        
+        if ($key != 0) {
+          
+          if (array_key_exists('receive_heart', $value)) {
+            $receive_heart = $value['receive_heart'];
+
+            foreach ($receive_heart as $receive_heart_key => $receive_heart_value) {
+                if ($receive_heart[$receive_heart_key]["is_read"] == 0) {
+                  # code...
+                  $count_receive++;
+                }
+            }
+          }
+        }
+      }
+      basic_send_push_notification($token, $title, $message, $sound, $vibrate = 0, $count_receive);
+    }
+  }
+
+  $result['result']  = TRUE;
+  $result['function'] = "shby_class";
+  $result['$_POST'] = $_POST;
+
+  return $result;
+}
+
+function application_category()
+{
+  $result = array();
+
+  $vocabulary = taxonomy_vocabulary_machine_name_load('tags_category_application');
+  $terms = entity_load('taxonomy_term', FALSE, array('vid' => $vocabulary->vid));
+
+  $result['result']  = TRUE;
+  $result['function'] = "application_category";
+  $result['data'] = $terms;
+
+  return $result;
+}
+
+function delete_my_application(){
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['item_id'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+    if ($value['value'] == $_REQUEST['item_id']) {
+      # code...
+      $wrapper = entity_metadata_wrapper('field_collection_item', field_collection_item_load($value['value']));
+      entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+      break;
+    }
+  }
+  $result['result']  = TRUE;
+  return $result;
+}
+
+
+/**
+ * Sends an e-mail.
+ *
+ * @param array $form_values
+ *   An array of values from the contact form fields that were submitted.
+ *   There are just two relevant items: $form_values['email'] and
+ *   $form_values['message'].
+ */
+function basic_mail_send($key, $to, $name, $verify_key) {
+  // All system mails need to specify the module and template key (mirrored from
+  // hook_mail()) that the message they want to send comes from.
+  $module = 'basic';
+
+  switch ($key) {
+    case 'contact_message':{
+      // $key = 'contact_message';
+
+      // Specify 'to' and 'from' addresses.
+      // $to = $form_values['email'];
+      $from = variable_get('site_mail', 'info@klovers.org');
+
+      // "params" loads in additional context for email content completion in
+      // hook_mail(). In this case, we want to pass in the values the user entered
+      // into the form, which include the message body in $form_values['message'].
+      // $params = '';//$form_values;
+
+      $params = array('verify_key' => $verify_key);
+
+      // The language of the e-mail. This will one of three values:
+      // - user_preferred_language(): Used for sending mail to a particular website
+      //   user, so that the mail appears in their preferred language.
+      // - global $language: Used when sending a mail back to the user currently
+      //   viewing the site. This will send it in the language they're currently
+      //   using.
+      // - language_default(): Used when sending mail to a pre-existing, 'neutral'
+      //   address, such as the system e-mail address, or when you're unsure of the
+      //   language preferences of the intended recipient.
+      //
+      // Since in our case, we are sending a message to a random e-mail address that
+      // is not necessarily tied to a user account, we will use the site's default
+      // language.
+      $language = language_default();
+
+      // Whether or not to automatically send the mail when drupal_mail() is
+      // called. This defaults to TRUE, and is normally what you want unless you
+      // need to do additional processing before drupal_mail_send() is called.
+      $send = TRUE;
+      // Send the mail, and check for success. Note that this does not guarantee
+      // message delivery; only that there were no PHP-related issues encountered
+      // while sending.
+      $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
+      if ($result['result'] == TRUE) {
+        drupal_set_message(t('Your message has been sent.'));
+      }
+      else {
+        drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+      }
+    }
+      break;
+
+    case 'user_forgot_password':
+    {
+
+      // Specify 'to' and 'from' addresses.
+      // $to = $form_values['email'];
+      $from = variable_get('site_mail', 'info@klovers.org');
+
+      // "params" loads in additional context for email content completion in
+      // hook_mail(). In this case, we want to pass in the values the user entered
+      // into the form, which include the message body in $form_values['message'].
+      // $params = '';//$form_values;
+
+      $params = array('name' => $name, 'verify_key' => $verify_key);
+
+
+      // The language of the e-mail. This will one of three values:
+      // - user_preferred_language(): Used for sending mail to a particular website
+      //   user, so that the mail appears in their preferred language.
+      // - global $language: Used when sending a mail back to the user currently
+      //   viewing the site. This will send it in the language they're currently
+      //   using.
+      // - language_default(): Used when sending mail to a pre-existing, 'neutral'
+      //   address, such as the system e-mail address, or when you're unsure of the
+      //   language preferences of the intended recipient.
+      //
+      // Since in our case, we are sending a message to a random e-mail address that
+      // is not necessarily tied to a user account, we will use the site's default
+      // language.
+      $language = language_default();
+
+      // Whether or not to automatically send the mail when drupal_mail() is
+      // called. This defaults to TRUE, and is normally what you want unless you
+      // need to do additional processing before drupal_mail_send() is called.
+      $send = TRUE;
+      // Send the mail, and check for success. Note that this does not guarantee
+      // message delivery; only that there were no PHP-related issues encountered
+      // while sending.
+      $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
+      if ($result['result'] == TRUE) {
+        drupal_set_message(t('Your message has been sent.'));
+      }
+      else {
+        drupal_set_message(t('There was a problem sending your message and it was not sent.'), 'error');
+      }
+
+    }
+      break;
+    
+    default:
+      # code...
+      break;
+  }
+
+  
+
+}
+
+
+function user_friends_heart($uid)
+{
+  $result = array();
+
+    // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user_fields = user_load($uid);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  // $uid_friends = array();
+
+  $data = array();
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // จะเลือกเฉพาะ friend ที่มี heart receive > 0 
+    if($data_item_load->field_heart_send[LANGUAGE_NONE][0]['value'] > 0){
+      // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+      $friend_user_fields = user_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value']);
+
+      $tmp['uid'] = $friend_user_fields->uid;
+      $tmp['name'] = $friend_user_fields->name;
+      $tmp['mail'] = $friend_user_fields->mail;
+      $tmp['data'] = $data_item_load;
+      $tmp['user_heart'] = $profile->field_profile_heart[LANGUAGE_NONE][0]['value'];
+      $tmp['heart_send'] = $data_item_load->field_heart_send[LANGUAGE_NONE][0]['value'];
+      $tmp['datetime_send'] = $data_item_load->field_datetime_send[LANGUAGE_NONE][0]['value'];
+
+      $tmp['heart_receive'] = $data_item_load->field_heart_receive[LANGUAGE_NONE][0]['value'];
+      $tmp['datetime_receive'] = $data_item_load->field_datetime_receive[LANGUAGE_NONE][0]['value'];
+
+      $data[] = $tmp;
+    }
+  }
+  
+  $result['result'] = TRUE;
+  // $result['GET'] = $uid;
+  $result['function'] = "user friends heart";
+  $result['data'] = $data;
+
+  return $result;
+}
+
+function user_friends($uid)
+{
+  $result = array();
+
+  // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user_fields = user_load($uid);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  // $uid_friends = array();
+  $data = array();
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    if($data_item_load->field_heart_friend_status[LANGUAGE_NONE][0]['value'] != 2){
+
+      $friend_user_fields = user_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value']);
+
+      $tmp['uid']         = $friend_user_fields->uid;
+      $tmp['name']        = $friend_user_fields->name;
+      $tmp['mail']        = $friend_user_fields->mail;
+
+      $profile_friend = profile2_load(profile2_load_by_user($friend_user_fields, NULL)['main']->pid);
+
+      if (count($profile_friend->field_profile_image) > 0) {
+        # code...
+        // file_create_url($account->picture->uri); 
+        $tmp['profile_picture'] =  file_create_url($profile_friend->field_profile_image[LANGUAGE_NONE][0]['uri']);
+      }else{
+        $tmp['profile_picture'] =  "";
+      }
+      
+
+      if($data_item_load->field_display_name[LANGUAGE_NONE][0]['value'] == ""){
+        $tmp['display_name']  = $friend_user_fields->name;
+      }else{
+        $tmp['display_name']  = $data_item_load->field_display_name[LANGUAGE_NONE][0]['value'];
+      }
+      
+      $tmp['heart_send']    = $data_item_load->field_heart_send[LANGUAGE_NONE][0]['value'];
+      $tmp['heart_receive'] = $data_item_load->field_heart_receive[LANGUAGE_NONE][0]['value'];
+      $tmp['friend_status'] = $data_item_load->field_heart_friend_status[LANGUAGE_NONE][0]['value'];
+
+      $tmp['profile_friend'] = $profile_friend;
+
+      if ($data_item_load->field_turn_off_notifications[LANGUAGE_NONE][0]['value'] == "") {
+        # code...
+        $tmp['turn_off_notifications'] = '0';
+      }else{
+        $tmp['turn_off_notifications'] = $data_item_load->field_turn_off_notifications[LANGUAGE_NONE][0]['value'];
+      }
+      
+
+      $data[] = $tmp;
+    }
+  }
+
+  $result['result'] = TRUE;
+  $result['function'] = "user friends";
+  $result['data'] = $data;
+  $result['user_heart']  =$profile->field_profile_heart[LANGUAGE_NONE][0]['value'];
+
+  return $result;
+}
+
+function accept_friend(){
+
+  $result = array();
+
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['uid_friend']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // load profile ของเราขึ้นมาแก้ใข friend status
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      //Update value
+      $wrapper->field_heart_friend_status->set('2');
+      $wrapper->save();
+    }
+  }
+
+  // load profile ของเพื่อนขึ้นมาแก้ไข friend status
+  $fprofile = profile2_by_uid_load($_REQUEST['uid_friend'], 'main');
+  foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      //Update value
+      $wrapper->field_heart_friend_status->set('2');
+      $wrapper->save();
+    }
+  }
+
+  $result['result'] = TRUE;
+  return $result;
+}
+
+function accept_friend_v1()
+{
+  $result = array();
+
+  // เป้นการโหลดข้อมูลของ  user uid เพอื่จะ แก้ไข สถานะ เพือน (field_heart_friend_status = 1)
+  $user_fields = user_load($_POST['uid']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      // $value_update = $data->field_heart_receive[LANGUAGE_NONE][0]['value'] + 1;
+
+      // watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set('2');
+      $wrapper->save();
+
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+      $data = array(
+        "friend_status"   =>'2',
+        "update"  => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/", $data);
+    }
+
+  }
+
+
+  // เป้นการโหลดข้อมูลของ  friend uid เพอื่จะ แก้ไข สถานะ เพือน (field_heart_friend_status = 1)
+  $user_fields = user_load($_POST['uid_friend']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid friend not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      // $value_update = $data->field_heart_receive[LANGUAGE_NONE][0]['value'] + 1;
+
+      // watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set('2');
+      $wrapper->save();
+
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+      $data = array(
+        "friend_status"   =>'2',
+        "update"  => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/" . $_POST['uid'] . "/", $data);
+    }
+  }
+
+  $result['result'] = TRUE;
+  $result['function'] = "accept_friend";
+  $result['POST'] = $_POST;
+
+  return $result;
+}
+
+function not_accept_friend(){
+  $result = array();
+
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['uid_friend']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // load profile ของเราขึ้นมาแก้ใข friend status
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      //Update value
+      $wrapper->field_heart_friend_status->set('-3');
+      $wrapper->save();
+    }
+  }
+
+  // load profile ของเพื่อนขึ้นมาแก้ไข friend status
+  $fprofile = profile2_by_uid_load($_REQUEST['uid_friend'], 'main');
+  foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      //Update value
+      $wrapper->field_heart_friend_status->set('-4');
+      $wrapper->save();
+    }
+  }
+
+  $result['result'] = TRUE;
+  return $result;
+}
+
+function not_accept_friend_v1()
+{
+  $result = array();
+
+  // เป้นการโหลดข้อมูลของ  user uid เพอื่จะ แก้ไข สถานะ เพือน (field_heart_friend_status = 1)
+  $user_fields = user_load($_POST['uid']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      // $value_update = $data->field_heart_receive[LANGUAGE_NONE][0]['value'] + 1;
+
+      // watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set('-2');
+      $wrapper->save();
+
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+      $data = array(
+        "friend_status"   =>'-2',
+        "update"  => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/", $data);
+    }
+
+  }
+
+
+  // เป้นการโหลดข้อมูลของ  friend uid เพอื่จะ แก้ไข สถานะ เพือน (field_heart_friend_status = 1)
+  $user_fields = user_load($_POST['uid_friend']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+      // $value_update = $data->field_heart_receive[LANGUAGE_NONE][0]['value'] + 1;
+
+      // watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set('-2');
+      $wrapper->save();
+
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+      $data = array(
+        "friend_status"   =>'-2',
+        "update"  => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/" . $_POST['uid'] . "/", $data);
+    }
+
+  }
+
+
+  $result['result'] = TRUE;
+  $result['function'] = "not accept_friend";
+  $result['POST'] = $_POST;
+
+  return $result;
+}
+
+function delete_friend(){
+
+  $result = array();
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['uid_friend']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  /*
+foreach ($user_profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+    if ($value['value'] == $_POST['item_id']) {
+      # code...
+      $wrapper = entity_metadata_wrapper('field_collection_item', field_collection_item_load($value['value']));
+      entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+      break;
+    }
+  }
+  */
+
+  // user
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      // $wrapper->field_heart_friend_status->set('-999');
+      // $wrapper->save();
+
+      entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+      break;
+    }
+  }
+
+  // friend
+  $fprofile = profile2_by_uid_load($_REQUEST['uid_friend'], 'main');
+   foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      // $wrapper->field_heart_friend_status->set('-999');
+      // $wrapper->save();
+
+      entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+      break;      
+    }
+  }
+
+  $result['result'] = TRUE;
+  return $result;
+}
+
+function delete_friend_v1(){
+  $result = array();
+
+  $user_fields = user_load($_POST['uid']);
+  // $uid_fields = user_load($_POST['uid_friend']);
+  // $name = user_load($_POST['name']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set('-999');
+      $wrapper->save();
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      
+      $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend']);
+
+      break;
+      
+    }
+  }
+
+  // friend
+
+  $friend_fields = user_load($_POST['uid_friend']);
+  // $uid_fields = user_load($_POST['uid_friend']);
+  // $name = user_load($_POST['name']);
+
+  if (!$friend_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "friend uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_friend = profile2_load_by_user($friend_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $friend_profile =  profile2_load($profile2_load_by_friend['main']->pid);
+
+  foreach ($friend_profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set('-999');
+      $wrapper->save();
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      
+      $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/" . $_POST['uid']);
+
+      break;
+      
+    }
+  }
+
+  $result['result'] = TRUE;
+  $result['function'] = "delete_friend";
+
+  return $result;
+}
+
+function send_heart_to_friends()
+{
+  $result = array();
+
+   // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user_fields = user_load($_POST['uid']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // $profile2_load_by_user->field_profile_heart[LANGUAGE_NONE][0]['value'] = 99;
+
+  // profile2_save($profile2_load_by_user);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile_user =  profile2_load($profile2_load_by_user['main']->pid);
+
+
+  // เช็กว่าเรา user นี้สามารถส่ง heart ได้หรือไหม
+  // if($profile_user->field_profile_heart[LANGUAGE_NONE][0]['value'] > 0){
+
+    // Firebase 
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+    // ลดจำนวน heart
+    $decrement_heart = $profile_user->field_profile_heart[LANGUAGE_NONE][0]['value'] - 1;
+
+    // ลดจำนวน heart ที่อยู่ที่ firebase 
+    // $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] . "/profile/", array("heart"   =>$decrement_heart));
+    
+    // ลดจำนวน heart ที่อยู่ที่ drupal 
+    $profile_user->field_profile_heart[LANGUAGE_NONE][0]['value'] = $decrement_heart;
+    profile2_save($profile_user);
+
+
+    foreach ($profile_user->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+      // Build array of field collection values.
+
+      $data = field_collection_item_load($value['value']);
+
+      // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+      // if($value['value'] == 16){
+      // update heart receive คือ เพิ่มขึ้นอีกหนึ่ง
+      if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+        /*
+        if($data->field_heart_send[LANGUAGE_NONE][0]['value'] >= LIMIT_SEND_HEART){
+
+          $result['result'] = FALSE;
+          $result['output'] = "Cannot send heart limit heart : " . LIMIT_SEND_HEART;
+
+          return $result;
+        }
+        */
+        
+        $value_update = $data->field_heart_send[LANGUAGE_NONE][0]['value'] + 1;
+
+        watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+        //Update value
+        $wrapper->field_heart_send->set($value_update);
+        $wrapper->field_datetime_send->set(time());
+        $wrapper->save();
+
+        /*
+        // update firebase
+        $data_update = array(
+          "send"   =>$value_update
+        );
+
+        $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/", $data_update);
+        */
+
+
+        // update firebase
+        $data_update = array(
+          "is_read"   =>"0", // เป็นการ update จากที่เราส่งถึงเพือนคนนี้
+          "time"  => time()
+        );
+
+        $firebase->push(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/send_heart/", $data_update);
+        break;
+      }
+    }
+    // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user 
+
+    /*
+    เป็นการ  update heart ของเพื่อน ว่า field_heart_send เท่าไร
+    */
+
+    $user_fields = user_load($_POST['uid_friend']);
+
+    if (!$user_fields->uid) {
+      // User is not logged in
+      //services_error(t('User is not logged in.'), 406);
+
+      $result['result'] = FALSE;
+      $result['output'] = "uid not match is user";
+
+      return $result;
+    }
+
+    $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+    // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+    $profile_friend =  profile2_load($profile2_load_by_user['main']->pid);
+
+    /*
+    // เพิ่มจำนวน heart
+    $increment_heart = $profile->field_profile_heart[LANGUAGE_NONE][0]['value'] + 1;
+
+    // เพิ่มจำนวน heart ที่อยู่ที่ firebase 
+    $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] . "/", array("heart"   =>$increment_heart));
+    
+    // เพิ่มจำนวน heart ที่อยู่ที่ drupal 
+    $profile->field_profile_heart[LANGUAGE_NONE][0]['value'] = $increment_heart;
+    profile2_save($profile);
+    */
+
+    foreach ($profile_friend->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+      // Build array of field collection values.
+
+      $data = field_collection_item_load($value['value']);
+
+      // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+      // if($value['value'] == 16){
+      if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+        
+        $value_update = $data->field_heart_receive[LANGUAGE_NONE][0]['value'] + 1;
+
+        watchdog(TAG, 'Update Heart = %edit', array('%edit' => $value_update), WATCHDOG_INFO);
+
+        //Update value
+        $wrapper->field_heart_receive->set($value_update);
+        $wrapper->field_datetime_receive->set(time());
+        $wrapper->save();
+
+
+        /*
+        // update firebase
+        $data_update = array(
+          "receive"   =>$value_update
+        );
+
+        $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/" . $_POST['uid_friend'] . "/", $data_update);
+        */
+        
+
+        $data_update = array(
+          "is_read"   =>"0",
+          "time"  => time()
+        );
+
+        $firebase->push(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/" . $_POST['uid'] . "/receive_heart/", $data_update);
+
+        break;
+      }
+    }
+
+
+
+    // send notication to friend
+    // เราต้อง profile  uid friend เพื่อหา token เพื่อใช้สำหรับ ส่่ง push notification เพราะว่า โอกาศที่ 1 user จะ login จากหลาย device ดังนี้เราต้องส่ง ทุก device ที่ login ของ friend  นั้นๆ
+
+    /*
+    $friend_fields = user_load($_POST['uid_friend']);
+
+    if (!$friend_fields->uid) {
+      // User is not logged in
+      //services_error(t('User is not logged in.'), 406);
+
+      $result['result'] = FALSE;
+      $result['output'] = "uid not match is user";
+
+      return $result;
+    }
+
+    $profile2_load_by_friend = profile2_load_by_user($friend_fields, NULL);
+
+    // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+    $profile_friend =  profile2_load($profile2_load_by_friend['main']->pid);
+    */
+
+    // $result['profile_friend'] = $profile_friend;
+    // $result['profile_friend'] = $profile_friend;
+
+    foreach ($profile_friend->field_device_access[LANGUAGE_NONE] as $key => $value) {
+      // Build array of field collection values.
+
+      $data_friend = field_collection_item_load($value['value']);
+
+
+      $token   = $data_friend->field_token[LANGUAGE_NONE][0]['value'];
+      $title   = "HEART";
+      $message = $profile_user->field_profile_name[LANGUAGE_NONE][0]['value'] . " send heart to you.";
+      // $sound   = ;// turn_off_notifications
+
+      $result['sound'] = $sound = '0';//$firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/".  $_POST['uid']. '/turn_off_notifications/');//$firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends/".  $_POST['uid']. '/turn_off_notifications/');
+
+
+      /* คำนวณหา badge */
+      $count_receive = 0;
+      $friends = json_decode($firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid_friend'] ."/friends"), true);
+
+      foreach ($friends as $key => $value) {
+        
+        if ($key != 0) {
+          
+          if (array_key_exists('receive_heart', $value)) {
+            $receive_heart = $value['receive_heart'];
+
+            foreach ($receive_heart as $receive_heart_key => $receive_heart_value) {
+                if ($receive_heart[$receive_heart_key]["is_read"] == 0) {
+                  # code...
+                  $count_receive++;
+                }
+            }
+          }
+        }
+      }
+      /* คำนวณหา badge */
+
+
+      basic_send_push_notification($token, $title, $message, $sound, $vibrate = 0, $count_receive);
+
+    }
+    // send notication to friend
+
+    $result['result'] = TRUE;
+    $result['function'] = "send heart to friend";
+    $result['POST'] = $_POST;
+
+/*
+  }else{
+    $result['result'] = FALSE;
+    $result['output'] = "Cannot send heart = 0 " ;
+  }
+  */
+
+  return $result;
+}
+
+
+function search_friend_by_id()
+{
+
+  $result = array();
+
+   // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user_fields = user_load($_POST['uid']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+// 
+  if (strcasecmp($_POST['isQR'], '0') == 0) {
+    # การค้นหาแบบ id search
+
+      $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', 0, '!=')
+        ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', $_POST['uid'], '!=')
+        ->execute()
+        ->fetchCol();
+
+    $mul_users =  user_load_multiple($uids);
+
+    $tm = array();
+
+    foreach ($mul_users as $account) {
+      # code...
+      
+      // $tmp['uid'] = $account->uid;
+      // $tmp['name'] = $account->name;
+      // $tmp['mail'] = $account->mail;
+
+      // // $path= file_create_url($uri)  uri
+      // if(!is_null($account->picture)){
+      //   $tmp['url_image'] = file_create_url($account->picture->uri); 
+      // }else{
+      //   $tmp['url_image'] = "";
+      // }
+
+      // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+      $user_fields = user_load($account->uid);
+
+      if (!$user_fields->uid) {
+        // User is not logged in
+        //services_error(t('User is not logged in.'), 406);
+
+        continue;
+      }
+
+      // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+      // $key = $profile2_load_by_user->field_profile_heart_id[LANGUAGE_NONE][0]['value'];
+
+      // $tm[] = $profile2_load_by_user->field_profile_heart_id;
+
+
+      $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+      $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+      $key = $profile->field_profile_heart_id[LANGUAGE_NONE][0]['value'];
+
+      // ที่ใช้ uid_friend เพราว่าเราใช้ function ร่วมกันกับ search qrcode ด้วย
+      if (strcasecmp($_POST['uid_friend'], $key) == 0) {
+        # code...
+
+        $result['result'] = TRUE;
+        $result['data']   = $profile;
+
+        return  $result;
+
+        break;
+      }
+    }
+
+    $result['result'] = FALSE;
+    $result['message']   = "User not found.";
+
+    return  $result;
+
+  }else{
+    # การค้นหาแบบ qrcode
+
+    $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+    // $profile2_load_by_user->field_profile_heart[LANGUAGE_NONE][0]['value'] = 99;
+
+    // profile2_save($profile2_load_by_user);
+
+    // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+    $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+
+    //  load profile ของ uid friend
+    $friend_fields = user_load($_POST['uid_friend']);
+    $profile2_load_by_friend = profile2_load_by_user($friend_fields, NULL);
+
+    // load profile ของ uid friend
+
+     // เช็กว่าเพือนคนนี้ เป้นเพือนเราอยู่แล้วหรือไม่ (check is friend duplicate ?)
+    foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+      // Build array of field collection values.
+
+      $data = field_collection_item_load($value['value']);
+
+      if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']) {
+
+  /*
+   0 = Family
+   1 = Favority
+   2 = Friends
+   3 = Friend Requests, -3 = User cancel Friend Requests
+   4 = Wait to Accept,  -4 = เป็นตัวบอกว่า เพือน cancel คำขอของเรา
+   5 = Hide
+   6 = Block
+   
+   -2 = เพื่อน cancel คำขอ
+   -4 = เรา cancel wait to accept
+   */
+
+        switch ($data->field_heart_friend_status[LANGUAGE_NONE][0]['value']) {
+          case '0':
+          case '1':
+          case '2':
+            # code...
+          $message = "is already your friend.";
+            break;
+
+          case '3':
+          $message = "Friend Requests";
+            break;
+          case '4':
+            # code...
+          $message = "wait to accept";
+            break;
+          
+          default:
+            # code...
+            break;
+        }
+
+        $result['result']   = TRUE;
+        $result['message']  = $message;
+        $result['status']   = strval($data->field_heart_friend_status[LANGUAGE_NONE][0]['value']);
+        $result['data']     = profile2_load($profile2_load_by_friend['main']->pid);
+        return $result;
+      }
+    }
+
+
+    $result['result']   = TRUE;
+    $result['data']     = profile2_load($profile2_load_by_friend['main']->pid);
+    $result['status']   = '99';
+  }
+
+  return $result;
+}
+
+function people_you_may_know(){
+
+  $result = array();
+
+  if (empty($_REQUEST['uid'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  /*
+  // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user_fields = user_load($_POST['uid']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+  */
+
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  $uid_friends = array('0', '1', $_REQUEST['uid']);
+
+  $tm =array();
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // 
+    // field_heart_friend_status == 99 เราจะนํามาคิดด้วย
+    // if ($data->field_heart_friend_status[LANGUAGE_NONE][0]['value'] != '99') {
+    //   # code...
+    //   $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+    // }
+
+    if (strcasecmp($data_item_load->field_heart_friend_status[LANGUAGE_NONE][0]['value'], '-999') == 0) {
+      # code...
+      $tm[] = $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'];
+      continue;
+    }else if (strcasecmp($data_item_load->field_heart_friend_status[LANGUAGE_NONE][0]['value'], '-2') == 0) {
+      # code...
+      $tm[] = $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'];
+      continue;
+    }else if (strcasecmp($data_item_load->field_heart_friend_status[LANGUAGE_NONE][0]['value'], '-4') == 0) {
+      # code...
+      $tm[] = $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'];
+      continue;
+    }
+
+    $uid_friends[] = $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'];
+  }
+  // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user 
+
+
+  $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', $uid_friends, 'NOT IN')
+        ->orderBy("ur.uid", "ASC")
+        ->execute()
+        ->fetchCol();
+
+  $users =  user_load_multiple($uids);
+
+  $data = array();
+  foreach ($users as $account) {
+    # code...
+    
+    $tmp['uid'] = $account->uid;
+    // $tmp['name'] = $account->name;
+    $tmp['mail'] = $account->mail;
+
+/*
+    // $path= file_create_url($uri)  uri
+    if(!is_null($account->picture)){
+      $tmp['url_image'] = file_create_url($account->picture->uri); 
+    }else{
+      $tmp['url_image'] = "";
+    }
+
+    */
+
+
+  
+    // $friend_user_fields = user_load($account->uid);
+    // $profile_friend = profile2_load(profile2_load_by_user($friend_user_fields, NULL)['main']->pid);
+
+    // 
+
+    $profile_friend = profile2_by_uid_load($account->uid, 'main');
+    $tmp['name'] = $profile_friend->field_profile_name[LANGUAGE_NONE][0]['value'];
+    if(count($profile_friend->field_profile_image) > 0){
+      $tmp['url_image'] = file_create_url($profile_friend->field_profile_image[LANGUAGE_NONE][0]['uri']);
+    }else{
+      $tmp['url_image'] = "";
+    }
+    $data[] = $tmp;
+  }
+
+  $result['result'] = TRUE;
+  $result['function'] = "people_you_may_know";
+  $result['data'] = $data;
+
+  $result['uid_friends'] = $uid_friends;
+  $result['tm'] = $tm;
+
+  return $result;
+}
+
+function edit_display_name(){
+  $result = array();
+
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['name']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // จะได้ เพือนมาทั้งหมด
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // Load profile ของเพือนแต่ละคน เพื่อที่เราจะ update รูปของเราที่เป้นเพือนด้วย
+    $fprofile = profile2_by_uid_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
+    foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $fkey => $fvalue) {
+      $fdata_item_load = field_collection_item_load($fvalue['value']);
+
+      /*
+        เราต้องเช็ดว่า เพื่อนคนใหน uid ตรงกันเรา ถึงจะ update displayname
+      */
+      if($fdata_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $fdata_item_load);
+            
+        $wrapper->field_display_name->set($_REQUEST['name']);
+        $wrapper->save();
+
+        break;
+      }
+    }
+  }
+
+  profile2_save($profile);
+
+  $result['result'] = TRUE;
+  return  $result;
+}
+
+function turn_off_notifications(){
+  $result = array();
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['uid_friend']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_turn_off_notifications->set($_POST['status']);
+      $wrapper->save();
+      break;
+    }
+  }
+  $result['result']   = TRUE;
+  return  $result;
+}
+
+function turn_off_notifications_v1()
+{
+  $result = array();
+
+  $user_fields = user_load($_POST['uid']);
+  // $uid_fields = user_load($_POST['uid_friend']);
+  // $name = user_load($_POST['name']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_turn_off_notifications->set($_POST['status']);
+      $wrapper->save();
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      $data = array(
+        "turn_off_notifications"  =>$_POST['status'],
+        "update"        => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/", $data);
+
+      break;
+      
+    }
+  }
+
+  $result['result']   = TRUE;
+  
+  return  $result;
+}
+
+function hide_friend(){
+  $result = array();
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['uid_friend']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set($_REQUEST['status']);
+      $wrapper->save();
+      break;
+    }
+  }
+  $result['result'] = TRUE;
+  return  $result;
+}
+
+function hide_friend_v1(){
+
+  $result = array();
+
+  $user_fields = user_load($_POST['uid']);
+  // $uid_fields = user_load($_POST['uid_friend']);
+  // $name = user_load($_POST['name']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set($_POST['status']);
+      $wrapper->save();
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      $data = array(
+        "friend_status"  =>$_POST['status'],
+        "update"        => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/", $data);
+
+      break;
+      
+    }
+  }
+
+  $result['result']   = TRUE;
+  $result['function'] = "hide_friend";
+  $result['status']   = $_POST['status'];
+  $result['data']     = $_POST;
+  return  $result;
+}
+
+function set_class_friend()
+{
+  $result = array();
+
+  $user_fields = user_load($_POST['uid']);
+  // $uid_fields = user_load($_POST['uid_friend']);
+  // $name = user_load($_POST['name']);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+
+    if(strcasecmp($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], $_POST['uid_friend']) == 0){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+
+      //Update value
+      $wrapper->field_heart_friend_status->set($_POST['status']);
+      $wrapper->save(TRUE);
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      $data_update = array(
+        "friend_status"  =>$_POST['status'],
+        "update"        => time()
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/friends/" . $_POST['uid_friend'] . "/", $data_update);
+
+      $result['result']   = TRUE;
+      $result['function'] = "set_class_friend";
+      return  $result;
+
+      break;
+      
+    }
+  }
+
+  $result['result']   = TRUE;
+  $result['function'] = "set_class_friend";
+  $result['status']   = $_POST['status'];
+  $result['data']     = $_POST;
+  return  $result;
+
+}
+
+function cancel_wait_to_accept(){
+
+  $result = array();
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['uid_friend']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      $wrapper->field_heart_friend_status->set($_POST['status']);
+      $wrapper->save();
+      break;
+    }
+  }
+
+  $fprofile = profile2_by_uid_load($_REQUEST['uid_friend'], 'main');
+  foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);            
+      entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+      break;
+    }
+  }
+
+  $result['result'] = TRUE;
+  return  $result;
+}
+
+function edit_friend_display_name(){
+
+  $result = array();
+
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['name']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // $user_fields = user_load($_REQUEST['uid']);
+  // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    // if($value['value'] == 16){
+    if($data->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid_friend']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      //Update value
+      $wrapper->field_display_name->set($_REQUEST['name']);
+      $wrapper->save();
+
+      // Firebase increment new HW Login
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      $data_update = array(
+        "display_name"  =>$_REQUEST['name'],
+        "is_update_display_name"=>"1"
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/data/contacts/" . $_REQUEST['uid_friend'] . "/", $data_update);
+
+      break;
+      
+    }
+  }
+
+  $result['result'] = TRUE;
+  $result['value']  = $_REQUEST['name'];
+  return  $result;
+}
+/*
+function edit_display_name(){
+  $result = array();
+
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['name']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  $user_fields = user_load($_REQUEST['uid']);
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+  $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    // $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    $friend_uid = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+
+    $is_update_display_name = $firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $friend_uid . "/data/contacts/" . $_POST['uid'] . "/is_update_display_name/");
+
+    if (intval($is_update_display_name) == 0) {
+      $value = array(
+        "display_name"  => $_REQUEST['name']
+      );
+
+      $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $friend_uid . "/data/contacts/" . $_REQUEST['uid'], $value);
+    }
+
+  }
+  profile2_save($profile);
+
+  $value = array(
+    "display_name"  => $_REQUEST['name']
+  );
+
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/', $value);
+
+  $result['result'] = TRUE;
+  $result['value']  = $_REQUEST['name'];
+  return  $result;
+}
+*/
+
+function edit_phone_v1_0()
+{
+  $result = array();
+
+  $user_fields = user_load($_POST['uid']);
+  // เป็นการ โหลด profile เพือเราจะหา pid ของ user นั้นๆ
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL)['main'];
+
+  $profile2_load_by_user->field_profile_phone[LANGUAGE_NONE][0]['value'] = $_POST['number'];
+
+  profile2_save($profile2_load_by_user);
+
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $data = array(
+    "phone"  => $_POST['number'],
+    "update"  => time()
+  );
+  // $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid, $data);
+
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/', $data);
+
+
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  // $uid_friends = array();
+  $data = array();
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+
+    $data_update = array(
+      "phone" => $_POST['number'],
+      "update"  => time()
+    );
+  
+    $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] . '/friends/' . $user_fields->uid, $data_update);
+  }
+
+  $result['result'] = TRUE;
+  $result['status'] = "0";
+
+  return $result;
+}
+
+function edit_phone()
+{
+  $result = array();
+
+  /* v1.0
+  $user_fields = user_load($_POST['uid']);
+  // เป็นการ โหลด profile เพือเราจะหา pid ของ user นั้นๆ
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL)['main'];
+
+  $profile2_load_by_user->field_profile_phone[LANGUAGE_NONE][0]['value'] = $_POST['number'];
+
+  profile2_save($profile2_load_by_user);
+
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $data = array(
+    "phone"  => $_POST['number'],
+    "update"  => time()
+  );
+  // $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid, $data);
+
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/profile/', $data);
+
+
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  // $uid_friends = array();
+  $data = array();
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+
+    $data_update = array(
+      "phone" => $_POST['number'],
+      "update"  => time()
+    );
+  
+    $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] . '/friends/' . $user_fields->uid, $data_update);
+  }
+  */
+
+
+  //  v1.1 support multi phone
+  // fction เป็นตัวบอกว่า เพิ่ม, แก้ไข, ลบ*/
+
+  /*
+
+  number_old, number_new 
+  กรณีเพิ่มใหม่ เราจะคิดเฉพาะ number_new เท่านั้น
+  กรณีแก้ไข่ เราจะคิดเฉพาะ number_old, number_new 
+  */
+
+  switch ($_POST['fction']) {
+    case 'add':
+    {
+        // #1 load profile friend
+        $user_fields = user_load($_POST['uid']);
+
+        if (!$user_fields->uid) {
+
+          $result['result'] = FALSE;
+          $result['output'] = "User is not logged in";
+
+          return $result;
+        }
+
+        $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+        $profile =  profile2_load($profile2_load_by_user['main']->pid);
+        // #2 load profile friend
+
+        // #3 
+        $flag = TRUE;
+        // check is phone number duplicat
+        foreach ($profile->field_profile_multi_phone[LANGUAGE_NONE] as $key => $value) {
+            $data_item_load = field_collection_item_load($value['value']);
+            if($data_item_load->field_phone_number[LANGUAGE_NONE][0]['value'] == $_POST['number_new']){
+              
+              $flag = FALSE;
+              break;
+            }
+        }
+
+        if ($flag) {
+          # code...
+          $value = array();
+          $value['field_name'] = 'field_profile_multi_phone'; // field collection name
+
+          $value['field_phone_number'][LANGUAGE_NONE][0]['value'] = $_POST['number_new'];
+
+          // Create the field collection entry and associate it with the profile
+          $field_entity = entity_create('field_collection_item', $value);
+          $field_entity->setHostEntity('profile2', $profile);
+          $field_entity->save();
+
+          // Firebase increment new HW Login
+          $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+          $data_update = array(
+            "phone"  =>$_POST['number_new'],
+            "update" => time()
+          );
+
+          $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/data/profile/", $data_update);
+
+
+          $result['result'] = TRUE;
+          $result['status'] = "0";
+          $result['fction'] = $_POST['fction'];
+        }else{
+          $result['result'] = TRUE;
+          $result['status'] = "1";
+          $result['message'] = "Duplicate Phone number";
+          $result['$_POST'] = $_POST;
+        }
+      break;
+    }
+
+    case 'edit':{
+      // #1 load profile friend
+      $user_fields = user_load($_POST['uid']);
+
+      if (!$user_fields->uid) {
+
+        $result['result'] = FALSE;
+        $result['output'] = "User is not logged in";
+
+        return $result;
+      }
+
+      $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+      $profile =  profile2_load($profile2_load_by_user['main']->pid);
+      // #2 load profile friend
+
+      // #3 
+      $flag = TRUE;
+      // check is phone number duplicat
+      foreach ($profile->field_profile_multi_phone[LANGUAGE_NONE] as $key => $value) {
+          $data_item_load = field_collection_item_load($value['value']);
+          if($data_item_load->field_phone_number[LANGUAGE_NONE][0]['value'] == $_POST['number_old']){
+            
+            $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+
+            //Update value
+            $wrapper->field_phone_number->set($_POST['number_new']);
+            $wrapper->save(TRUE);
+
+
+            // Firebase increment new HW Login
+            $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+            $data_update = array(
+              "phone"  =>$_POST['number_new'],
+              "update" => time()
+            );
+
+            $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_POST['uid'] ."/data/profile/", $data_update);
+            break;
+          }
+      }
+
+      $result['result'] = TRUE;
+      $result['status'] = "0";
+      $result['number_old'] = $_POST['number_old'];
+      $result['fction'] = $_POST['fction'];
+
+      break;
+    }
+    case 'delete':
+      # code...
+      break;
+    
+    default:
+      # code...
+      break;
+  }
+
+  return  $result;
+}
+
+function edit_multi_phone()
+{
+  $result = array();
+
+
+  if (empty($_POST['fction']) || empty($_POST['uid'])) {
+
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  //  v1.1 support multi phone
+  // fction เป็นตัวบอกว่า เพิ่ม, แก้ไข, ลบ*/
+
+  /*
+
+  number_old, number_new 
+  กรณีเพิ่มใหม่ เราจะคิดเฉพาะ number_new เท่านั้น
+  กรณีแก้ไข่ เราจะคิดเฉพาะ number_old, number_new 
+  */
+
+  switch ($_POST['fction']) {
+    case 'add':
+    {
+        // #1 load profile friend
+        // $user_fields = user_load($_POST['uid']);
+        // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+        // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+        // #2 load profile friend
+
+        $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+        // #3 
+        $flag = TRUE;
+        // check is phone number duplicat
+        foreach ($profile->field_profile_multi_phone[LANGUAGE_NONE] as $key => $value) {
+            $data_item_load = field_collection_item_load($value['value']);
+            if($data_item_load->field_phone_number[LANGUAGE_NONE][0]['value'] == $_POST['number']){
+              
+              $flag = FALSE;
+              break;
+            }
+        }
+
+        if ($flag) {
+          # code...
+          $value = array();
+          $value['field_name'] = 'field_profile_multi_phone'; // field collection name
+
+          $value['field_phone_number'][LANGUAGE_NONE][0]['value'] = $_POST['number'];
+
+          // Create the field collection entry and associate it with the profile
+          $field_entity = entity_create('field_collection_item', $value);
+          $field_entity->setHostEntity('profile2', $profile);
+          $field_entity->save();
+
+          /*
+          $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+          $value = array(
+            "number"  => $_POST['number'],
+            "enabled"   => "1",  
+            "create"  => time(),
+            "update"  => time()
+          );
+          // $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid, $data);
+
+          $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/phones/' . $field_entity->item_id, $value);
+          */
+
+          $result['result']  = TRUE;
+          $result['is_edit']  = FALSE;
+          $result['item_id'] = $field_entity->item_id;
+          $result['data']    = $value;
+        }else{
+          $result['result'] = FALSE;
+          $result['message'] = "Duplicate";
+        }
+      break;
+    }
+
+    case 'edit':{
+      // #1 load profile friend
+      // $user_fields = user_load($_POST['uid']);
+
+      // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+      // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+      // #2 load profile friend
+
+      $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+      // check is phone number duplicat
+      foreach ($profile->field_profile_multi_phone[LANGUAGE_NONE] as $key => $value) {
+          $data_item_load = field_collection_item_load($value['value']);
+          if($data_item_load->item_id == $_POST['item_id']){
+            
+            $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+
+            //Update value
+            $wrapper->field_phone_number->set($_POST['number']);
+            $wrapper->save(TRUE);
+
+            /*
+            $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+            $value = array(
+              "number"   => $_POST['number'],
+              "enabled" => "1",  
+              "update"  => time()
+            );
+            // $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid, $data);
+
+            $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/phones/' . $data_item_load->item_id, $value);
+            */
+
+            $result['result']   = TRUE;
+            $result['is_edit']  = TRUE;
+            $result['item_id']  = $data_item_load->item_id;
+            $result['data']     = $value;
+
+            return $result;
+            break;
+          }
+      }
+
+      break;
+    }
+    case 'delete':{
+
+      // $user_fields = user_load($_POST['uid']);
+      // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+      // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+      // #2 load profile friend
+
+      $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+      // #3 
+      $flag = TRUE;
+      // check is phone number duplicat
+      foreach ($profile->field_profile_multi_phone[LANGUAGE_NONE] as $key => $value) {
+          $data_item_load = field_collection_item_load($value['value']);
+          if($data_item_load->item_id == $_POST['item_id']){
+            entity_delete_multiple('field_collection_item', array($data_item_load->item_id));
+
+            /*
+            $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+            $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/phones/' . $data_item_load->item_id);
+            */
+
+            $result['result']   = TRUE;
+            $result['item_id']  = $data_item_load->item_id;
+            return $result;
+            break;
+          }
+      }
+      break;
+    }
+    
+    default:
+      # code...
+      break;
+  }
+
+  return  $result;
+}
+
+function edit_multi_email()
+{
+  $result = array();
+  if (empty($_POST['fction']) || empty($_POST['uid'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  switch ($_POST['fction']) {
+    case 'add':
+    {
+        // #1 load profile friend
+        // $user_fields = user_load($_POST['uid']);
+        // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+        // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+        // #2 load profile friend
+        $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+        // #3 
+        $flag = TRUE;
+        // check is phone number duplicat
+        foreach ($profile->field_profile_multi_email[LANGUAGE_NONE] as $key => $value) {
+            $data_item_load = field_collection_item_load($value['value']);
+            if($data_item_load->field_email_text[LANGUAGE_NONE][0]['value'] == $_POST['email']){
+              
+              $flag = FALSE;
+              break;
+            }
+        }
+
+        if ($flag) {
+          # code...
+          $value = array();
+          $value['field_name'] = 'field_profile_multi_email'; // field collection name
+
+          $value['field_email_text'][LANGUAGE_NONE][0]['value'] = $_POST['email'];
+
+          // Create the field collection entry and associate it with the profile
+          $field_entity = entity_create('field_collection_item', $value);
+          $field_entity->setHostEntity('profile2', $profile);
+          $field_entity->save();
+
+          $value = array(
+            "name"      => $_POST['email'],
+            "level"     => "1",  // ลำดับชั้น 0: mail ที่ใช้ลงทะเบียน
+            "enabled"   => "1",  // เปิด หรือ ปิดการใช้
+            "create"    => time(),
+            "update"    => time()
+          );
+          // $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid, $data);
+
+          $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/mails/' . $field_entity->item_id, $value);
+
+          $result['result']  = TRUE;
+          $result['is_edit'] = FALSE;
+          $result['item_id'] = $field_entity->item_id;
+          $result['data']    = $value;
+        }else{
+          $result['result'] = FALSE;
+          $result['message'] = "Duplicate Email number";
+        }
+      break;
+    }
+
+    case 'edit':{
+      // #1 load profile friend
+      // $user_fields = user_load($_POST['uid']);
+      // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+      // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+      // #2 load profile friend
+
+      $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+      // #3 
+      // check is phone number duplicat
+      foreach ($profile->field_profile_multi_email[LANGUAGE_NONE] as $key => $value) {
+          $data_item_load = field_collection_item_load($value['value']);
+          if($data_item_load->item_id == $_POST['item_id']){
+            
+            $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+
+            //Update value
+            $wrapper->field_email_text->set($_POST['email']);
+            $wrapper->save(TRUE);
+
+            $value = array(
+              "name"      => $_POST['email'],
+              "level"     => "1",  // ลำดับชั้น 0: mail ที่ใช้ลงทะเบียน
+              "enabled"   => "1",  // เปิด หรือ ปิดการใช้
+              "update"    => time()
+            );
+
+            $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/mails/' . $data_item_load->item_id, $value);
+
+            $result['result']  = TRUE;
+            $result['is_edit'] = TRUE;
+            $result['item_id'] = $data_item_load->item_id;
+            $result['data']    = $value;
+            return $result;
+            break;
+          }
+      }
+      break;
+    }
+    case 'delete':{
+      // $user_fields = user_load($_POST['uid']);
+      // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+      // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+      // #2 load profile friend
+      $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+      // #3 
+      $flag = TRUE;
+      // check is phone number duplicat
+      foreach ($profile->field_profile_multi_email[LANGUAGE_NONE] as $key => $value) {
+          $data_item_load = field_collection_item_load($value['value']);
+          if($data_item_load->item_id == $_POST['item_id']){
+            entity_delete_multiple('field_collection_item', array($data_item_load->item_id));
+
+            $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/mails/' . $data_item_load->item_id);
+
+            $result['result'] = TRUE;
+            $result['item_id'] = $data_item_load->item_id;
+            return $result;
+            break;
+          }
+      }
+      break;
+    }
+    default:
+      # code...
+      break;
+  }
+
+  return  $result;
+}
+
+function edit_status_message(){
+
+  /*
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['message'])) {
+    $result['result'] = FALSE;
+    return  $result;
+  }
+
+  $result = array();
+
+  $user_fields = user_load($_REQUEST['uid']);
+  // เป็นการ โหลด profile เพือเราจะหา pid ของ user นั้นๆ
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL)['main'];
+  $profile2_load_by_user->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['message'];
+  profile2_save($profile2_load_by_user);
+
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  // $uid_friends = array();
+  $data = array();
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data_item_load = field_collection_item_load($value['value']);
+    $data_update = array(
+      "status_message" => $_REQUEST['message']
+    );
+  }
+
+  $result['result'] = TRUE;
+  $result['value'] = $_REQUEST['message'];
+
+  return  $result;
+  */
+
+  $result = array();
+
+  if (empty($_REQUEST['uid'] || empty($_REQUEST['message']))) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['message'];
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    /*
+      จะได้ เพือนมาทั้งหมด
+    */
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // Load profile ของเพือนแต่ละคน เพื่อที่เราจะ update รูปของเราที่เป้นเพือนด้วย
+    $fprofile = profile2_by_uid_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
+    foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $fkey => $fvalue) {
+      $fdata_item_load = field_collection_item_load($fvalue['value']);
+
+      /*
+        เราต้องเช็ดว่า เพื่อนคนใหน uid ตรงกันเรา ถึงจะ update displayname
+      */
+      if($fdata_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $fdata_item_load);
+            
+        $wrapper->field_profile_status_message->set($_REQUEST['message']);
+        $wrapper->save();
+
+        break;
+      }
+    }
+  }
+  profile2_save($profile);
+
+  $result['result'] = TRUE;
+  return  $result;
+}
+
+function set_my_id()
+{
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['my_id'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', 0, '!=')
+        ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', $_POST['uid'], '!=')
+        ->execute()
+        ->fetchCol();
+
+  $mul_users =  user_load_multiple($uids);
+  foreach ($mul_users as $account) {
+    // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+    // $user_fields = user_load($account->uid);
+    // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+    // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+    $profile = profile2_by_uid_load($account->uid, 'main');
+    $key = $profile->field_profile_heart_id[LANGUAGE_NONE][0]['value'];
+
+    // เช็ดว่ามีคนตั้ง id นี้หรือเปล่า  ตัวใหญ่-เล้กมองเป้นตัวเดียวกัน
+    if (strcasecmp($_POST['my_id'], $key) == 0) {
+      $result['result'] = FALSE;
+      $result['message'] = "My ID Duplicate.";
+      return  $result;
+      break;
+    }
+  }
+ 
+  # code...
+  // $user_fields = user_load($_POST['uid']);
+  // เป็นการ โหลด profile เพือเราจะหา pid ของ user นั้นๆ
+  // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL)['main'];
+
+  $profile2_load_by_user = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  $profile2_load_by_user->field_profile_heart_id[LANGUAGE_NONE][0]['value'] = $_POST['my_id'];
+  profile2_save($profile2_load_by_user);
+
+/*
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  $data_update = array(
+    "my_id"  => $_POST['my_id']
+  );
+
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $user_fields->uid . '/data/profile/', $data_update);
+  */
+
+  $result['result'] = TRUE;
+  $result['value']  = $_POST['my_id'];
+ 
+  return  $result;
+}
+
+function token_notication(){
+
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['token'])) {
+    $result['result'] = FALSE;
+    $result['$_REQUEST'] = $_REQUEST;
+    return  $result;
+  }
+
+  // $user_fields = user_load($_REQUEST['uid']);
+  // $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  // $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  // http://drupal.stackexchange.com/questions/68765/how-to-properly-delete-a-field-collection
+  foreach ($profile->field_device_access[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+    if($data->field_udid[LANGUAGE_NONE][0]['value'] == $_REQUEST['udid']){
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      $wrapper->field_token->set($_REQUEST['token']);
+
+      $wrapper->save();
+
+      break;
+    }
+  }
+
+  $result['result'] = TRUE;
+  return  $result;
+}
+
+function get_profiles(){
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['uids'])) {
+    $result['result'] = FALSE;
+    return  $result;
+  }
+
+  $data = array();
+  foreach ($_REQUEST['uids'] as $account) {
+    $profile = profile2_by_uid_load($account, 'main');
+    
+    $item = array();
+    $item['name']           = $profile->field_profile_name[LANGUAGE_NONE][0]['value'];
+    $item['status_message'] = $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'];// 
+    $item['picture']        = file_load($profile->field_profile_image[LANGUAGE_NONE][0]['fid']);
+    $data[] = $item;
+  }
+
+  $result['result']     = TRUE;
+  $result['data']  = $data;
+  return  $result;
+}
+
+function get_store(){
+  $result = array();
+
+  $uids = db_select('users', 'ur')
+      ->fields('ur', array('uid'))
+      // ->condition('ur.uid', $uid, '!=')
+      // ->condition('ur.uid', 0, '!=')
+      // ->condition('ur.uid', 1, '!=')
+      ->condition('ur.uid', 0, '!=')
+      ->condition('ur.uid', 1, '!=')
+      ->execute()
+      ->fetchCol();
+
+  $mul_users =  user_load_multiple($uids);
+
+  $data = array();
+  foreach ($mul_users as $account) {
+
+    $profile = profile2_by_uid_load($account->uid, 'main');
+    foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+      $item             = array();
+      $item["owner_id"] = $account->uid;
+      $item["item"]     = field_collection_item_load($value['value']);
+      $data[]           = $item;
+    }
+  }
+
+  // ดึง slide
+  $query = new EntityFieldQuery();
+  $entities = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'slide_store')
+    ->execute();  
+
+  $nodes = node_load_multiple(array_keys($entities['node']));  
+
+  $slides = array();
+  foreach ($nodes as $node) {
+    $slides[] = file_load($node->field_image[LANGUAGE_NONE][0]['fid']);
+  } 
+
+  $result['result'] = TRUE;
+  $result['data']   = $data;
+  $result['slides'] = $slides;
+  return  $result;
+}
+
+function get_app_detail(){
+  $result = array();
+
+  if (empty($_REQUEST['item_id'])) {
+    $result['result'] = FALSE;
+    return  $result;
+  }
+
+  $items = field_collection_item_load($_REQUEST['item_id']);
+
+  $item = array();
+  $item['item_id']        = $_REQUEST['item_id'];
+  $item['name']           = $items->field_my_app_name[LANGUAGE_NONE][0]['value'];
+  $item['category']       = $items->field_my_app_category[LANGUAGE_NONE][0]['tid'];
+  $item['picture']        = file_load($items->field_image[LANGUAGE_NONE][0]['fid']);
+
+  /* field_my_app_update */
+  $posts = array();
+  if(isset($items->field_my_app_update)){
+    if (!empty($items->field_my_app_update[LANGUAGE_NONE])) {
+      foreach ($items->field_my_app_update[LANGUAGE_NONE] as $pkey => $pvalue) {
+
+          $pitems = field_collection_item_load($pvalue['value']);
+          $posts[$pvalue['value']]["title"]    = $pitems->field_my_app_title[LANGUAGE_NONE][0]['value'];
+          $posts[$pvalue['value']]["message"]  = $pitems->field_my_app_message_udate[LANGUAGE_NONE][0]['value'];
+          $posts[$pvalue['value']]['picture']  = file_load($pitems->field_image[LANGUAGE_NONE][0]['fid']);
+
+          
+          $comments =array();
+          
+          if(isset($pitems->field_my_app_update_comment)){
+            if (!empty($pitems->field_my_app_update_comment[LANGUAGE_NONE])) {
+              foreach ($pitems->field_my_app_update_comment[LANGUAGE_NONE] as $ckey => $cvalue) {
+                  $citems = field_collection_item_load($cvalue['value']);
+
+                  $comments[$cvalue['value']]['message'] = $citems->field_comment_message[LANGUAGE_NONE][0]['value'];
+              }
+            }
+          }
+          
+          $posts[$pvalue['value']]['comments']  = $comments;
+      }
+    }
+  }
+
+  $item['posts']  = $posts;
+
+
+  $result['result'] = TRUE;
+  $result['data']   = $item;
+
+  return  $result;
+}
+
+function user_forgot_password()
+{
+  $result = array();
+
+  if (!empty($_POST['email'])) {
+    # code...
+    // #1
+    // load user object ขึ้นมาเพือแก้ไข mail
+    $load_user = user_load_by_mail($_POST['email']);
+    // update some user property
+
+    if ($load_user) {
+      # code...
+
+      $verify_key = generateKey();
+      $load_user->pass = $verify_key;
+
+      // save existing user
+      user_save((object) array('uid' => $load_user->uid), (array) $load_user);
+
+      basic_mail_send("user_forgot_password", $_POST['email'], $load_user->name, $verify_key);
+
+      /*
+      basic_mail_send("user_forgot_password", $_POST['email'], $verify_key);
+      $verify_key = generateKey();
+      */
+
+      $result['result']   = TRUE;
+      $result['message'] = "";
+
+    }else{
+      $result['result']   = FALSE;
+      $result['message'] = "Email not match " . $_POST['email'];
+    }
+
+    // // กรณี user ยังไม่ได้ตั้งชือใหม่ เราจะกำหนดให้ชือเท่ากัน email
+    // if (strcasecmp($existingUser->name, $_POST['UDID'] . '@annmousu') != 0) { // 
+    //   # code...
+    //   $existingUser->name = $_POST['email'];
+    // }
+
+    // $existingUser->mail = $_POST['email'];
+    // $existingUser->pass = $_POST['key'];
+
+    // // save existing user
+    // user_save((object) array('uid' => $existingUser->uid), (array) $existingUser);
+
+    
+  }else{
+    $result['result']   = FALSE;
+    $result['message'] = "Email empty.";
+  }
+  
+  $result['function'] = "user_forgot_password";
+  $result['$_POST']   = $_POST;
+
+  return $result;
+}
+
+function add_friend(){
+
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['uid_friend'])) {
+    $result['result']  = FALSE;
+    return $result;
+  }
+
+  // #1 load profile user
+  $profile_user = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  // #1 load profile user
+
+  // #2 load profile friend
+  $profile_friend = profile2_by_uid_load($_REQUEST['uid_friend'], 'main');
+  // #2 load profile friend
+
+  // #3 เช็กว่ามีเคยเป้นเพือนหรือเปล่า ถ้าเคยเราจะ update status = 4 ถ้าไม่เคยเราจะเพิ่ม
+  $flag = TRUE;
+  //  กรณีเราเคยมีเพือนคนนี้อยู่แล้ว เราจะ update friend status อย่างเดียว
+  foreach ($profile_user->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+      $data_item_load = field_collection_item_load($value['value']);
+      if($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid_friend']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+
+        //Update value
+        $wrapper->field_heart_friend_status->set('4'); // Wait to Accept
+        $wrapper->save(TRUE);
+
+        $flag = FALSE;
+        break;
+      }
+  }
+
+  if ($flag) {
+    # code...
+    $user_values = array();
+    $user_values['field_name'] = 'field_profile_friends'; // field collection name
+
+    $user_values['field_friend_uid'][LANGUAGE_NONE][0]['value'] = $_POST['uid_friend'];
+    $user_values['field_heart_receive'][LANGUAGE_NONE][0]['value'] = 0;
+    $user_values['field_heart_send'][LANGUAGE_NONE][0]['value'] = 0;
+    $user_values['field_heart_friend_status'][LANGUAGE_NONE][0]['value'] = '4';
+    $user_values['field_profile_status_message'][LANGUAGE_NONE][0]['value'] = $profile_friend->field_profile_status_message[LANGUAGE_NONE][0]['value'];
+    $user_values['field_display_name'][LANGUAGE_NONE][0]['value'] = $profile_friend->field_profile_name[LANGUAGE_NONE][0]['value'];
+    $user_values['field_turn_off_notifications'][LANGUAGE_NONE][0]['value'] = 0;
+
+    // Create the field collection entry and associate it with the profile
+    $field_entity = entity_create('field_collection_item', $user_values);
+    $field_entity->setHostEntity('profile2', $profile_user);
+    $field_entity->save();
+  }
+
+
+  // #4 เช็กว่ามีเคยเพือนหรือเปล่า ถ้าเคยเราจะ update status = 3 ถ้าไม่เคยเราจะเพิ่ม
+  $flag = TRUE;
+  //  กรณีเราเคยมีเพือนคนนี้อยู่แล้ว เราจะ update friend status อย่างเดียว
+  foreach ($profile_friend->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+      $data_item_load = field_collection_item_load($value['value']);
+      if($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_POST['uid']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+
+        //Update value
+        $wrapper->field_heart_friend_status->set('3'); // Friend Requests
+        $wrapper->save(TRUE);
+
+        $flag = FALSE;
+        break;
+      }
+  }
+
+  if ($flag) {
+    $friend_values = array();
+    $friend_values['field_name'] = 'field_profile_friends'; // field collection name
+
+    $friend_values['field_friend_uid'][LANGUAGE_NONE][0]['value'] = $_POST['uid'];
+    $friend_values['field_heart_receive'][LANGUAGE_NONE][0]['value'] = 0;
+    $friend_values['field_heart_send'][LANGUAGE_NONE][0]['value'] = 0;
+    $friend_values['field_heart_friend_status'][LANGUAGE_NONE][0]['value'] = '3';
+    $friend_values['field_profile_status_message'][LANGUAGE_NONE][0]['value'] = $profile_user->field_profile_status_message[LANGUAGE_NONE][0]['value'];
+    $friend_values['field_display_name'][LANGUAGE_NONE][0]['value'] = $profile_user->field_profile_name[LANGUAGE_NONE][0]['value'];
+    $friend_values['field_turn_off_notifications'][LANGUAGE_NONE][0]['value'] = 0;
+
+    // Create the field collection entry and associate it with the profile
+    $field_entity = entity_create('field_collection_item', $friend_values);
+    $field_entity->setHostEntity('profile2', $profile_friend);
+    $field_entity->save();
+  }
+
+  $result['result'] = TRUE;
+  return $result;
+}
+
+function list_friends($uid)
+{
+  $result = array();
+
+  // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+  $user_fields = user_load($uid);
+
+  if (!$user_fields->uid) {
+    // User is not logged in
+    //services_error(t('User is not logged in.'), 406);
+
+    $result['result'] = FALSE;
+    $result['output'] = "uid not match is user";
+
+    return $result;
+  }
+
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile =  profile2_load($profile2_load_by_user['main']->pid);
+
+  $uid_friends = array(0, 1, $uid);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+
+    $data = field_collection_item_load($value['value']);
+
+    $uid_friends[] = $data->field_friend_uid[LANGUAGE_NONE][0]['value'];
+  }
+  // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user 
+
+
+  $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', $uid_friends, 'NOT IN')
+        ->execute()
+        ->fetchCol();
+
+  $users =  user_load_multiple($uids);
+
+  $data = array();
+  foreach ($users as $account) {
+    # code...
+    
+    $tmp['uid'] = $account->uid;
+    $tmp['name'] = $account->name;
+    $tmp['mail'] = $account->mail;
+
+    // $path= file_create_url($uri)  uri
+    if(!is_null($account->picture)){
+      $tmp['url_image'] = file_create_url($account->picture->uri); 
+    }else{
+      $tmp['url_image'] = "";
+    }
+
+    $data[] = $tmp;
+  }
+
+  $result['result'] = TRUE;
+  $result['GET'] = $uid;
+  $result['function'] = "add list friends";
+  $result['data'] = $data;
+
+  return $result;
+}
+
+function basic_fetch_profile($uid)
+{
+
+  $result = array();
+
+  // เป็นการ โหลด profile เพือเราจะหา pid ของ user นั้นๆ
+  $profile2_load_by_user = profile2_load_by_user($uid, NULL);
+
+  $result['result'] = TRUE;
+
+  $profile = $profile2_load_by_user['main'];
+
+  $result['name']         = $profile->field_profile_name[LANGUAGE_NONE][0]['value']; 
+  $result['subname']      = $profile->field_profile_subname[LANGUAGE_NONE][0]['value']; 
+  $result['address']      = $profile->field_profile_address[LANGUAGE_NONE][0]['value']; 
+
+  $result['phone_number'] = $profile->field_profile_phone[LANGUAGE_NONE][0]['value'];
+  $result['location']     = $profile->field_profile_location[LANGUAGE_NONE][0]['value'];
+  $result['google_plus']  = $profile->field_profile_google_plus[LANGUAGE_NONE][0]['value'];
+  $result['facebook']     = $profile->field_profile_facebook[LANGUAGE_NONE][0]['value'];
+  
+
+  $url_image = "";
+  if(!is_null($profile->field_profile_image[LANGUAGE_NONE][0]['uri'])){
+    $url_image = file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']); 
+  }else{
+    $url_image = "";
+  }
+
+  // field_field_profile_bg
+  $url_image_bg = "";
+  if(!is_null($profile->field_field_profile_bg[LANGUAGE_NONE][0]['uri'])){
+    $url_image_bg = file_create_url($profile->field_field_profile_bg[LANGUAGE_NONE][0]['uri']); 
+  }else{
+    $url_image_bg = "";
+  }
+
+  $url_qrcode = "";
+  if(!is_null($profile->field_profile_my_qrcode[LANGUAGE_NONE][0]['uri'])){
+    $url_qrcode = file_create_url($profile->field_profile_my_qrcode[LANGUAGE_NONE][0]['uri']); 
+  }else{
+    $url_qrcode = "";
+  }
+
+
+  $result['url_picture']  = $url_image;
+  $result['url_picture_bg']  = $url_image_bg;
+  $result['url_qrcode']   = $url_qrcode;
+
+  // $result['uid']    = $uid;
+  $result['profile'] = $profile;
+
+   
+  return $result;
+}
+
+/*
+  function = 0 : แก้ไขรูป, 1 : แก้ไขชื่อ, 2 : แก้ไข Category, 3 : แก้ไข email, 4 : แก้ไข phone, 5 : แก้ไข status 
+*/
+function update_my_application_profile()
+{
+  $result = array();
+
+  switch ($_POST['fi']) {
+    case '0':{
+        try {
+          // $node = node_load($_REQUEST['item_id']);          
+          // $node_wrapper = entity_metadata_wrapper('node', $node);
+
+          $image = $_REQUEST['image'];
+
+          // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+          $binary = base64_decode($image);
+
+          //Create the directory if it does not already exist, otherwise check the permissions
+          $directory = 'public://';
+          file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+          $currentDate = date("Ymd");
+          $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+          
+          //Saves a file to the specified destination and creates a database entry.
+          $file = klovers_file_save_data($_REQUEST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+          // https://www.drupal.org/node/1803286 update file image
+          // $wrapper->field_image[0]->set((array)$file);
+          
+          // $wrapper->save();
+
+          // $node->field_image[LANGUAGE_NONE][0] = (array)$file;
+          // node_save($node);
+
+          $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+          foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+            if ($_REQUEST['item_id'] == $value['value']) {
+              $data_item_load = field_collection_item_load($value['value']);
+              $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);
+                  
+              $wrapper->field_image->set((array)$file);
+              $wrapper->save();
+              break;
+            }
+          }
+          
+        } catch (Exception $e) {
+          $result['error'] = $e->getMessage();
+        }
+      }
+      break;
+    case '1':{
+
+      }
+      break;
+    case '2':{
+
+      }
+      break;
+    case '3':{
+
+      }
+      break;
+    case '4':{
+
+      }
+      break;
+    case '5':{
+
+      }
+      break;
+    
+    default:
+      # code...
+      break;
+  }
+
+  $result['result'] = TRUE;
+  $result['function'] = "update_my_application_profile";
+  $result['$_POST'] = $_POST;
+  return $result;
+}
+
+
+function update_picture_profile(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['image'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  if($_REQUEST['image'] != ""){
+
+    $image = $_POST['image'];
+
+    // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+    $binary = base64_decode($image);
+
+    //Create the directory if it does not already exist, otherwise check the permissions
+    $directory = 'public://';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+    $currentDate = date("Ymd");
+    $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+    
+    //Saves a file to the specified destination and creates a database entry.
+    $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+    // save รูป profile
+    $profile->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
+  }
+
+  profile2_save($profile);
+
+  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
+    // Build array of field collection values.
+    /*
+      จะได้ เพือนมาทั้งหมด
+    */
+    $data_item_load = field_collection_item_load($value['value']);
+
+    // Load profile ของเพือนแต่ละคน เพื่อที่เราจะ update รูปของเราที่เป้นเพือนด้วย
+    $fprofile = profile2_by_uid_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
+    foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $fkey => $fvalue) {
+      $fdata_item_load = field_collection_item_load($fvalue['value']);
+
+      /*
+        เราต้องเช็ดว่า เพื่อนคนใหน uid ตรงกันเรา ถึงจะ update image
+      */
+      if($fdata_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
+        $wrapper = entity_metadata_wrapper('field_collection_item', $fdata_item_load);
+            
+        $wrapper->field_friend_image->set((array)$file);
+        $wrapper->save();
+
+        break;
+      }
+    }
+  }
+  $result['result'] = TRUE;  
+  return $result;
+}
+
+function create_my_card()
+{
+  $result = array();
+
+  if (!empty($_POST['uid']) && !empty($_POST['name'])) {
+    $content_type = "page_my_card";
+
+    $node = new stdClass();
+    $node->title = $_POST['name'];
+    $node->type  = $content_type;
+    $node->uid   = $_POST['uid'];
+    // $node->body[LANGUAGE_NONE][0]['value']  = "";
+    // $node->field_verify_token[LANGUAGE_NONE][0]['value']  = $_POST['UDID'];
+    // $node->field_verify_key[LANGUAGE_NONE][0]['value']    = $verify_key;
+    
+    $node->language = LANGUAGE_NONE;
+    // $node->revision = 0;
+
+    $node = node_submit($node);
+    node_save($node);
+
+
+    // create to firebase
+    /*
+        // insert new 12/24/2559
+        if ( $firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/profile/') == 'null') {
+          # code...
+          
+          $extension = explode('@', $account->mail);
+
+          if (strcasecmp($extension[1], 'annmousu') == 0) {
+             $data_profile = array(
+              "uid"             => $account->uid,
+              "display_name"    => generate_name_annmousu($account->name),
+              "picture"         => '',
+              "phone"           => '',
+              "status_message"  => '',
+              "heart"           => DEFUALT_NUMBER_HEART,
+              "create"          => time(),
+              "update"          => time()
+            );
+
+          }else{
+
+            $data_profile = array(
+              "uid"             => $account->uid,
+              "display_name"    => $account->name,
+              "picture"         => '',
+              "phone"           => '',
+              "status_message"  => '',
+              "heart"           => DEFUALT_NUMBER_HEART,
+              "create"          => time(),
+              "update"          => time()
+            );
+          }
+
+          $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/profile/', $data_profile);
+
+        }else{
+          $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/profile/', $data);
+        }
+        // insert new 12/24/2559
+
+      }
+
+
+      // เก้บเครื่องที่ user ใช้
+      $data = array(
+        "udid" => $_GET['udid'],
+        "platform"=>$_GET['platform'],
+        "token"=>$_GET['token'],
+        "online"=>'1',
+        "create" => time(),
+        "update" => time()
+      );
+
+      $firebase->push(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid .'/HW/', $data);
+    */
+
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    // if ( $firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_POST['uid'] . '/my-id/my-card/') == 'null') {
+
+      $data = array(
+              "name"      => $_POST['name'],
+              "photo"     => '',
+              "email"     => array(),
+              "phone"     => array(),
+              "create"    => time(),
+              "update"    => time()
+            );
+      $firebase->push(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_POST['uid'] . '/my-id/my-card/', $data);
+    // }
+
+
+    // create to firebase
+
+    $result['result'] = TRUE;
+  }else{
+    $result['result'] = FALSE;
+    $result['message'] = "Empty uid & name.";
+  }
+
+  $result['$_POST'] = $_POST;
+  return $result;
+}
+
+function create_my_application(){
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['name']) || empty($_REQUEST['category']) || empty($_REQUEST['image'])) {
+    $result['result'] = FALSE;
+    $result['$_REQUEST'] = $_REQUEST;
+    return $result;
+  }
+
+  $content_type = "pages_my_app";
+
+  $node = new stdClass();
+  $node->title = $_REQUEST['name'];
+  $node->type  = $content_type;
+  $node->uid   = $_REQUEST['uid'];
+
+  if($_REQUEST['image'] != ""){
+    $image = $_REQUEST['image'];
+
+    // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+    $binary = base64_decode($image);
+
+    //Create the directory if it does not already exist, otherwise check the permissions
+    $directory = 'public://';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+    $currentDate = date("Ymd");
+    $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+    
+    //Saves a file to the specified destination and creates a database entry.
+    $file = klovers_file_save_data($_REQUEST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+    $node->field_image[LANGUAGE_NONE][0] = (array)$file;
+  }
+
+  $node->language = LANGUAGE_NONE;
+  $node = node_submit($node);
+  node_save($node);
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  # code...
+  $val = array();
+  $val['field_name'] = 'field_my_application'; // field collection name
+
+  $val['field_my_app_name'][LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  $val['field_my_app_category'][LANGUAGE_NONE][0]['tid'] = $_REQUEST['category'];
+  $val['field_image'][LANGUAGE_NONE][0] = (array)$file;
+  
+
+  // Create the field collection entry and associate it with the profile
+  $field_entity = entity_create('field_collection_item', $val);
+  $field_entity->setHostEntity('profile2', $profile);
+  $field_entity->save();
+
+  $item = array();
+  $item['item_id']        = $field_entity->item_id;
+  $item['owner_id']       = $_REQUEST['uid'];
+  $item['name']           = $_REQUEST['name'];
+  $item['category']       = $_REQUEST['category'];
+  $item['picture']        = (array)$file;
+
+  /* 
+    เราต้อง ไป add my_application ไว้ที่ firebase ด้วย แยกตาม category
+  */
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_CENTER . 'data/' . $_REQUEST['category']. '/' . $field_entity->item_id, $item);
+
+  $result['result']   = TRUE;
+  $result['item']     = $item;
+  $result['item_id']  = $field_entity->item_id;
+
+  return $result;
+}
+
+function create_my_application_v1()
+{
+  $result = array();
+
+  if (!empty($_POST['uid']) && !empty($_POST['name'])) {
+    $content_type = "pages_my_app";
+
+    $node = new stdClass();
+    $node->title = $_POST['name'];
+    $node->type  = $content_type;
+    $node->uid   = $_POST['uid'];
+
+    // $node->field_my_app_category[LANGUAGE_NONE][0]['tid'] = $_POST['category'];
+
+
+    // $node->body[LANGUAGE_NONE][0]['value']  = "";
+    // $node->field_verify_token[LANGUAGE_NONE][0]['value']  = $_POST['UDID'];
+    // $node->field_verify_key[LANGUAGE_NONE][0]['value']    = $verify_key;
+
+    if($_POST['image'] != ""){
+
+      $image = $_POST['image'];
+
+      // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+      $binary = base64_decode($image);
+
+      //Create the directory if it does not already exist, otherwise check the permissions
+      $directory = 'public://';
+      file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+      $currentDate = date("Ymd");
+      $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+      
+      //Saves a file to the specified destination and creates a database entry.
+      $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+      $node->field_image[LANGUAGE_NONE][0] = (array)$file;
+    }
+
+    $node->language = LANGUAGE_NONE;
+    $node = node_submit($node);
+    node_save($node);
+
+
+
+
+
+// $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+
+  // #1 load profile user
+  // #1 ดึงข้อมูลของเรา เพือเพิ่มข้อมูล ใน field_profile_friends
+  $user_fields = user_load($_REQUEST['uid']);
+  $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+  $profile_user =  profile2_load($profile2_load_by_user['main']->pid);
+  // #1 load profile user
+
+  # code...
+  $user_values = array();
+  $user_values['field_name'] = 'field_my_application'; // field collection name
+
+  $user_values['field_my_app_name'][LANGUAGE_NONE][0]['value'] = $_POST['name'];
+  $user_values['field_my_app_category'][LANGUAGE_NONE][0]['tid'] = $_POST['category'];
+  $user_values['field_image'][LANGUAGE_NONE][0] = (array)$file;
+  
+
+  // Create the field collection entry and associate it with the profile
+  $field_entity = entity_create('field_collection_item', $user_values);
+  $field_entity->setHostEntity('profile2', $profile_user);
+  $field_entity->save();
+  
+
+
+    /*
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    // if ( $firebase->get(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_POST['uid'] . '/my-id/my-card/') == 'null') {
+
+    $data = array(
+              "name"      => $_POST['name'],
+              "picture"   => (array)$file,
+              "category"  => $_POST['category'],
+              "email"     => array(),
+              "phone"     => array(),
+              "create"    => time(),
+              "update"    => time()
+            );
+
+    $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_POST['uid'] . '/my-id/my-app/'. $node->nid, $data);
+    */
+    // }
+    // create to firebase
+
+    $result['result'] = TRUE;
+    $result['item_id'] = $field_entity->item_id;
+  }else{
+    $result['result'] = FALSE;
+    $result['message'] = "Empty uid & name.";
+  }
+
+  $result['$_POST'] = $_POST;
+
+  return $result;
+}
+
+function AED_post()
+{
+  $result = array();
+
+  if (empty($_REQUEST['uid'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  if ($_REQUEST['is_add'] == 1) {
+    // เป็นการเพิ่มใหม่
+
+    $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+    foreach ($profile->field_my_application[LANGUAGE_NONE] as $key => $value) {
+        if ($_REQUEST['item_id'] == $value['value']) {
+   
+          $data = field_collection_item_load($value['value']);
+
+          $values = array();
+          $values['field_name'] = 'field_my_app_update'; 
+          $values['field_my_app_title'][LANGUAGE_NONE][0]['value'] = $_REQUEST['title'];
+          $values['field_my_app_message_udate'][LANGUAGE_NONE][0]['value'] = $_REQUEST['detail'];
+          // $val['field_image'][LANGUAGE_NONE][0] = (array)$file;
+
+          if($_POST['image'] != ""){
+
+            $image = $_POST['image'];
+
+            // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+            $binary = base64_decode($image);
+
+            //Create the directory if it does not already exist, otherwise check the permissions
+            $directory = 'public://';
+            file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+            $currentDate = date("Ymd");
+            $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+            
+            //Saves a file to the specified destination and creates a database entry.
+            $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+            $values['field_image'][LANGUAGE_NONE][0] = (array)$file;
+          }   
+
+          $field_entity = entity_create('field_collection_item', $values);
+          $field_entity->setHostEntity("field_my_app_update", $data);
+          $field_entity->save();  //  ยังมีปัญหาอยู่ ต้องแก้ใขเพราะว่าไม่ได้ return สถานะเอามาว่าสำเร็จหรือเปล่า แต่ save สำเร็จ      
+
+          $value = array();
+          $value[$field_entity->item_id]["title"]   = $_REQUEST['title'];
+          $value[$field_entity->item_id]["message"] = $_REQUEST['detail'];
+          $value[$field_entity->item_id]["picture"] = (array)$file;
+    
+          $result['result']   = TRUE;
+          $result['post_id']  = $field_entity->item_id;
+          $result['values']   = $value;
+
+          return $result;
+          break;
+        }
+      }
+  }else if ($_REQUEST['is_add'] == 0){
+    // เป็นการแก้ไข
+    $items  = field_collection_item_load($_REQUEST['post_nid']);
+    $wrapper = entity_metadata_wrapper('field_collection_item', $items);
+
+    try {
+      //Update value
+      $wrapper->field_my_app_title->set($_REQUEST['title']);
+      $wrapper->field_my_app_message_udate->set(array(
+                                                    'value' => $_REQUEST['detail'],
+                                                    'summary' => 'This is the summary',
+                                                    'format' => 'full_html',
+                                                  ));
+      $image = $_REQUEST['image'];
+
+      // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+      $binary = base64_decode($image);
+
+      //Create the directory if it does not already exist, otherwise check the permissions
+      $directory = 'public://';
+      file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+      $currentDate = date("Ymd");
+      $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+      
+      //Saves a file to the specified destination and creates a database entry.
+      $file = klovers_file_save_data($_REQUEST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+      // https://www.drupal.org/node/1803286 update file image
+      // $wrapper->field_image[0]->set((array)$file);     
+      $wrapper->field_image->set((array)$file);       
+      $wrapper->save();
+
+    } catch (Exception $e) {
+      $result['error'] = $e->getMessage();
+    }
+    $result['result'] = TRUE;
+  }else if($_REQUEST['is_add'] == -1){
+    // เป็นการ Delete post
+    entity_delete_multiple('field_collection_item', array($_REQUEST['post_nid']));
+
+    $result['result'] = TRUE;
+  }
+
+  return $result;
+}
+
+function delete_post()
+{
+  $result = array();
+  $node = node_load($_POST['nid']);
+
+  $post = array();
+  // field_my_app_update
+  foreach ($node->field_my_app_update[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+
+    if($data->item_id == $_POST['nid_post']){
+      // $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+
+      entity_delete_multiple('field_collection_item', array($data->item_id));
+
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      $firebase->delete(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $_POST['uid'] . '/my-id/my-app/'. $_POST['nid'] . "/post/" . $_POST['nid_post']);
+    }
+  }
+
+  $result['result'] = TRUE;
+  $result['function'] = "delete_post";
+  $result['$_POST'] = $_POST;
+
+  return $result;
+}
+
+// https://www.drupal.org/node/2382811
+function comment_post()
+{
+  $result = array();
+
+  /*
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['name']) || empty($_REQUEST['category']) || empty($_REQUEST['image'])) {
+    $result['result'] = FALSE;
+    $result['$_REQUEST'] = $_REQUEST;
+    return $result;
+  }
+  */
+
+  /*
+  a_id : application id
+  p_id : post id
+  */
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['a_id']) || empty($_REQUEST['p_id']) || empty($_REQUEST['text'])) {
+    $result['result'] = FALSE;
+    $result['$_REQUEST'] = $_REQUEST;
+    return $result;
+  }
+
+  /*
+  // 1. Load All node by nid 
+  $node = node_load($_POST['nid']);
+
+  // 2. Get field_my_app_update 
+  foreach ($node->field_my_app_update[LANGUAGE_NONE] as $key => $value) {
+    $data = field_collection_item_load($value['value']);
+    
+    // 3. Check itme_id == nid_item ?
+    if($data->item_id == $_POST['nid_item']){
+      
+      
+      // 4. Create Comment  
+      $values = array();
+      $values['field_name'] = 'field_my_app_update_comment'; 
+      $values['field_comment_message'][LANGUAGE_NONE][0]['value'] = $_POST['text'];
+
+      $entity_data = $field_entity = entity_create('field_collection_item', $values);
+      $field_entity->setHostEntity("field_my_app_update_comment", $data);
+      $field_entity->save();  //  ยังมีปัญหาอยู่ ต้องแก้ใขเพราะว่าไม่ได้ return สถานะเอามาว่าสำเร็จหรือเปล่า แต่ save สำเร็จ      
+      
+      break;
+    }
+  }
+  */
+
+  $result['result'] = TRUE;
+  
+  return $result;
+}
+
+function update_new_password()
+{
+  $result = array();
+
+  require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+
+  $account = user_load($_POST['uid']);
+
+  $check = user_check_password($_POST['old_password'], $account);
+
+  if ($check) {
+    # code...
+
+    $account->pass = $_POST['new_password'];
+
+    // save existing user
+    user_save((object) array('uid' => $account->uid), (array) $account);
+    
+
+    $result['result'] = TRUE;
+    $result['function'] = "update_new_password";
+    $result["$_POST"]  = $_POST;
+  }else{
+
+    $result['result'] = FALSE;
+    $result["message"]  = "Old password not match.";
+  }
+
+  
+  return $result;
+}
+
+function basic_update_profile($data)
+{
+	$result = array();
+
+  try {
+
+    $user_fields = user_load($_POST['uid']);
+    // เป็นการ โหลด profile เพือเราจะหา pid ของ user นั้นๆ
+    $profile2_load_by_user = profile2_load_by_user($user_fields, NULL)['main'];
+
+    if($_POST['image'] != ""){
+
+
+      $image = $_POST['image'];
+
+      // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+      $binary = base64_decode($image);
+
+      //Create the directory if it does not already exist, otherwise check the permissions
+      $directory = 'public://services_image';
+      file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+      $currentDate = date("Ymd");
+      $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+      
+      //Saves a file to the specified destination and creates a database entry.
+      $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+
+      // save รูป profile
+      $profile2_load_by_user->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
+    }
+
+    if($_POST['imageBG'] != ""){
+
+
+      $image = $_POST['imageBG'];
+
+      // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+      $binary = base64_decode($image);
+
+      //Create the directory if it does not already exist, otherwise check the permissions
+      $directory = 'public://services_image';
+      file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+      $currentDate = date("Ymd");
+      $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+      
+      //Saves a file to the specified destination and creates a database entry.
+      $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+
+      // save รูป profile
+      $profile2_load_by_user->field_field_profile_bg[LANGUAGE_NONE][0] = (array)$file;
+    }
+
+    // &phone_number=%@&google_plus=%@&facebook=%@
+    $profile2_load_by_user->field_profile_name[LANGUAGE_NONE][0]['value'] = $_POST['name'];
+    $profile2_load_by_user->field_profile_phone[LANGUAGE_NONE][0]['value'] = $_POST['phone_number'];
+    $profile2_load_by_user->field_profile_location[LANGUAGE_NONE][0]['value'] = $_POST['location'];
+    $profile2_load_by_user->field_profile_google_plus[LANGUAGE_NONE][0]['value'] = $_POST['google_plus'];
+    $profile2_load_by_user->field_profile_facebook[LANGUAGE_NONE][0]['value'] = $_POST['facebook'];
+
+    profile2_save($profile2_load_by_user);
+
+    
+    $result['file'] = (array)$file ;
+    $result['message'] = "klovers_update_profile";
+    $result['data'] = $data;
+    $result['uid'] = $_POST['uid'];
+    $result['x'] =  $profile2_load_by_user;
+    $result['profile2_load_by_user'] = $profile2_load_by_user;
+
+
+    $result['result'] = TRUE;
+
+  }catch (Exception $e) {
+    $result['message'] = 'Caught exception: '.  $e->getMessage(). "\n";
+
+    $result['result'] = FALSE;
+    $result['message'] = 'Caught exception: '.  $e->getMessage(). "\n";
+  }
+
+  return $result;
+}
+
+function reset_heart()
+{
+
+  $uids = db_select('users', 'ur')
+        ->fields('ur', array('uid'))
+        // ->condition('ur.uid', $uid, '!=')
+        // ->condition('ur.uid', 0, '!=')
+        // ->condition('ur.uid', 1, '!=')
+        ->condition('ur.uid', 0, '!=')
+        ->condition('ur.uid', 1, '!=')
+        ->execute()
+        ->fetchCol();
+
+  $mul_users =  user_load_multiple($uids);
+
+  // $data = array();
+  foreach ($mul_users as $account) {
+    # code...
+    
+    // $tmp['uid'] = $account->uid;
+    // $tmp['name'] = $account->name;
+    // $tmp['mail'] = $account->mail;
+
+    // // $path= file_create_url($uri)  uri
+    // if(!is_null($account->picture)){
+    //   $tmp['url_image'] = file_create_url($account->picture->uri); 
+    // }else{
+    //   $tmp['url_image'] = "";
+    // }
+
+    // เป้นการโหลดข้อมูลของ profile user ซึ่งจะได้รู้ว่า friend ของ user
+    $user_fields = user_load($account->uid);
+
+    if (!$user_fields->uid) {
+      // User is not logged in
+      //services_error(t('User is not logged in.'), 406);
+
+      $result['result'] = FALSE;
+      $result['output'] = "uid not match is user";
+
+      return $result;
+    }
+
+    $profile2_load_by_user = profile2_load_by_user($user_fields, NULL);
+
+    $profile2_load_by_user->field_profile_heart[LANGUAGE_NONE][0]['value'] = LIMIT_SEND_HEART;
+
+    profile2_save($profile2_load_by_user);
+  }
+
+  // echo "<pre>";
+  // var_dump($data);
+  // echo "</pre>";
+
+  // watchdog("Reset Heart", "1", WATCHDOG_ERROR);
+  watchdog("BASIC", 'Reset Heart = %uid', array('%uid' => '1'), WATCHDOG_ERROR);
+
+
+  return "Reset Heart";
+}
+
+/*
+  สร้าง QRCode &  profile ที่ firebase ให้แต่ละ user โดยแต่ละ application (heart, dna)
+
+  $account : user account
+  $bundleidentifier : heart.basic or heart.dna
+  $url     : url app store[heart, dna](ios), play store[heart, dna](android)
+*/
+function generatorQRCode($account, $platform, $bundleidentifier)
+{
+  try {
+    $file = array();
+        
+    // Gen QRCode
+    //set it to writable location, a place for temp generated PNG files
+    $PNG_TEMP_DIR = PATH_FOLDER_QRCODE;
+
+    //Create the directory if it does not already exist, otherwise check the permissions
+    file_prepare_directory($PNG_TEMP_DIR, FILE_CREATE_DIRECTORY);
+
+    $text = $account->uid;//$_GET['user'];
+    $errorCorrectionLevel = "M";
+    $matrixPointSize = 8;
+
+
+    // Create Profile2
+    // Where 'main' is your profile2 type machine name.
+    $profile = profile2_create(array('type' => 'main', 'uid' => $account->uid));
+
+    // add field name
+    $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $account->name;
+
+    // Display name
+    $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $account->name;
+
+    // จำนวน heart
+    $profile->field_profile_heart[LANGUAGE_NONE][0]['value'] = DEFUALT_NUMBER_HEART;
+
+    // status message
+    $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = 'status message';
+
+    /*
+    เราจะแยกออกกัน ระหว่าง heart, dna เพราะว่าต้อง scan qrcode มันต้องวิ่งไปเปด store ถูกเพราะว่าเราแยก app กัน
+    */
+    switch ($bundleidentifier) {
+      // BASIC
+      case BI_ANDROID_BASIC:
+      case BI_IOS_BASIC:
+      {
+        // ios
+        $filename = $PNG_TEMP_DIR.'/'.md5($text.'|'.$errorCorrectionLevel.'|'.$matrixPointSize).'.png';
+        QRcode::png(URL_SERVER() . "/basic/URL_STORE?&bi=" . BI_IOS_BASIC . "&heart-id=" . $text, $filename, $errorCorrectionLevel, $matrixPointSize, 2);  
+
+        $currentDate = date("Ymd");
+        $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+        $image = file_get_contents($filename); 
+        //Saves a file to the specified destination and creates a database entry.
+        $file = klovers_file_save_data($account->uid, $image, 'public://qrcode/' . $name, FILE_EXISTS_RENAME);
+        
+        // Delete file ที่  QRCode  สร้างขึ้นมาเพราะว่าเราเก็บเข้าระบบแล้ว
+        unlink($filename);
+        // Gen QRCode
+
+        $profile->field_profile_my_qrcode[LANGUAGE_NONE][0] = (array)$file;
+
+
+        // android
+        $filename = $PNG_TEMP_DIR.'/'.md5($text.'|'.$errorCorrectionLevel.'|'.$matrixPointSize).'.png';
+        QRcode::png(URL_SERVER() . "/basic/URL_STORE?&bi=" . BI_ANDROID_BASIC . "&heart-id=" . $text, $filename, $errorCorrectionLevel, $matrixPointSize, 2);  
+
+        $currentDate = date("Ymd");
+        $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+        $image = file_get_contents($filename); 
+        //Saves a file to the specified destination and creates a database entry.
+        $file = klovers_file_save_data($account->uid, $image, 'public://qrcode/' . $name, FILE_EXISTS_RENAME);
+        
+        // Delete file ที่  QRCode  สร้างขึ้นมาเพราะว่าเราเก็บเข้าระบบแล้ว
+        unlink($filename);
+        // Gen QRCode
+
+        $profile->field_profile_my_qrcode_android[LANGUAGE_NONE][0] = (array)$file;
+        break;
+      }
+      // DNA
+      case BI_ANDROID_IDNA:
+      case BI_IOS_IDNA:
+      {
+        // ios
+        $filename = $PNG_TEMP_DIR.'/'.md5($text.'|'.$errorCorrectionLevel.'|'.$matrixPointSize).'.png';
+        QRcode::png(URL_SERVER() . "/basic/URL_STORE?&bi=" . BI_IOS_IDNA  . "&heart-id=" . $text, $filename, $errorCorrectionLevel, $matrixPointSize, 2);  
+
+        $currentDate = date("Ymd");
+        $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+        $image = file_get_contents($filename); 
+        //Saves a file to the specified destination and creates a database entry.
+        $file = klovers_file_save_data($account->uid, $image, 'public://qrcode/' . $name, FILE_EXISTS_RENAME);
+        
+        // Delete file ที่  QRCode  สร้างขึ้นมาเพราะว่าเราเก็บเข้าระบบแล้ว
+        unlink($filename);
+        // Gen QRCode
+
+        $profile->field_profile_my_qrcode_dna[LANGUAGE_NONE][0] = (array)$file;
+
+
+
+        // android 
+        $filename = $PNG_TEMP_DIR.'/'.md5($text.'|'.$errorCorrectionLevel.'|'.$matrixPointSize).'.png';
+        QRcode::png(URL_SERVER() . "/basic/URL_STORE?&bi=" . BI_ANDROID_IDNA . "&heart-id=" . $text, $filename, $errorCorrectionLevel, $matrixPointSize, 2);  
+
+        $currentDate = date("Ymd");
+        $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+        $image = file_get_contents($filename); 
+        //Saves a file to the specified destination and creates a database entry.
+        $file = klovers_file_save_data($account->uid, $image, 'public://qrcode/' . $name, FILE_EXISTS_RENAME);
+        
+        // Delete file ที่  QRCode  สร้างขึ้นมาเพราะว่าเราเก็บเข้าระบบแล้ว
+        unlink($filename);
+        // Gen QRCode
+
+
+        $profile->field_profile_my_qrcode_dna_andr[LANGUAGE_NONE][0] = (array)$file;
+        break;
+      }
+      
+      default:
+        # code...
+        break;
+    }
+
+    $value['field_name'] = 'field_profile_multi_email'; // field collection name
+    $value['field_email_text'][LANGUAGE_NONE][0]['value'] = $account->mail;
+
+    // Create the field collection entry and associate it with the profile
+    $field_entity = entity_create('field_collection_item', $value);
+    $field_entity->setHostEntity('profile2', $profile);
+    $field_entity->save();
+
+    // Save the profile2 to the user account.
+    profile2_save($profile); 
+  } catch (Exception $e) {
+    watchdog("BASIC", 'Erorr = %message', array('%message' => $e->getMessage()), WATCHDOG_ERROR);
+  }
+}
+
+/*
+ เป็นการ redirect url store
+*/ 
+function URL_STORE(){
+
+  $iPod = stripos($_SERVER['HTTP_USER_AGENT'],"iPod");
+  $iPhone = stripos($_SERVER['HTTP_USER_AGENT'],"iPhone");
+  $iPad = stripos($_SERVER['HTTP_USER_AGENT'],"iPad");
+  $Android= stripos($_SERVER['HTTP_USER_AGENT'],"Android");
+
+  // //check if user is using ipod, iphone or ipad...
+  if( $iPod || $iPhone || $iPad ){
+    // bi = bundleidentifier
+    //we send these people to Apple Store
+    switch ($_GET['bi']) {
+      case BI_IOS_BASIC:{
+        header('Location: ' . DEFUALT_IOS_URL_STORE_BASIC); // <-apple store link here
+        break;
+      }
+
+      case BI_IOS_IDNA:{
+        header('Location: ' . DEFUALT_IOS_URL_STORE_DNA); // <-apple store link here
+        break;
+      }
+      
+      default:
+        # code...
+        break;
+    }
+  }else if($Android){
+    //we send these people to Android Store
+
+    switch ($_GET['bi']) {
+      case BI_ANDROID_BASIC:{
+        header('Location: ' . DEFUALT_ANDROID_URL_STORE_BASIC); // <-apple store link here
+        break;
+      }
+
+      case BI_ANDROID_IDNA:{
+        header('Location: ' . DEFUALT_ANDROID_URL_STORE_DNA); // <-apple store link here
+        break;
+      }
+      
+      default:
+        # code...
+        break;
+    }
+  }
+}
