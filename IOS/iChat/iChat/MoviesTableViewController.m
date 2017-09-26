@@ -31,6 +31,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.title = [NSString stringWithFormat:@"Contacts-%@", [[Configs sharedInstance] getUIDU]];
+    
     ref = [[FIRDatabase database] reference];
     data = [[NSMutableDictionary alloc] init];
     [data setValue:nil forKey:@"profile"];
@@ -209,10 +211,21 @@
         }
         
         NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
-        
+        if ([profiles objectForKey:@"image_url"]) {
+            [cell.imgPerson clear];
+            [cell.imgPerson showLoadingWheel];
+            [cell.imgPerson setUrl:[NSURL URLWithString:[profiles objectForKey:@"image_url"]]];
+            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+        }else{}
+
         cell.lblName.text = [profiles objectForKey:@"name"];
         
-        // UserDataUILongPressGestureRecognizer
+        if ([profiles objectForKey:@"status_message"]) {
+            cell.lblStatusmessage.text = [profiles objectForKey:@"status_message"];
+        }else{
+            cell.lblStatusmessage.text = @"";
+        }
+        
         UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
         // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
         

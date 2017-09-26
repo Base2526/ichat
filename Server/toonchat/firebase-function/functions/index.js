@@ -166,6 +166,11 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 			console.log('#4 : invite_group');
 		}
 		break;
+
+		case 'multi_chat':{
+			console.log('#4 : multi_chat');
+		}
+		break;
 	}
 	
 

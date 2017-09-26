@@ -8,6 +8,7 @@
 
 #import "ChatView.h"
 #import "Configs.h"
+#import "InviteFriends.h"
 
 @interface ChatView ()
 
@@ -205,5 +206,12 @@
     return self.messages.count;
 }
 
+- (IBAction)onInvite:(id)sender {
+    UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    InviteFriends *inviteF = [storybrd instantiateViewControllerWithIdentifier:@"InviteFriends"];
+    
+    // changeFN.friend_id = [item objectForKey:@"friend_id"];
+    [self.navigationController pushViewController:inviteF animated:YES];
+}
 @end
 

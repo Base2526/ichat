@@ -10,6 +10,12 @@
 #import "HJManagedImageV.h"
 #import "GKImagePicker.h"
 
+@import Firebase;
+@import FirebaseMessaging;
+@import FirebaseDatabase;
+
+#import "TopAlignedLabel.h"
+
 @interface MyProfile : UIViewController<GKImagePickerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 @property (nonatomic, strong) GKImagePicker *imagePicker;
@@ -17,5 +23,11 @@
 
 @property (weak, nonatomic) IBOutlet HJManagedImageV *imageV;
 @property (weak, nonatomic) IBOutlet UITextField *txtFName;
-@property (weak, nonatomic) IBOutlet UITextField *txtFEmail;
+//@property (weak, nonatomic) IBOutlet UITextField *txtFEmail;
+@property (weak, nonatomic) IBOutlet TopAlignedLabel *lblEmail;
+@property (weak, nonatomic) IBOutlet UITextField *txtFStatus;
+
+@property (strong, nonatomic) FIRDatabaseReference *ref;
+
+- (IBAction)onSave:(id)sender;
 @end

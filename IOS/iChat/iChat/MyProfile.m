@@ -7,16 +7,19 @@
 //
 
 #import "MyProfile.h"
-#import "UpdatePictureProfileThread.h"
+
 #import "Configs.h"
 #import "AppDelegate.h"
+
+#import "UpdatePictureProfileThread.h"
+#import "UpdateMyProfileThread.h"
 
 @interface MyProfile ()
 
 @end
 
 @implementation MyProfile
-@synthesize imageV;
+@synthesize imageV, ref, txtFName, lblEmail, txtFStatus;
 @synthesize imagePicker;
 @synthesize popoverController;
 
@@ -24,8 +27,36 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    ref = [[FIRDatabase database] reference];
+    
     imageV.userInteractionEnabled = YES;
     [imageV addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(selectImage:)]];
+    
+
+    NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+    if ([profiles objectForKey:@"image_url"]) {
+        [imageV clear];
+        [imageV showLoadingWheel];
+        [imageV setUrl:[NSURL URLWithString:[profiles objectForKey:@"image_url"]]];
+        [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+    }
+    
+    txtFName.text =[profiles objectForKey:@"name"];
+    lblEmail.text =[profiles objectForKey:@"mail"];
+    
+    // txtFStatus
+    if ([profiles objectForKey:@"status_message"]) {
+        txtFStatus.text =[profiles objectForKey:@"status_message"];
+    }
+    
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                          action:@selector(dismissKeyboard)];
+    [self.view addGestureRecognizer:tap];
+}
+
+-(void)dismissKeyboard {
+    [self.view endEditing:true];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -111,6 +142,8 @@
             [imageV showLoadingWheel];
             [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
             [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+            
+            [self updateURI:jsonDict[@"url"]];
         }
         [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
     }];
@@ -160,6 +193,8 @@
             [imageV showLoadingWheel];
             [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
             [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+            
+            [self updateURI:jsonDict[@"url"]];
         }
         [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
     }];
@@ -176,4 +211,48 @@
     [picker dismissViewControllerAnimated:YES completion:NULL];
 }
 
+- (IBAction)onSave:(id)sender {
+    // UpdateMyProfileThread
+    
+    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
+    UpdateMyProfileThread *uMPThread = [[UpdateMyProfileThread alloc] init];
+    [uMPThread setCompletionHandler:^(NSString *data) {
+        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
+        [[Configs sharedInstance] SVProgressHUD_Dismiss];
+        
+        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
+            NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+            [profiles setValue:txtFName.text forKey:@"name"];
+            [profiles setValue:txtFStatus.text forKey:@"status_message"];
+            
+            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+            [newDict removeObjectForKey:@"profiles"];
+            
+            [newDict setObject:profiles forKey:@"profiles"];
+            
+            [[Configs sharedInstance] saveData:_DATA :newDict];
+        }
+        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+    }];
+    
+    [uMPThread setErrorHandler:^(NSString *error) {
+        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
+    }];
+    [uMPThread start:txtFName.text :txtFStatus.text];
+}
+
+-(void)updateURI:(NSString *)uri{
+    
+    NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+    [profiles setValue:uri forKey:@"image_url"];
+    
+    NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+    [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+    [newDict removeObjectForKey:@"profiles"];
+    
+    [newDict setObject:profiles forKey:@"profiles"];
+    
+    [[Configs sharedInstance] saveData:_DATA :newDict];
+}
 @end

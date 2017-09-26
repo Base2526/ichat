@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		3A109437FB5C4EE816776A26 /* libPods-iChat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */; };
+		603BB8B21F7A00D4006AC6D8 /* InviteFriends.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */; };
 		604A6FDF1F7918E700807966 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A6FDE1F7918E700807966 /* ViewController.m */; };
 		604A6FE41F7918E700807966 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE31F7918E700807966 /* Assets.xcassets */; };
 		604A6FE71F7918E700807966 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE51F7918E700807966 /* LaunchScreen.storyboard */; };
@@ -23,6 +24,9 @@
 		604A701A1F791C7500807966 /* HJMOUserBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A700A1F791C0D00807966 /* HJMOUserBase.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		604A701B1F791C7500807966 /* HJObjManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A700D1F791C0D00807966 /* HJObjManager.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		604A701C1F791C7500807966 /* HJWeakMutableArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A6FFB1F791C0B00807966 /* HJWeakMutableArray.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		6051292B1F7980E8008CB2B9 /* TopAlignedLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 605129291F7980E7008CB2B9 /* TopAlignedLabel.m */; };
+		605129301F79E025008CB2B9 /* UpdateMyProfileThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 6051292F1F79E025008CB2B9 /* UpdateMyProfileThread.m */; };
+		605129331F79EB4C008CB2B9 /* CreateGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 605129321F79EB4C008CB2B9 /* CreateGroup.m */; };
 		605A8BC31F7948A700A6CB54 /* SVIndefiniteAnimatedView.m in Sources */ = {isa = PBXBuildFile; fileRef = 605A8BB91F79204000A6CB54 /* SVIndefiniteAnimatedView.m */; };
 		605A8BC41F7948A700A6CB54 /* SVProgressAnimatedView.m in Sources */ = {isa = PBXBuildFile; fileRef = 605A8BBA1F79204000A6CB54 /* SVProgressAnimatedView.m */; };
 		605A8BC51F7948A700A6CB54 /* SVProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 605A8BBE1F79204000A6CB54 /* SVProgressHUD.m */; };
@@ -56,6 +60,8 @@
 
 /* Begin PBXFileReference section */
 		0B108AC4220EA264F3CC6197 /* Pods-iChat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.release.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.release.xcconfig"; sourceTree = "<group>"; };
+		603BB8B01F7A00D4006AC6D8 /* InviteFriends.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InviteFriends.h; sourceTree = "<group>"; };
+		603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InviteFriends.m; sourceTree = "<group>"; };
 		6045765811BEB18F3E3607D3 /* Pods-iChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.debug.xcconfig"; sourceTree = "<group>"; };
 		604A6FD71F7918E700807966 /* iChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		604A6FDD1F7918E700807966 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
@@ -89,6 +95,12 @@
 		604A700B1F791C0D00807966 /* HJCircularBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HJCircularBuffer.h; sourceTree = "<group>"; };
 		604A700C1F791C0D00807966 /* HJObjManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HJObjManager.h; sourceTree = "<group>"; };
 		604A700D1F791C0D00807966 /* HJObjManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HJObjManager.m; sourceTree = "<group>"; };
+		605129291F7980E7008CB2B9 /* TopAlignedLabel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TopAlignedLabel.m; sourceTree = "<group>"; };
+		6051292A1F7980E7008CB2B9 /* TopAlignedLabel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TopAlignedLabel.h; sourceTree = "<group>"; };
+		6051292E1F79E025008CB2B9 /* UpdateMyProfileThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UpdateMyProfileThread.h; sourceTree = "<group>"; };
+		6051292F1F79E025008CB2B9 /* UpdateMyProfileThread.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UpdateMyProfileThread.m; sourceTree = "<group>"; };
+		605129311F79EB4C008CB2B9 /* CreateGroup.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CreateGroup.h; sourceTree = "<group>"; };
+		605129321F79EB4C008CB2B9 /* CreateGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CreateGroup.m; sourceTree = "<group>"; };
 		605A8BB01F791F2B00A6CB54 /* SAMKeychainQuery.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SAMKeychainQuery.h; sourceTree = "<group>"; };
 		605A8BB11F791F2B00A6CB54 /* SAMKeychain.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SAMKeychain.m; sourceTree = "<group>"; };
 		605A8BB21F791F2B00A6CB54 /* SAMKeychainQuery.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SAMKeychainQuery.m; sourceTree = "<group>"; };
@@ -187,13 +199,17 @@
 		604A6FD91F7918E700807966 /* iChat */ = {
 			isa = PBXGroup;
 			children = (
+				6051292C1F7980F0008CB2B9 /* Utils */,
 				604A6FF51F791B9800807966 /* Config */,
 				604A6FF01F791B3800807966 /* Vender */,
 				60DE2A3D1F79605700F77FEB /* Thread */,
+				6051292D1F79DD2D008CB2B9 /* Storyboard */,
 				604A6FDD1F7918E700807966 /* ViewController.h */,
 				604A6FDE1F7918E700807966 /* ViewController.m */,
 				604A6FF71F791BCD00807966 /* AppDelegate.h */,
 				604A6FF61F791BCC00807966 /* AppDelegate.m */,
+				605129311F79EB4C008CB2B9 /* CreateGroup.h */,
+				605129321F79EB4C008CB2B9 /* CreateGroup.m */,
 				605ED4E11F794F6E00AD621C /* Changefriendsname.h */,
 				605ED4D91F794F6D00AD621C /* Changefriendsname.m */,
 				605ED4E01F794F6E00AD621C /* ChatView.h */,
@@ -206,6 +222,8 @@
 				605ED4E21F794F6F00AD621C /* MoviesTableViewController.m */,
 				605ED4E71F794F7000AD621C /* MyProfile.h */,
 				605ED4E81F794F7000AD621C /* MyProfile.m */,
+				603BB8B01F7A00D4006AC6D8 /* InviteFriends.h */,
+				603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */,
 				605ED4E41F794F6F00AD621C /* UserDataUIAlertView.h */,
 				605ED4E51F794F6F00AD621C /* UserDataUIAlertView.m */,
 				605ED4DB1F794F6D00AD621C /* UserDataUILongPressGestureRecognizer.h */,
@@ -216,11 +234,7 @@
 				605ED4F41F794F9200AD621C /* FriendTableViewCell.m */,
 				605ED4F91F794FA300AD621C /* ProfileTableViewCell.h */,
 				605ED4FA1F794FA300AD621C /* ProfileTableViewCell.m */,
-				605ED4FF1F79512200AD621C /* FriendTableViewCell.xib */,
-				605ED4FE1F79512200AD621C /* ProfileTableViewCell.xib */,
-				605ED4FC1F7950BB00AD621C /* Main.storyboard */,
 				604A6FE31F7918E700807966 /* Assets.xcassets */,
-				604A6FE51F7918E700807966 /* LaunchScreen.storyboard */,
 				604A6FE81F7918E700807966 /* Info.plist */,
 				604A6FE91F7918E700807966 /* main.m */,
 				605ED4D61F794EEA00AD621C /* GoogleService-Info.plist */,
@@ -287,6 +301,26 @@
 			path = SAMKeychain;
 			sourceTree = "<group>";
 		};
+		6051292C1F7980F0008CB2B9 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				6051292A1F7980E7008CB2B9 /* TopAlignedLabel.h */,
+				605129291F7980E7008CB2B9 /* TopAlignedLabel.m */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		6051292D1F79DD2D008CB2B9 /* Storyboard */ = {
+			isa = PBXGroup;
+			children = (
+				605ED4FF1F79512200AD621C /* FriendTableViewCell.xib */,
+				605ED4FE1F79512200AD621C /* ProfileTableViewCell.xib */,
+				605ED4FC1F7950BB00AD621C /* Main.storyboard */,
+				604A6FE51F7918E700807966 /* LaunchScreen.storyboard */,
+			);
+			path = Storyboard;
+			sourceTree = "<group>";
+		};
 		605A8BB41F791F5000A6CB54 /* SVProgressHUD */ = {
 			isa = PBXGroup;
 			children = (
@@ -350,6 +384,8 @@
 		60DE2A3D1F79605700F77FEB /* Thread */ = {
 			isa = PBXGroup;
 			children = (
+				6051292E1F79E025008CB2B9 /* UpdateMyProfileThread.h */,
+				6051292F1F79E025008CB2B9 /* UpdateMyProfileThread.m */,
 				60DE2A3A1F79605100F77FEB /* UpdatePictureProfileThread.h */,
 				60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */,
 			);
@@ -516,6 +552,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				605129301F79E025008CB2B9 /* UpdateMyProfileThread.m in Sources */,
 				605ED51A1F79558A00AD621C /* GKCropBorderView.m in Sources */,
 				605ED51B1F79558A00AD621C /* GKImageCropOverlayView.m in Sources */,
 				605ED51C1F79558A00AD621C /* GKImageCropView.m in Sources */,
@@ -524,6 +561,7 @@
 				605ED51F1F79558A00AD621C /* GKResizeableCropOverlayView.m in Sources */,
 				60DE2A3C1F79605100F77FEB /* UpdatePictureProfileThread.m in Sources */,
 				605ED4E91F794F7100AD621C /* Changefriendsname.m in Sources */,
+				605129331F79EB4C008CB2B9 /* CreateGroup.m in Sources */,
 				605ED4F71F794F9400AD621C /* FriendTableViewCell.m in Sources */,
 				605ED4F01F794F7100AD621C /* MyProfile.m in Sources */,
 				605ED4FB1F794FA400AD621C /* ProfileTableViewCell.m in Sources */,
@@ -535,6 +573,7 @@
 				605A8BC51F7948A700A6CB54 /* SVProgressHUD.m in Sources */,
 				605ED4EA1F794F7100AD621C /* ChatView.m in Sources */,
 				605A8BC61F7948A700A6CB54 /* SVRadialGradientLayer.m in Sources */,
+				603BB8B21F7A00D4006AC6D8 /* InviteFriends.m in Sources */,
 				605ED4EE1F794F7100AD621C /* UserDataUIAlertView.m in Sources */,
 				604A70141F791C7500807966 /* HJCircularBuffer.m in Sources */,
 				604A70151F791C7500807966 /* HJManagedImageV.m in Sources */,
@@ -547,6 +586,7 @@
 				605ED4ED1F794F7100AD621C /* MoviesTableViewController.m in Sources */,
 				604A701B1F791C7500807966 /* HJObjManager.m in Sources */,
 				605ED4EB1F794F7100AD621C /* UserDataUILongPressGestureRecognizer.m in Sources */,
+				6051292B1F7980E8008CB2B9 /* TopAlignedLabel.m in Sources */,
 				604A701C1F791C7500807966 /* HJWeakMutableArray.m in Sources */,
 				604A6FF81F791BCD00807966 /* AppDelegate.m in Sources */,
 				604A6FDF1F7918E700807966 /* ViewController.m in Sources */,

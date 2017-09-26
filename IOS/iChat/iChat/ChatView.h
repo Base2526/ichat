@@ -19,5 +19,6 @@
 @property (strong, nonatomic) FIRDatabaseReference *ref;
 
 @property(nonatomic)NSDictionary *friend;
+- (IBAction)onInvite:(id)sender;
 
 @end

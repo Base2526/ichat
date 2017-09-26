@@ -374,6 +374,16 @@ function toonchat_services_resources()
         ),
       ),
     ),
+    'update_my_profile'=>array(
+      'create' =>array(
+        'help'=>'Services แก้ไข Display Name, Status ของ User',
+        'callback'=>'update_my_profile',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+      ),
+    ),
+
   );
   
   return $services;
@@ -490,41 +500,61 @@ function update_picture_profile(){
     // save รูป profile
     $profile->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
 
-    $result['url'] = file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']);;//file_create_url((array)$file);
   }
 
   profile2_save($profile);
 
-  /*
-  foreach ($profile->field_profile_friends[LANGUAGE_NONE] as $key => $value) {
-    // Build array of field collection values.
-    
-    //   จะได้ เพือนมาทั้งหมด
-    
-    $data_item_load = field_collection_item_load($value['value']);
 
-    // Load profile ของเพือนแต่ละคน เพื่อที่เราจะ update รูปของเราที่เป้นเพือนด้วย
-    $fprofile = profile2_by_uid_load($data_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'], 'main');
-    foreach ($fprofile->field_profile_friends[LANGUAGE_NONE] as $fkey => $fvalue) {
-      $fdata_item_load = field_collection_item_load($fvalue['value']);
+  // url image profile
+  $url = file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']);
 
-      
-      //   เราต้องเช็ดว่า เพื่อนคนใหน uid ตรงกันเรา ถึงจะ update image
-      
-      if($fdata_item_load->field_friend_uid[LANGUAGE_NONE][0]['value'] == $_REQUEST['uid']){
-        $wrapper = entity_metadata_wrapper('field_collection_item', $fdata_item_load);
-            
-        $wrapper->field_friend_image->set((array)$file);
-        $wrapper->save();
+  // Firebase : update image url profile
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $data_update = array(
+      "image_url"  =>$url
+  );
 
-        break;
-      }
-    }
-  }
-  */
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);
+  // Firebase : update image url profile
+
+
   $result['result'] = TRUE;  
+  $result['url'] = $url;
 
   return $result;
+}
+
+function update_my_profile(){
+
+  $result = array();
+
+  if (empty($_REQUEST['uid'])) {
+    $result['result'] = FALSE;
+    $result['uid']    = "empty uid.";
+    return $result;
+  }
+
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['status_message'];
+
+  profile2_save($profile);
+
+  // Firebase : udate name, status message
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $data_update = array(
+      "name"           =>$_REQUEST['name'],
+      "status_message" => $_REQUEST['status_message']
+  );
+
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);
+  // Firebase : udate name, status message
+
+
+  $result['result'] = TRUE;
+  return  $result;
 }
 
 

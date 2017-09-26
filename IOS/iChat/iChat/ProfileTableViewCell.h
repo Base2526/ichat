@@ -12,4 +12,5 @@
 @interface ProfileTableViewCell : UITableViewCell
 @property (weak, nonatomic) IBOutlet HJManagedImageV *imgPerson;
 @property (weak, nonatomic) IBOutlet UILabel *lblName;
+@property (weak, nonatomic) IBOutlet UILabel *lblStatusmessage;
 @end

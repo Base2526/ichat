@@ -64,8 +64,7 @@
         */
         
         self.FETCH_MY_PROFILE   = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/basic_fetch_profile"];// @"/service_heart/klovers_fetch_profile";
-        self.UPDATE_MY_PROFILE  = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/basic_update_profile"];// @"/service_heart/klovers_update_profile";
-
+        self.UPDATE_MY_PROFILE  = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/update_my_profile"];
         /*
         self.FETCH_MY_APP   = @"/service_heart/klovers_fetch_my_app";
         self.UPDATE_MY_APP  = @"/service_heart/klovers_update_my_app";
