@@ -168,7 +168,80 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		break;
 
 		case 'multi_chat':{
-			console.log('#4 : multi_chat');
+			// console.log('#4 : multi_chat');
+
+			event.data.forEach(function(childSnapshot) {
+		      // key will be "ada" the first time and "alan" the second time
+		      // var key = childSnapshot.key;
+		      // childData will be the actual contents of the child
+		      // var childData = childSnapshot.val();
+
+		      // console.log('# key : ' + key + ", childData : " + childData);
+
+				/*
+		      if (event.params.key == childSnapshot.key) {
+		      	var key = childSnapshot.key;
+		      	var childData = childSnapshot.val();
+				console.log('># key : ' + key + ", childData : " + childData);
+		      }else{
+		      	console.log(">###< | " + event.params.key + " & "+ childSnapshot.key);
+		      }
+		      */
+
+
+		      if(childSnapshot.key == 'members'){
+		      	// var members = JSON.parse(childSnapshot.val());
+
+		      	var members = childSnapshot.val();
+
+		      	
+		      	// members.forEach(function(childMembers) {
+		      	// 	console.log('>## childMembers :' + childMembers.key);
+		      	// });
+
+		  //     	for(let index in members){
+				//   var element = members[index];
+				//   console.log('>## element :' + element);
+				// }
+
+				console.log('>## numChildren() :' + childSnapshot.numChildren());
+
+				var ref = db.ref(path);
+
+				childSnapshot.forEach(function (snapshot) {
+		           var obj = snapshot.val();
+		           if(obj.status == "pedding") {
+		               // console.log("uid : " + snapshot.key + ", status = " + obj.status);
+
+		               // เราต้อง เพิ่ม invite_group เพือ่นที่เรา invite ไปด้วย
+		               ref.child(snapshot.key).child("invite_multi_chat").child(event.params.key).set({
+		               	'owner_id':event.params.uid,
+		               	'status':obj.status
+		               });
+		           }
+		        });
+
+
+		      	// console.log(JSON.parse(JSON.stringify(childSnapshot.val())));
+		      	// console.log('>## KOK : #2 >');
+		      	// $.each(JSON.parse(JSON.stringify(childSnapshot.val())), function(index, valueA){
+		      	// 	console.log('>##>' + index);
+		      	// 	console.log('>##>>' + valueA);
+		      	// });
+
+		   //    	for (var keyM in members) {
+					// console.log('>## keyM : ' + keyM);
+		   //    	}
+
+		   //    	for (var ikey in members) {
+					// console.log('>## ikey : ' + ikey);
+		   //    	}
+				// members.forEach(function(childMember) {
+				// 	var _key = childMember.key;
+				// 	console.log('>## key : ' + _key);
+				// });
+		      }
+		  	});
 		}
 		break;
 	}
