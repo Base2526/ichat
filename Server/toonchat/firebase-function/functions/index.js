@@ -218,6 +218,38 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		               	'owner_id':event.params.uid,
 		               	'status':obj.status
 		               });
+
+
+		               /*
+						let tokens = [];
+				    	var msg = "-iChat-";
+				        // for (let user of users) {
+				        //     tokens.push(user.pushToken);
+				        // }
+
+				        if (_val.title !== undefined) {
+							msg = _val.title;
+				        }
+
+				        tokens.push(userLogin[key].token);
+
+				        let payload = {
+				            notification: {
+				                title: '',
+				                body: msg ,
+				                sound: 'default',
+				                badge: _badge.toString()
+				            }
+				        };
+
+				        return admin.messaging().sendToDevice(tokens, payload).then(function(response) {
+					    	// See the MessagingDevicesResponse reference documentation for
+					    	// the contents of response.
+					    	console.log("Successfully sent message:", response);
+					  	}).catch(function(error) {
+					    	console.log("Error sending message:", error);
+					  	});
+		               */
 		           }
 		        });
 

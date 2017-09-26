@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		3A109437FB5C4EE816776A26 /* libPods-iChat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */; };
 		603BB8B21F7A00D4006AC6D8 /* InviteFriends.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */; };
+		603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = 603BB8B31F7A29D4006AC6D8 /* README.txt */; };
 		604A6FDF1F7918E700807966 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A6FDE1F7918E700807966 /* ViewController.m */; };
 		604A6FE41F7918E700807966 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE31F7918E700807966 /* Assets.xcassets */; };
 		604A6FE71F7918E700807966 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE51F7918E700807966 /* LaunchScreen.storyboard */; };
@@ -62,6 +63,7 @@
 		0B108AC4220EA264F3CC6197 /* Pods-iChat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.release.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.release.xcconfig"; sourceTree = "<group>"; };
 		603BB8B01F7A00D4006AC6D8 /* InviteFriends.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InviteFriends.h; sourceTree = "<group>"; };
 		603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InviteFriends.m; sourceTree = "<group>"; };
+		603BB8B31F7A29D4006AC6D8 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		6045765811BEB18F3E3607D3 /* Pods-iChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.debug.xcconfig"; sourceTree = "<group>"; };
 		604A6FD71F7918E700807966 /* iChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		604A6FDD1F7918E700807966 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				604A6FF31F791B9100807966 /* AppConstant.h */,
 				604A6FF11F791B9100807966 /* Configs.h */,
 				604A6FF21F791B9100807966 /* Configs.m */,
+				603BB8B31F7A29D4006AC6D8 /* README.txt */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -481,6 +484,7 @@
 				605ED5011F79512200AD621C /* FriendTableViewCell.xib in Resources */,
 				605ED4D71F794EEA00AD621C /* GoogleService-Info.plist in Resources */,
 				604A6FE41F7918E700807966 /* Assets.xcassets in Resources */,
+				603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */,
 				605ED5001F79512200AD621C /* ProfileTableViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

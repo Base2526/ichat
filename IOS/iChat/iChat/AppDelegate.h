@@ -30,7 +30,7 @@
 /*
  การ Observe Event friends ทั้งหมด
  */
-- (void)observeEventType : (NSArray *)values;
+- (void)observeEventType;
 
 @end
 

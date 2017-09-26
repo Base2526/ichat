@@ -359,7 +359,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     }];
 }
 
-- (void)observeEventType : (NSArray *)values{
+- (void)observeEventType /* : (NSArray *)values*/{
     
     if (childObserver_Friends != nil) {
         for (FIRDatabaseReference *ref in childObserver_Friends) {
@@ -389,7 +389,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 //        
 //        [childObserver_Friends addObject:[ref child:child]];
 
-        if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"]) {
+        if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"] || [snapshot.key isEqualToString:@"groups"] || [snapshot.key isEqualToString:@"multi_chat"] || [snapshot.key isEqualToString:@"invite_multi_chat"] || [snapshot.key isEqualToString:@"invite_group"]) {
             NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
             [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
             [newDict removeObjectForKey:snapshot.key];
@@ -402,26 +402,21 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
         [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadData" object:self userInfo:@{}];
     }];
     
-    
-    
     /*
      เป็นการ add observeEvent ให้กับเพือนทุกคน แล้วถ้ามีการ change data เช่น online, offline
      */
+    /*
     for (NSMutableDictionary *item in values) {
         NSLog(@"friend id :%@", [item objectForKey:@"friend_id"]);
         
         NSString *child = [NSString stringWithFormat:@"toonchat/%@/", [item objectForKey:@"friend_id"]];
         
-        /*
-         กรณี friend_id มีการ change data เช่น online, offline
-         */
+        //  กรณี friend_id มีการ change data เช่น online, offline
         [[ref child:child] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
             
             NSLog(@"%@, %@", snapshot.key, snapshot.value);
             
-            /*
-             จะได้ %@ => จาก toonchat/%@/ เราจะรู้เป็น friend_id
-             */
+            // จะได้ %@ => จาก toonchat/%@/ เราจะรู้เป็น friend_id
             NSString* parent = snapshot.ref.parent.key;
             
             // update profile friend
@@ -448,6 +443,44 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
         }];
         
     }
+    */
+    
+    NSMutableDictionary *friends = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"friends"];
+    for (NSString* key in friends) {
+        NSDictionary *item = [friends objectForKey:key];
+        NSString *child = [NSString stringWithFormat:@"toonchat/%@/", key];
+        
+        //  กรณี friend_id มีการ change data เช่น online, offline
+        [[ref child:child] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+            
+            NSLog(@"%@, %@", snapshot.key, snapshot.value);
+            
+            // จะได้ %@ => จาก toonchat/%@/ เราจะรู้เป็น friend_id
+            NSString* parent = snapshot.ref.parent.key;
+            
+            // update profile friend
+            [[self friendsProfile] setObject:snapshot.value forKey:parent];
+            
+            [childObserver_Friends addObject:[ref child:child]];
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadData" object:self userInfo:@{}];
+        }];
+        
+        // toonchat_message
+        NSString *child_cmessage = [NSString stringWithFormat:@"toonchat_message/%@/", [item objectForKey:@"chat_id"]];
+        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+            NSLog(@"%@, %@", snapshot.key, snapshot.value);
+            
+            [childObserver_Friends addObject:[ref child:child_cmessage]];
+        }];
+        
+        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+            NSLog(@"%@, %@", snapshot.key, snapshot.value);
+            
+            [childObserver_Friends addObject:[ref child:child_cmessage]];
+        }];
+    }
+    
     NSLog(@"");
 }
 
