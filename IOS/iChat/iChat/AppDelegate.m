@@ -480,8 +480,6 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
             [childObserver_Friends addObject:[ref child:child_cmessage]];
         }];
     }
-    
-    NSLog(@"");
 }
 
 @end

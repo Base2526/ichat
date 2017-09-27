@@ -10,6 +10,11 @@
 		3A109437FB5C4EE816776A26 /* libPods-iChat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */; };
 		603BB8B21F7A00D4006AC6D8 /* InviteFriends.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */; };
 		603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = 603BB8B31F7A29D4006AC6D8 /* README.txt */; };
+		603BB8B71F7A5472006AC6D8 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 603BB8B61F7A5472006AC6D8 /* libsqlite3.tbd */; };
+		603BB8BC1F7A56B5006AC6D8 /* Message.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8BB1F7A56B5006AC6D8 /* Message.m */; };
+		603BB8BF1F7A56CB006AC6D8 /* MessageRepo.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8BE1F7A56CB006AC6D8 /* MessageRepo.m */; };
+		603BB8C21F7A5C5D006AC6D8 /* DBManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8B81F7A549D006AC6D8 /* DBManager.m */; };
+		603BB8C81F7A669B006AC6D8 /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 603BB8C71F7A669B006AC6D8 /* db.sql */; };
 		604A6FDF1F7918E700807966 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A6FDE1F7918E700807966 /* ViewController.m */; };
 		604A6FE41F7918E700807966 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE31F7918E700807966 /* Assets.xcassets */; };
 		604A6FE71F7918E700807966 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE51F7918E700807966 /* LaunchScreen.storyboard */; };
@@ -64,6 +69,14 @@
 		603BB8B01F7A00D4006AC6D8 /* InviteFriends.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InviteFriends.h; sourceTree = "<group>"; };
 		603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InviteFriends.m; sourceTree = "<group>"; };
 		603BB8B31F7A29D4006AC6D8 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		603BB8B61F7A5472006AC6D8 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		603BB8B81F7A549D006AC6D8 /* DBManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DBManager.m; sourceTree = "<group>"; };
+		603BB8B91F7A549D006AC6D8 /* DBManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DBManager.h; sourceTree = "<group>"; };
+		603BB8BA1F7A56B5006AC6D8 /* Message.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Message.h; sourceTree = "<group>"; };
+		603BB8BB1F7A56B5006AC6D8 /* Message.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Message.m; sourceTree = "<group>"; };
+		603BB8BD1F7A56CB006AC6D8 /* MessageRepo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageRepo.h; sourceTree = "<group>"; };
+		603BB8BE1F7A56CB006AC6D8 /* MessageRepo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MessageRepo.m; sourceTree = "<group>"; };
+		603BB8C71F7A669B006AC6D8 /* db.sql */ = {isa = PBXFileReference; lastKnownFileType = file; path = db.sql; sourceTree = "<group>"; };
 		6045765811BEB18F3E3607D3 /* Pods-iChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.debug.xcconfig"; sourceTree = "<group>"; };
 		604A6FD71F7918E700807966 /* iChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		604A6FDD1F7918E700807966 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
@@ -173,6 +186,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				603BB8B71F7A5472006AC6D8 /* libsqlite3.tbd in Frameworks */,
 				3A109437FB5C4EE816776A26 /* libPods-iChat.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -180,6 +194,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		603BB8B51F7A543D006AC6D8 /* DB */ = {
+			isa = PBXGroup;
+			children = (
+				603BB8C71F7A669B006AC6D8 /* db.sql */,
+				603BB8B91F7A549D006AC6D8 /* DBManager.h */,
+				603BB8B81F7A549D006AC6D8 /* DBManager.m */,
+				603BB8BA1F7A56B5006AC6D8 /* Message.h */,
+				603BB8BB1F7A56B5006AC6D8 /* Message.m */,
+				603BB8BD1F7A56CB006AC6D8 /* MessageRepo.h */,
+				603BB8BE1F7A56CB006AC6D8 /* MessageRepo.m */,
+			);
+			path = DB;
+			sourceTree = "<group>";
+		};
 		604A6FCE1F7918E700807966 = {
 			isa = PBXGroup;
 			children = (
@@ -201,6 +229,7 @@
 		604A6FD91F7918E700807966 /* iChat */ = {
 			isa = PBXGroup;
 			children = (
+				603BB8B51F7A543D006AC6D8 /* DB */,
 				6051292C1F7980F0008CB2B9 /* Utils */,
 				604A6FF51F791B9800807966 /* Config */,
 				604A6FF01F791B3800807966 /* Vender */,
@@ -407,6 +436,7 @@
 		BC15AC457D13672239142177 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				603BB8B61F7A5472006AC6D8 /* libsqlite3.tbd */,
 				9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */,
 			);
 			name = Frameworks;
@@ -485,6 +515,7 @@
 				605ED4D71F794EEA00AD621C /* GoogleService-Info.plist in Resources */,
 				604A6FE41F7918E700807966 /* Assets.xcassets in Resources */,
 				603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */,
+				603BB8C81F7A669B006AC6D8 /* db.sql in Resources */,
 				605ED5001F79512200AD621C /* ProfileTableViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -556,6 +587,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				603BB8C21F7A5C5D006AC6D8 /* DBManager.m in Sources */,
 				605129301F79E025008CB2B9 /* UpdateMyProfileThread.m in Sources */,
 				605ED51A1F79558A00AD621C /* GKCropBorderView.m in Sources */,
 				605ED51B1F79558A00AD621C /* GKImageCropOverlayView.m in Sources */,
@@ -587,6 +619,8 @@
 				604A70191F791C7500807966 /* HJMOPolicy.m in Sources */,
 				605ED4F31F794F8700AD621C /* AnNmousUThread.m in Sources */,
 				604A701A1F791C7500807966 /* HJMOUserBase.m in Sources */,
+				603BB8BC1F7A56B5006AC6D8 /* Message.m in Sources */,
+				603BB8BF1F7A56CB006AC6D8 /* MessageRepo.m in Sources */,
 				605ED4ED1F794F7100AD621C /* MoviesTableViewController.m in Sources */,
 				604A701B1F791C7500807966 /* HJObjManager.m in Sources */,
 				605ED4EB1F794F7100AD621C /* UserDataUILongPressGestureRecognizer.m in Sources */,

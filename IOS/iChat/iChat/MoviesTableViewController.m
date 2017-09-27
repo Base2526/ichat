@@ -31,6 +31,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    MessageRepo *mRepo = [[MessageRepo alloc] init];
+    // [mRepo insert:nil];
+    
     self.title = [NSString stringWithFormat:@"Contacts-%@", [[Configs sharedInstance] getUIDU]];
     
     ref = [[FIRDatabase database] reference];
@@ -285,6 +288,75 @@
             break;
     }
     return @"";
+}
+
+/*
+ ความสูงขอแต่ละ section กรณีไม่มีข้อมูลเราจะให้ return 0
+ */
+-(CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
+    switch (section) {
+        case 0:{
+            return 45.0f;
+        }
+        case 1:{
+            // @"Favorite"
+            NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
+            if ([favorites count] == 0) {
+                return 0;
+            }else{
+                return 45.0f;
+            }
+        }
+        case 2:{
+            // @"Friends";
+            NSMutableDictionary *friends = [data objectForKey:@"friends"];
+            if ([friends count] == 0) {
+                return 0;
+            }else{
+                return 45.0f;
+            }
+        }
+        case 3:{
+            // @"Groups";
+            NSMutableDictionary *groups = [data objectForKey:@"groups"];
+            if ([groups count] == 0) {
+                return 0;
+            }else{
+                return 45.0f;
+            }
+        }
+        case 4:{
+            // @"Multi Chat";
+            NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
+            if ([multi_chat count] == 0) {
+                return 0;
+            }else{
+                return 45.0f;
+            }
+        }
+        case 5:{
+            // @"Invite Group";
+            NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
+            if ([invite_group count] == 0) {
+                return 0;
+            }else{
+                return 45.0f;
+            }
+        }
+        case 6:{
+            // @"Invite Multi Chat";
+            NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
+            if ([invite_multi_chat count] == 0) {
+                return 0;
+            }else{
+                return 45.0f;
+            }
+        }
+        default:
+            break;
+    }
+    
+    return 0;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{

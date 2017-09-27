@@ -12,6 +12,8 @@
 @import FirebaseMessaging;
 @import FirebaseDatabase;
 
+#import "MessageRepo.h"
+
 @interface MoviesTableViewController : UITableViewController
 <UITableViewDataSource,UITableViewDelegate>
 
