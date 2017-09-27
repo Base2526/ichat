@@ -8,6 +8,7 @@
 
 #import "DBManager.h"
 #import <sqlite3.h>
+#import "Configs.h"
 
 @interface DBManager()
 
@@ -33,7 +34,7 @@
         self.documentsDirectory = [paths objectAtIndex:0];
         
         //  Keep the database filename.
-        self.databaseFileName = @"db.sql";
+        self.databaseFileName = [Configs sharedInstance].DBFileName;
         
         //  Copy the databse file into the documents directory if necessary.
         [self copyDatabaseIntoDocumentsDirectory];
@@ -44,7 +45,6 @@
 /*
  initWithDatabaseFileName:@"db.sql"
  */
-
 #pragma mark - Custom Init
 -(instancetype) initWithDatabaseFileName:(NSString *)dbFileName
 {

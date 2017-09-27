@@ -101,6 +101,10 @@
 @property(nonatomic) CGFloat timeOut;
 
 
+// ชือของ DB
+@property(nonatomic) NSString *DBFileName;
+
+
 // Global Function
 -(NSString *)getUniqueDeviceIdentifierAsString;
 

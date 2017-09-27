@@ -140,6 +140,8 @@
         self.navigationBarHeight = 30.0f;
         
         self.timeOut    = 100.0f;
+        
+        self.DBFileName = @"db.sql";
     }
     return self;
 }
