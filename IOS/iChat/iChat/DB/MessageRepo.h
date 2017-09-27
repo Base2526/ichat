@@ -17,8 +17,9 @@
 
 @property (nonatomic, strong) DBManager *dbManager;
 
-- (BOOL) check:(Message *)message;
-- (BOOL) insert:(Message *)message;
+- (BOOL)check:(NSString *)object_id;
+- (BOOL)insert:(Message *)message;
+- (BOOL)update:(Message *)message;
 
 /*
  การดึงข้อความ chat แยกตาม chat_id
