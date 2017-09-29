@@ -38,11 +38,8 @@
     
     ref = [[FIRDatabase database] reference];
     
-    
-    
     data = [[NSMutableDictionary alloc] init];
-    
-    
+
     [self.tableView registerNib:[UINib nibWithNibName:@"ProfileTableViewCell" bundle:nil] forCellReuseIdentifier:@"ProfileTableViewCell"];
     [self.tableView registerNib:[UINib nibWithNibName:@"FriendTableViewCell" bundle:nil] forCellReuseIdentifier:@"FriendTableViewCell"];
 
@@ -763,11 +760,42 @@
         [self.navigationController pushViewController:profile animated:YES];
     }else{
         
-        NSMutableArray *friends = [data valueForKey:@"friends"];
         
-        ChatView *chatView = [storybrd instantiateViewControllerWithIdentifier:@"ChatView"];        
-        chatView.friend =[friends objectAtIndex:indexPath.row];
-        [self.navigationController pushViewController:chatView animated:YES];
+        
+        
+        switch (indexPath.section) {
+            case 1:{
+                // @"Favorite"
+                NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
+                
+                // NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[item objectForKey:@"friend_id"]];
+                NSArray *keys = [favorites allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                NSMutableDictionary* item = [favorites objectForKey:key];
+                [item setValue:key forKey:@"friend_id"];
+                
+                ChatView *chatView = [storybrd instantiateViewControllerWithIdentifier:@"ChatView"];
+                chatView.friend =item;//[friends objectAtIndex:indexPath.row];
+                [self.navigationController pushViewController:chatView animated:YES];
+            }
+                break;
+            case 2:{
+                
+                NSMutableDictionary *friends = [data valueForKey:@"friends"];
+                
+                NSArray *keys = [friends allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                NSMutableDictionary*  item = [friends objectForKey:key];
+                [item setValue:key forKey:@"friend_id"];
+                
+                ChatView *chatView = [storybrd instantiateViewControllerWithIdentifier:@"ChatView"];
+                chatView.friend =item;//[friends objectAtIndex:indexPath.row];
+                [self.navigationController pushViewController:chatView animated:YES];
+            }
+                break;
+        }
+        
+        
     }
 }
 

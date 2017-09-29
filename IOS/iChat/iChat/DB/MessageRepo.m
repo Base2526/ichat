@@ -26,7 +26,7 @@
 
 - (BOOL)check:(NSString *)object_id{
     //  Create a query
-    NSString *query = [NSString stringWithFormat:@"select * from message where object_id=%@", object_id];
+    NSString *query = [NSString stringWithFormat:@"select * from messages where object_id=%@", object_id];
     
     //  Load the relevant data.
     NSArray *results = [[NSArray alloc] initWithArray:[self.dbManager loadDataFromDBWithQuery:query]];
@@ -36,11 +36,23 @@
     return true;
 }
 
+-(Message *)get:(NSString *)object_id{
+    //  Create a query
+    NSString *query = [NSString stringWithFormat:@"select * from messages where object_id='%@';", object_id];
+    
+    //  Load the relevant data.
+    NSArray *results = [[NSArray alloc] initWithArray:[self.dbManager loadDataFromDBWithQuery:query]];
+    if ([results count] ==0) {
+        return nil;
+    }
+    return [results objectAtIndex:0];
+}
+
 - (BOOL) insert:(Message *)message{
     BOOL success = false;
     
     //  ยังไม่เคยมี ให้ insert
-    NSString *query = [NSString stringWithFormat:@"INSERT INTO message ('chat_id', 'object_id','owner_id','text','type', 'uid', 'status', 'create', 'update') VALUES (%@, %@, %@, %@, %@, %@, %@, %@, %@);", message.chat_id, message.object_id, message.owner_id, message.text, message.type, message.uid, message.status, message.create, message.update];
+    NSString *query = [NSString stringWithFormat:@"INSERT INTO messages ('chat_id', 'object_id','sender_id', 'receive_id','text','type', 'status', 'reader', 'create', 'update') VALUES ('%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@', '%@');", message.chat_id, message.object_id, message.sender_id, message.receive_id, message.text, message.type, message.status, message.reader,message.create, message.update];
     
     //  Execute the query.
     [self.dbManager executeQuery:query];
@@ -57,7 +69,7 @@
 
 - (BOOL) update:(Message *)message{
     //  แสดงว่ามีให้ทำการ udpate
-    NSString *query = [NSString stringWithFormat:@"UPDATE message set 'text'=%@, 'status'=%@ WHERE object_id=%@;", message.text, message.status, message.object_id];
+    NSString *query = [NSString stringWithFormat:@"UPDATE messages set 'text'='%@', 'status'='%@', 'reader'='%@' WHERE object_id='%@';", message.text, message.status, message.reader, message.object_id];
     
     //  Execute the query.
     [self.dbManager executeQuery:query];
@@ -74,14 +86,14 @@
 
 - (NSMutableArray *) getMessageByChatId:(NSString *)chat_id{
     //  Create a query
-    NSString *query = [NSString stringWithFormat:@"select * from message where chat_id=%@", chat_id];
+    NSString *query = [NSString stringWithFormat:@"select * from messages where chat_id='%@';", chat_id];
     
     //  Load the relevant data.
     return [[NSMutableArray alloc] initWithArray:[self.dbManager loadDataFromDBWithQuery:query]];
 }
 
 - (BOOL) deleteByChatId :(NSString *)chat_id{
-    NSString *query = [NSString stringWithFormat:@"DELETE from message WHERE chat_id = %@", chat_id];
+    NSString *query = [NSString stringWithFormat:@"DELETE from messages WHERE chat_id = %@", chat_id];
     [self.dbManager executeQuery:query];
     
     //  If the query was succesfully executed then pop the view controller.

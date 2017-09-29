@@ -9,6 +9,5 @@
 #import "Message.h"
 
 @implementation Message
-@synthesize chat_id, object_id, owner_id, text, type, uid, status, create, update;
-
+@synthesize chat_id, object_id, sender_id, receive_id, text, type, status, reader, create, update;
 @end

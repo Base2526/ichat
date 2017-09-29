@@ -10,11 +10,14 @@
 @interface Message : NSObject
 @property (nonatomic, strong) NSString *chat_id;
 @property (nonatomic, strong) NSString *object_id;
-@property (nonatomic, strong) NSString *owner_id;
 @property (nonatomic, strong) NSString *text;
 @property (nonatomic, strong) NSString *type;
-@property (nonatomic, strong) NSString *uid;
+
+@property (nonatomic, strong) NSString *sender_id;
+@property (nonatomic, strong) NSString *receive_id;
+
 @property (nonatomic, strong) NSString *status;
+@property (nonatomic, strong) NSString *reader;
 @property (nonatomic, strong) NSString *create;
 @property (nonatomic, strong) NSString *update;
 @end

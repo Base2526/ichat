@@ -14,7 +14,6 @@
 		603BB8BC1F7A56B5006AC6D8 /* Message.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8BB1F7A56B5006AC6D8 /* Message.m */; };
 		603BB8BF1F7A56CB006AC6D8 /* MessageRepo.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8BE1F7A56CB006AC6D8 /* MessageRepo.m */; };
 		603BB8C21F7A5C5D006AC6D8 /* DBManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8B81F7A549D006AC6D8 /* DBManager.m */; };
-		603BB8C81F7A669B006AC6D8 /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 603BB8C71F7A669B006AC6D8 /* db.sql */; };
 		604A6FDF1F7918E700807966 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 604A6FDE1F7918E700807966 /* ViewController.m */; };
 		604A6FE41F7918E700807966 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE31F7918E700807966 /* Assets.xcassets */; };
 		604A6FE71F7918E700807966 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 604A6FE51F7918E700807966 /* LaunchScreen.storyboard */; };
@@ -61,6 +60,7 @@
 		605ED51D1F79558A00AD621C /* GKImageCropViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5071F79550F00AD621C /* GKImageCropViewController.m */; };
 		605ED51E1F79558A00AD621C /* GKImagePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5051F79550F00AD621C /* GKImagePicker.m */; };
 		605ED51F1F79558A00AD621C /* GKResizeableCropOverlayView.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5091F79551000AD621C /* GKResizeableCropOverlayView.m */; };
+		60CD1FD51F7D632C005CA3B4 /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 60CD1FD41F7D632C005CA3B4 /* db.sql */; };
 		60DE2A3C1F79605100F77FEB /* UpdatePictureProfileThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */; };
 /* End PBXBuildFile section */
 
@@ -76,7 +76,6 @@
 		603BB8BB1F7A56B5006AC6D8 /* Message.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Message.m; sourceTree = "<group>"; };
 		603BB8BD1F7A56CB006AC6D8 /* MessageRepo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessageRepo.h; sourceTree = "<group>"; };
 		603BB8BE1F7A56CB006AC6D8 /* MessageRepo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MessageRepo.m; sourceTree = "<group>"; };
-		603BB8C71F7A669B006AC6D8 /* db.sql */ = {isa = PBXFileReference; lastKnownFileType = file; path = db.sql; sourceTree = "<group>"; };
 		6045765811BEB18F3E3607D3 /* Pods-iChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.debug.xcconfig"; sourceTree = "<group>"; };
 		604A6FD71F7918E700807966 /* iChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		604A6FDD1F7918E700807966 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
@@ -176,6 +175,7 @@
 		605ED5171F79552600AD621C /* PLCameraSheetDoneButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = PLCameraSheetDoneButton.png; path = GKImagePicker/GKImages/PLCameraSheetDoneButton.png; sourceTree = SOURCE_ROOT; };
 		605ED5181F79552600AD621C /* PLCameraSheetButtonPressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = PLCameraSheetButtonPressed.png; path = GKImagePicker/GKImages/PLCameraSheetButtonPressed.png; sourceTree = SOURCE_ROOT; };
 		605ED5191F79552600AD621C /* PLCameraSheetDoneButton@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "PLCameraSheetDoneButton@2x.png"; path = "GKImagePicker/GKImages/PLCameraSheetDoneButton@2x.png"; sourceTree = SOURCE_ROOT; };
+		60CD1FD41F7D632C005CA3B4 /* db.sql */ = {isa = PBXFileReference; lastKnownFileType = file; name = db.sql; path = ../../../../../../../db.sql; sourceTree = "<group>"; };
 		60DE2A3A1F79605100F77FEB /* UpdatePictureProfileThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UpdatePictureProfileThread.h; sourceTree = "<group>"; };
 		60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UpdatePictureProfileThread.m; sourceTree = "<group>"; };
 		9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iChat.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -197,7 +197,7 @@
 		603BB8B51F7A543D006AC6D8 /* DB */ = {
 			isa = PBXGroup;
 			children = (
-				603BB8C71F7A669B006AC6D8 /* db.sql */,
+				60CD1FD41F7D632C005CA3B4 /* db.sql */,
 				603BB8B91F7A549D006AC6D8 /* DBManager.h */,
 				603BB8B81F7A549D006AC6D8 /* DBManager.m */,
 				603BB8BA1F7A56B5006AC6D8 /* Message.h */,
@@ -476,7 +476,7 @@
 				TargetAttributes = {
 					604A6FD61F7918E700807966 = {
 						CreatedOnToolsVersion = 9.0;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
 								enabled = 1;
@@ -515,7 +515,7 @@
 				605ED4D71F794EEA00AD621C /* GoogleService-Info.plist in Resources */,
 				604A6FE41F7918E700807966 /* Assets.xcassets in Resources */,
 				603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */,
-				603BB8C81F7A669B006AC6D8 /* db.sql in Resources */,
+				60CD1FD51F7D632C005CA3B4 /* db.sql in Resources */,
 				605ED5001F79512200AD621C /* ProfileTableViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -757,14 +757,15 @@
 			baseConfigurationReference = 6045765811BEB18F3E3607D3 /* Pods-iChat.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 32ENZ344NK;
 				INFOPLIST_FILE = iChat/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = net.testtoonchat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "8a487979-a127-49f2-b58e-3bfed2ef8257";
-				PROVISIONING_PROFILE_SPECIFIER = "Test Chat Development";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -774,14 +775,15 @@
 			baseConfigurationReference = 0B108AC4220EA264F3CC6197 /* Pods-iChat.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 32ENZ344NK;
 				INFOPLIST_FILE = iChat/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = net.testtoonchat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "8a487979-a127-49f2-b58e-3bfed2ef8257";
-				PROVISIONING_PROFILE_SPECIFIER = "Test Chat Development";
+				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

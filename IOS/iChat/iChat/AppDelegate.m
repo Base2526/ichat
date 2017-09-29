@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "MessageRepo.h"
 
 
 #if defined(__IPHONE_10_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_10_0
@@ -468,16 +469,63 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
         
         // toonchat_message
         NSString *child_cmessage = [NSString stringWithFormat:@"toonchat_message/%@/", [item objectForKey:@"chat_id"]];
-        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
-            NSLog(@"%@, %@", snapshot.key, snapshot.value);
-            
-            [childObserver_Friends addObject:[ref child:child_cmessage]];
-        }];
+//        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+//            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+//
+//            [childObserver_Friends addObject:[ref child:child_cmessage]];
+//        }];
         
         [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
-            NSLog(@"%@, %@", snapshot.key, snapshot.value);
+            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+            
+            /*
+             @property (nonatomic, strong) NSString *chat_id;
+             @property (nonatomic, strong) NSString *object_id;
+             @property (nonatomic, strong) NSString *text;
+             @property (nonatomic, strong) NSString *type;
+             
+             @property (nonatomic, strong) NSString *sender_id;
+             @property (nonatomic, strong) NSString *receive_id;
+             
+             @property (nonatomic, strong) NSString *status;
+             @property (nonatomic, strong) NSString *create;
+             @property (nonatomic, strong) NSString *update;
+             */
+            MessageRepo* meRepo = [[MessageRepo alloc] init];
+            if(![meRepo check:snapshot.key]){
+                NSDictionary *value = snapshot.value;
+                
+                NSLog(@"");
+                /*
+                Message* m  = [[Message alloc] init];
+                m.chat_id   = snapshot.ref.parent.key;
+                m.object_id = snapshot.key;
+                m.text      = [value objectForKey:@"text"];
+                m.type      = [value objectForKey:@"type"];
+                m.sender_id = [value objectForKey:@"sender_id"];
+                m.receive_id = [value objectForKey:@"receive_id"];
+                m.status    = [value objectForKey:@"status"];
+                m.create    = [value objectForKey:@"create"];
+                m.update    = [value objectForKey:@"update"];
+                */
+            }
             
             [childObserver_Friends addObject:[ref child:child_cmessage]];
+            
+            // NSString *_child = [NSString stringWithFormat:@"%@%@/", child_cmessage, snapshot.key];
+            [[[ref child:child_cmessage] child:snapshot.key] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+            
+                /*
+                 ติดไว้ก่อนเราต้อง removeObaserver ออกด้วยโดยมีเงือ่น ? ตอนนี้ลบออกให้หมดก่อน
+                 */
+                [childObserver_Friends addObject:[ref child:child_cmessage]];
+                
+                // [ref removeAllObservers];
+                
+                // [ref removeObserverWithHandle:snapshot];
+            }];
+            
         }];
     }
 }

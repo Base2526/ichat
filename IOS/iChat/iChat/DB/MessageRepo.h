@@ -18,6 +18,7 @@
 @property (nonatomic, strong) DBManager *dbManager;
 
 - (BOOL)check:(NSString *)object_id;
+- (Message *)get:(NSString *)object_id;
 - (BOOL)insert:(Message *)message;
 - (BOOL)update:(Message *)message;
 
