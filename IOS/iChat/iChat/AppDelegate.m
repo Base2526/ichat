@@ -401,6 +401,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
         }
         
         [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadData" object:self userInfo:@{}];
+        
     }];
     
     /*
@@ -454,7 +455,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
         //  กรณี friend_id มีการ change data เช่น online, offline
         [[ref child:child] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
             
-            NSLog(@"%@, %@", snapshot.key, snapshot.value);
+            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
             
             // จะได้ %@ => จาก toonchat/%@/ เราจะรู้เป็น friend_id
             NSString* parent = snapshot.ref.parent.key;
@@ -464,7 +465,9 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
             
             [childObserver_Friends addObject:[ref child:child]];
             
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadData" object:self userInfo:@{}];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadDataUpdateFriendProfile" object:self userInfo:@{}];
+            
+             [[NSNotificationCenter defaultCenter] postNotificationName:@"ChatView_detectOnline" object:self userInfo:@{}];
         }];
         
         // toonchat_message
@@ -497,9 +500,25 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
                 
                 NSLog(@"");
                 /*
+                
+                */
+                
+                /*
+                 "chat_id" = r1ibtvtq9LJpOzoOkmpy;
+                 create = 1506680186063;
+                 "object_id" = "-KvC7lffIPOBZ574Y8yQ";
+                 "receive_id" = 1028;
+                 "sender_id" = 1023;
+                 status = send;
+                 text = Err;
+                 type = private;
+                 update = 1506680186063;
+                 */
+                
                 Message* m  = [[Message alloc] init];
                 m.chat_id   = snapshot.ref.parent.key;
                 m.object_id = snapshot.key;
+                
                 m.text      = [value objectForKey:@"text"];
                 m.type      = [value objectForKey:@"type"];
                 m.sender_id = [value objectForKey:@"sender_id"];
@@ -507,7 +526,11 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
                 m.status    = [value objectForKey:@"status"];
                 m.create    = [value objectForKey:@"create"];
                 m.update    = [value objectForKey:@"update"];
-                */
+                
+                [meRepo insert:m];
+                
+                NSDictionary* userInfo = @{@"message":m};
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"ChatView_reloadData" object:self userInfo:userInfo];
             }
             
             [childObserver_Friends addObject:[ref child:child_cmessage]];

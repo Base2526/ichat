@@ -8,6 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		3A109437FB5C4EE816776A26 /* libPods-iChat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */; };
+		60350E071F7E820100990C49 /* ChatView2.m in Sources */ = {isa = PBXBuildFile; fileRef = 60350E061F7E820100990C49 /* ChatView2.m */; };
+		60350E081F7E835000990C49 /* PTSMessagingCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 60350DFD1F7E7EDD00990C49 /* PTSMessagingCell.m */; };
+		60350E091F7E83F900990C49 /* person1.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350E011F7E7EE500990C49 /* person1.png */; };
+		60350E0A1F7E83F900990C49 /* person2.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350E021F7E7EE500990C49 /* person2.png */; };
+		60350E0B1F7E83F900990C49 /* balloon_read_left.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350DFE1F7E7EDE00990C49 /* balloon_read_left.png */; };
+		60350E0C1F7E83F900990C49 /* balloon_read_right.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350DFC1F7E7EDD00990C49 /* balloon_read_right.png */; };
+		60350E0D1F7E83F900990C49 /* balloon_selected_left.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350DFB1F7E7EDD00990C49 /* balloon_selected_left.png */; };
+		60350E0E1F7E83F900990C49 /* balloon_selected_right.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350DF91F7E7EDD00990C49 /* balloon_selected_right.png */; };
+		60350E0F1F7E83F900990C49 /* balloon_unread_left.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350DFF1F7E7EDE00990C49 /* balloon_unread_left.png */; };
+		60350E101F7E83F900990C49 /* balloon_unread_right.png in Resources */ = {isa = PBXBuildFile; fileRef = 60350DFA1F7E7EDD00990C49 /* balloon_unread_right.png */; };
+		60350E1A1F7EAC6400990C49 /* UIView+KeyBoardShowAndHidden.m in Sources */ = {isa = PBXBuildFile; fileRef = 60350E191F7EAC6300990C49 /* UIView+KeyBoardShowAndHidden.m */; };
 		603BB8B21F7A00D4006AC6D8 /* InviteFriends.m in Sources */ = {isa = PBXBuildFile; fileRef = 603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */; };
 		603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = 603BB8B31F7A29D4006AC6D8 /* README.txt */; };
 		603BB8B71F7A5472006AC6D8 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 603BB8B61F7A5472006AC6D8 /* libsqlite3.tbd */; };
@@ -62,10 +73,32 @@
 		605ED51F1F79558A00AD621C /* GKResizeableCropOverlayView.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5091F79551000AD621C /* GKResizeableCropOverlayView.m */; };
 		60CD1FD51F7D632C005CA3B4 /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 60CD1FD41F7D632C005CA3B4 /* db.sql */; };
 		60DE2A3C1F79605100F77FEB /* UpdatePictureProfileThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */; };
+		60E4A4FA1F7F546900536B58 /* GroupTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A4F81F7F546900536B58 /* GroupTableViewCell.m */; };
+		60E4A4FB1F7F546900536B58 /* GroupTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 60E4A4F91F7F546900536B58 /* GroupTableViewCell.xib */; };
+		60E4A4FE1F7F63D800536B58 /* GroupChatView.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A4FD1F7F63D700536B58 /* GroupChatView.m */; };
+		60E4A5011F7F6CE000536B58 /* Members.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A5001F7F6CE000536B58 /* Members.m */; };
+		60E4A5041F7F6CF700536B58 /* Invite.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A5031F7F6CF700536B58 /* Invite.m */; };
+		60E4A5071F7F972000536B58 /* ManageGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A5061F7F972000536B58 /* ManageGroup.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0B108AC4220EA264F3CC6197 /* Pods-iChat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iChat.release.xcconfig"; path = "Pods/Target Support Files/Pods-iChat/Pods-iChat.release.xcconfig"; sourceTree = "<group>"; };
+		60350DF91F7E7EDD00990C49 /* balloon_selected_right.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon_selected_right.png; sourceTree = "<group>"; };
+		60350DFA1F7E7EDD00990C49 /* balloon_unread_right.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon_unread_right.png; sourceTree = "<group>"; };
+		60350DFB1F7E7EDD00990C49 /* balloon_selected_left.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon_selected_left.png; sourceTree = "<group>"; };
+		60350DFC1F7E7EDD00990C49 /* balloon_read_right.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon_read_right.png; sourceTree = "<group>"; };
+		60350DFD1F7E7EDD00990C49 /* PTSMessagingCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PTSMessagingCell.m; sourceTree = "<group>"; };
+		60350DFE1F7E7EDE00990C49 /* balloon_read_left.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon_read_left.png; sourceTree = "<group>"; };
+		60350DFF1F7E7EDE00990C49 /* balloon_unread_left.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = balloon_unread_left.png; sourceTree = "<group>"; };
+		60350E001F7E7EDE00990C49 /* PTSMessagingCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PTSMessagingCell.h; sourceTree = "<group>"; };
+		60350E011F7E7EE500990C49 /* person1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = person1.png; sourceTree = "<group>"; };
+		60350E021F7E7EE500990C49 /* person2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = person2.png; sourceTree = "<group>"; };
+		60350E031F7E7EF100990C49 /* ViewController2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController2.m; sourceTree = "<group>"; };
+		60350E041F7E7EF100990C49 /* ViewController2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController2.h; sourceTree = "<group>"; };
+		60350E051F7E820100990C49 /* ChatView2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ChatView2.h; sourceTree = "<group>"; };
+		60350E061F7E820100990C49 /* ChatView2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ChatView2.m; sourceTree = "<group>"; };
+		60350E181F7EAC6300990C49 /* UIView+KeyBoardShowAndHidden.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "UIView+KeyBoardShowAndHidden.h"; path = "../../../../../../../../Downloads/KeyBoardShowAndHidden-master 2/KeyBoardShowAndHidden/UIView+KeyBoardShowAndHidden.h"; sourceTree = "<group>"; };
+		60350E191F7EAC6300990C49 /* UIView+KeyBoardShowAndHidden.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "UIView+KeyBoardShowAndHidden.m"; path = "../../../../../../../../Downloads/KeyBoardShowAndHidden-master 2/KeyBoardShowAndHidden/UIView+KeyBoardShowAndHidden.m"; sourceTree = "<group>"; };
 		603BB8B01F7A00D4006AC6D8 /* InviteFriends.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = InviteFriends.h; sourceTree = "<group>"; };
 		603BB8B11F7A00D4006AC6D8 /* InviteFriends.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = InviteFriends.m; sourceTree = "<group>"; };
 		603BB8B31F7A29D4006AC6D8 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
@@ -178,6 +211,17 @@
 		60CD1FD41F7D632C005CA3B4 /* db.sql */ = {isa = PBXFileReference; lastKnownFileType = file; name = db.sql; path = ../../../../../../../db.sql; sourceTree = "<group>"; };
 		60DE2A3A1F79605100F77FEB /* UpdatePictureProfileThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UpdatePictureProfileThread.h; sourceTree = "<group>"; };
 		60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UpdatePictureProfileThread.m; sourceTree = "<group>"; };
+		60E4A4F71F7F546900536B58 /* GroupTableViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GroupTableViewCell.h; sourceTree = "<group>"; };
+		60E4A4F81F7F546900536B58 /* GroupTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GroupTableViewCell.m; sourceTree = "<group>"; };
+		60E4A4F91F7F546900536B58 /* GroupTableViewCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = GroupTableViewCell.xib; sourceTree = "<group>"; };
+		60E4A4FC1F7F63D700536B58 /* GroupChatView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GroupChatView.h; sourceTree = "<group>"; };
+		60E4A4FD1F7F63D700536B58 /* GroupChatView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GroupChatView.m; sourceTree = "<group>"; };
+		60E4A4FF1F7F6CE000536B58 /* Members.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Members.h; sourceTree = "<group>"; };
+		60E4A5001F7F6CE000536B58 /* Members.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Members.m; sourceTree = "<group>"; };
+		60E4A5021F7F6CF700536B58 /* Invite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Invite.h; sourceTree = "<group>"; };
+		60E4A5031F7F6CF700536B58 /* Invite.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Invite.m; sourceTree = "<group>"; };
+		60E4A5051F7F972000536B58 /* ManageGroup.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ManageGroup.h; sourceTree = "<group>"; };
+		60E4A5061F7F972000536B58 /* ManageGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ManageGroup.m; sourceTree = "<group>"; };
 		9EFEEF0155F2C7E1356125F4 /* libPods-iChat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iChat.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -194,6 +238,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		60350DF81F7E7EC700990C49 /* ChatView */ = {
+			isa = PBXGroup;
+			children = (
+				60350E181F7EAC6300990C49 /* UIView+KeyBoardShowAndHidden.h */,
+				60350E191F7EAC6300990C49 /* UIView+KeyBoardShowAndHidden.m */,
+				60350E041F7E7EF100990C49 /* ViewController2.h */,
+				60350E031F7E7EF100990C49 /* ViewController2.m */,
+				60350E011F7E7EE500990C49 /* person1.png */,
+				60350E021F7E7EE500990C49 /* person2.png */,
+				60350DFE1F7E7EDE00990C49 /* balloon_read_left.png */,
+				60350DFC1F7E7EDD00990C49 /* balloon_read_right.png */,
+				60350DFB1F7E7EDD00990C49 /* balloon_selected_left.png */,
+				60350DF91F7E7EDD00990C49 /* balloon_selected_right.png */,
+				60350DFF1F7E7EDE00990C49 /* balloon_unread_left.png */,
+				60350DFA1F7E7EDD00990C49 /* balloon_unread_right.png */,
+				60350E001F7E7EDE00990C49 /* PTSMessagingCell.h */,
+				60350DFD1F7E7EDD00990C49 /* PTSMessagingCell.m */,
+				60350E051F7E820100990C49 /* ChatView2.h */,
+				60350E061F7E820100990C49 /* ChatView2.m */,
+				60E4A4FC1F7F63D700536B58 /* GroupChatView.h */,
+				60E4A4FD1F7F63D700536B58 /* GroupChatView.m */,
+			);
+			path = ChatView;
+			sourceTree = "<group>";
+		};
 		603BB8B51F7A543D006AC6D8 /* DB */ = {
 			isa = PBXGroup;
 			children = (
@@ -229,6 +298,8 @@
 		604A6FD91F7918E700807966 /* iChat */ = {
 			isa = PBXGroup;
 			children = (
+				60E4A4F61F7F544500536B58 /* Cell */,
+				60350DF81F7E7EC700990C49 /* ChatView */,
 				603BB8B51F7A543D006AC6D8 /* DB */,
 				6051292C1F7980F0008CB2B9 /* Utils */,
 				604A6FF51F791B9800807966 /* Config */,
@@ -269,6 +340,12 @@
 				604A6FE81F7918E700807966 /* Info.plist */,
 				604A6FE91F7918E700807966 /* main.m */,
 				605ED4D61F794EEA00AD621C /* GoogleService-Info.plist */,
+				60E4A4FF1F7F6CE000536B58 /* Members.h */,
+				60E4A5001F7F6CE000536B58 /* Members.m */,
+				60E4A5021F7F6CF700536B58 /* Invite.h */,
+				60E4A5031F7F6CF700536B58 /* Invite.m */,
+				60E4A5051F7F972000536B58 /* ManageGroup.h */,
+				60E4A5061F7F972000536B58 /* ManageGroup.m */,
 			);
 			path = iChat;
 			sourceTree = "<group>";
@@ -424,6 +501,16 @@
 			path = Thread;
 			sourceTree = "<group>";
 		};
+		60E4A4F61F7F544500536B58 /* Cell */ = {
+			isa = PBXGroup;
+			children = (
+				60E4A4F71F7F546900536B58 /* GroupTableViewCell.h */,
+				60E4A4F81F7F546900536B58 /* GroupTableViewCell.m */,
+				60E4A4F91F7F546900536B58 /* GroupTableViewCell.xib */,
+			);
+			path = Cell;
+			sourceTree = "<group>";
+		};
 		95B004433310ECAD81825A7C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -508,6 +595,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60350E091F7E83F900990C49 /* person1.png in Resources */,
+				60E4A4FB1F7F546900536B58 /* GroupTableViewCell.xib in Resources */,
+				60350E0A1F7E83F900990C49 /* person2.png in Resources */,
+				60350E0B1F7E83F900990C49 /* balloon_read_left.png in Resources */,
+				60350E0C1F7E83F900990C49 /* balloon_read_right.png in Resources */,
+				60350E0D1F7E83F900990C49 /* balloon_selected_left.png in Resources */,
+				60350E0E1F7E83F900990C49 /* balloon_selected_right.png in Resources */,
+				60350E0F1F7E83F900990C49 /* balloon_unread_left.png in Resources */,
+				60350E101F7E83F900990C49 /* balloon_unread_right.png in Resources */,
 				605A8BC71F7948B900A6CB54 /* SVProgressHUD.bundle in Resources */,
 				605ED4FD1F7950BB00AD621C /* Main.storyboard in Resources */,
 				604A6FE71F7918E700807966 /* LaunchScreen.storyboard in Resources */,
@@ -587,6 +683,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60350E081F7E835000990C49 /* PTSMessagingCell.m in Sources */,
 				603BB8C21F7A5C5D006AC6D8 /* DBManager.m in Sources */,
 				605129301F79E025008CB2B9 /* UpdateMyProfileThread.m in Sources */,
 				605ED51A1F79558A00AD621C /* GKCropBorderView.m in Sources */,
@@ -597,16 +694,19 @@
 				605ED51F1F79558A00AD621C /* GKResizeableCropOverlayView.m in Sources */,
 				60DE2A3C1F79605100F77FEB /* UpdatePictureProfileThread.m in Sources */,
 				605ED4E91F794F7100AD621C /* Changefriendsname.m in Sources */,
+				60E4A5011F7F6CE000536B58 /* Members.m in Sources */,
 				605129331F79EB4C008CB2B9 /* CreateGroup.m in Sources */,
 				605ED4F71F794F9400AD621C /* FriendTableViewCell.m in Sources */,
 				605ED4F01F794F7100AD621C /* MyProfile.m in Sources */,
 				605ED4FB1F794FA400AD621C /* ProfileTableViewCell.m in Sources */,
+				60E4A4FA1F7F546900536B58 /* GroupTableViewCell.m in Sources */,
 				605ED4D11F794C3E00AD621C /* SAMKeychain.m in Sources */,
 				605ED4EC1F794F7100AD621C /* MoviesTableViewCell.m in Sources */,
 				605ED4D21F794C3E00AD621C /* SAMKeychainQuery.m in Sources */,
 				605A8BC31F7948A700A6CB54 /* SVIndefiniteAnimatedView.m in Sources */,
 				605A8BC41F7948A700A6CB54 /* SVProgressAnimatedView.m in Sources */,
 				605A8BC51F7948A700A6CB54 /* SVProgressHUD.m in Sources */,
+				60E4A4FE1F7F63D800536B58 /* GroupChatView.m in Sources */,
 				605ED4EA1F794F7100AD621C /* ChatView.m in Sources */,
 				605A8BC61F7948A700A6CB54 /* SVRadialGradientLayer.m in Sources */,
 				603BB8B21F7A00D4006AC6D8 /* InviteFriends.m in Sources */,
@@ -615,13 +715,17 @@
 				604A70151F791C7500807966 /* HJManagedImageV.m in Sources */,
 				604A70161F791C7500807966 /* HJMOBigFileCache.m in Sources */,
 				604A70171F791C7500807966 /* HJMOFileCache.m in Sources */,
+				60E4A5041F7F6CF700536B58 /* Invite.m in Sources */,
 				604A70181F791C7500807966 /* HJMOHandler.m in Sources */,
 				604A70191F791C7500807966 /* HJMOPolicy.m in Sources */,
 				605ED4F31F794F8700AD621C /* AnNmousUThread.m in Sources */,
 				604A701A1F791C7500807966 /* HJMOUserBase.m in Sources */,
 				603BB8BC1F7A56B5006AC6D8 /* Message.m in Sources */,
+				60350E1A1F7EAC6400990C49 /* UIView+KeyBoardShowAndHidden.m in Sources */,
 				603BB8BF1F7A56CB006AC6D8 /* MessageRepo.m in Sources */,
 				605ED4ED1F794F7100AD621C /* MoviesTableViewController.m in Sources */,
+				60350E071F7E820100990C49 /* ChatView2.m in Sources */,
+				60E4A5071F7F972000536B58 /* ManageGroup.m in Sources */,
 				604A701B1F791C7500807966 /* HJObjManager.m in Sources */,
 				605ED4EB1F794F7100AD621C /* UserDataUILongPressGestureRecognizer.m in Sources */,
 				6051292B1F7980E8008CB2B9 /* TopAlignedLabel.m in Sources */,

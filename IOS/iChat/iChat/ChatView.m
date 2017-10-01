@@ -50,20 +50,32 @@
     msRepo = [[MessageRepo alloc] init];
     ref = [[FIRDatabase database] reference];
     
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadData:)
+                                                 name:@"ChatView_reloadData"
+                                               object:nil];
+    
+}
+
+-(void)reloadData:(NSNotification *) notification{
+    
+    [self.messages removeAllObjects];
+    
     NSMutableArray *all_message = [msRepo getMessageByChatId:[friend objectForKey:@"chat_id"]];
     
     /*
-    JSQMessage *message1 = [JSQMessage messageWithSenderId:@"user1"
-                                               displayName:@"underscore"
-                                                      text:@"Hello"];
-    
-    [self.messages addObject:message1];
-    
-    JSQMessage *message2 = [JSQMessage messageWithSenderId:@"user2"
-                                               displayName:@"underscore"
-                                                      text:@"Hello2"];
-    [self.messages addObject:message2];
-    */
+     JSQMessage *message1 = [JSQMessage messageWithSenderId:@"user1"
+     displayName:@"underscore"
+     text:@"Hello"];
+     
+     [self.messages addObject:message1];
+     
+     JSQMessage *message2 = [JSQMessage messageWithSenderId:@"user2"
+     displayName:@"underscore"
+     text:@"Hello2"];
+     [self.messages addObject:message2];
+     */
     
     
     NSInteger ichat_id = [msRepo.dbManager.arrColumnNames indexOfObject:@"chat_id"];
@@ -79,30 +91,30 @@
         
         NSLog(@"");
         /*
-        Message* m =[[Message alloc] init];
-        m.chat_id  = item[1];
-        m.object_id  = item[2];
-        m.text  = item[3];
-        m.type  = item[4];
-        m.sender_id  = item[5];
-        m.receive_id  = item[6];
-        m.status  = item[7];
-        m.reader  = item[8];
-        m.create  = item[9];
-        m.update  = item[10];
-        
-        JSQMessage *message1 = nil;
-        if ([[[Configs sharedInstance] getUIDU] isEqualToString:m.sender_id]) {
-            message1 = [JSQMessage messageWithSenderId:@"user1"
-                                                       displayName:@"underscore"
-                                                              text:m.text];
-        }else{
-            message1 = [JSQMessage messageWithSenderId:@"user2"
-                                                       displayName:@"underscore"
-                                                              text:m.text];
-        }
-        [self.messages addObject:message1];
-        */
+         Message* m =[[Message alloc] init];
+         m.chat_id  = item[1];
+         m.object_id  = item[2];
+         m.text  = item[3];
+         m.type  = item[4];
+         m.sender_id  = item[5];
+         m.receive_id  = item[6];
+         m.status  = item[7];
+         m.reader  = item[8];
+         m.create  = item[9];
+         m.update  = item[10];
+         
+         JSQMessage *message1 = nil;
+         if ([[[Configs sharedInstance] getUIDU] isEqualToString:m.sender_id]) {
+         message1 = [JSQMessage messageWithSenderId:@"user1"
+         displayName:@"underscore"
+         text:m.text];
+         }else{
+         message1 = [JSQMessage messageWithSenderId:@"user2"
+         displayName:@"underscore"
+         text:m.text];
+         }
+         [self.messages addObject:message1];
+         */
         
         JSQMessage *message1 = nil;
         if ([[[Configs sharedInstance] getUIDU] isEqualToString:sender_id]) {
@@ -117,6 +129,7 @@
         
         [self.messages addObject:message1];
     }
+    
 }
 
 #pragma mark - Auto Message
