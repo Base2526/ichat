@@ -397,9 +397,9 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="2Ke-gb-2iL">
-                                <rect key="frame" x="40" y="101" width="295" height="30"/>
+                                <rect key="frame" x="109" y="101" width="250" height="30"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="295" id="rEr-C9-eim"/>
+                                    <constraint firstAttribute="width" constant="250" id="FFo-1p-PTx"/>
                                     <constraint firstAttribute="height" constant="30" id="uRH-Xp-Dq3"/>
                                 </constraints>
                                 <nil key="textColor"/>
@@ -407,11 +407,11 @@
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="QPK-lA-KTJ">
-                                <rect key="frame" x="0.0" y="149" width="375" height="518"/>
+                                <rect key="frame" x="0.0" y="165" width="375" height="502"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="518" id="5qg-Iz-1zq"/>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="375" id="rGm-bT-Xeq"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="502" id="rYn-as-NrA"/>
                                 </constraints>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Cell" rowHeight="100" id="k3d-0T-fiy">
@@ -455,15 +455,26 @@
                                     <outlet property="delegate" destination="CIj-rj-10j" id="DQW-Bo-3MA"/>
                                 </connections>
                             </tableView>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="yiH-kg-KA4" customClass="HJManagedImageV">
+                                <rect key="frame" x="16" y="72" width="80" height="80"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="80" id="62O-6w-19L"/>
+                                    <constraint firstAttribute="width" constant="80" id="goC-6J-jw5"/>
+                                </constraints>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="QPK-lA-KTJ" firstAttribute="leading" secondItem="JHF-mr-oBC" secondAttribute="leading" id="2Jv-jA-4rT"/>
                             <constraint firstItem="2Ke-gb-2iL" firstAttribute="top" secondItem="nEd-HT-v4i" secondAttribute="bottom" constant="37" id="NnP-sh-2Oq"/>
-                            <constraint firstItem="QPK-lA-KTJ" firstAttribute="top" secondItem="2Ke-gb-2iL" secondAttribute="bottom" constant="18" id="bDO-FC-QDA"/>
+                            <constraint firstItem="2Ke-gb-2iL" firstAttribute="leading" secondItem="yiH-kg-KA4" secondAttribute="trailing" constant="13" id="OLf-rG-3O7"/>
+                            <constraint firstAttribute="trailing" secondItem="2Ke-gb-2iL" secondAttribute="trailing" constant="16" id="P42-ad-DuB"/>
+                            <constraint firstItem="yiH-kg-KA4" firstAttribute="top" secondItem="nEd-HT-v4i" secondAttribute="bottom" constant="8" id="c2D-zn-X5A"/>
+                            <constraint firstItem="yiH-kg-KA4" firstAttribute="leading" secondItem="JHF-mr-oBC" secondAttribute="leading" constant="16" id="iqa-Px-CZf"/>
                             <constraint firstItem="Kvw-jX-Fc6" firstAttribute="top" secondItem="QPK-lA-KTJ" secondAttribute="bottom" id="kAc-xT-D9Y"/>
                             <constraint firstAttribute="trailing" secondItem="QPK-lA-KTJ" secondAttribute="trailing" id="kt0-ye-dw2"/>
-                            <constraint firstItem="2Ke-gb-2iL" firstAttribute="centerX" secondItem="JHF-mr-oBC" secondAttribute="centerX" id="ygq-yb-7KI"/>
+                            <constraint firstItem="QPK-lA-KTJ" firstAttribute="top" secondItem="yiH-kg-KA4" secondAttribute="bottom" constant="13" id="nak-x8-yh2"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Create Group" id="UC4-Rr-CKd">
@@ -474,6 +485,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="ImageVGroup" destination="yiH-kg-KA4" id="fk6-mo-quj"/>
                         <outlet property="tableView" destination="QPK-lA-KTJ" id="h8v-fa-TTR"/>
                         <outlet property="txtFName" destination="2Ke-gb-2iL" id="hPa-s9-CYp"/>
                     </connections>

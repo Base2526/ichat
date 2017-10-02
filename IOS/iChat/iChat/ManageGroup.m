@@ -161,7 +161,8 @@
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
     UIImage *chosenImage = info[UIImagePickerControllerEditedImage];
     
-     [self.imageV setImage:chosenImage];
+    [self.imageV setImage:chosenImage];
+    
     /*
     [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
     UpdatePictureProfileThread *uThread = [[UpdatePictureProfileThread alloc] init];
