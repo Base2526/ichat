@@ -71,6 +71,7 @@
 		605ED51D1F79558A00AD621C /* GKImageCropViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5071F79550F00AD621C /* GKImageCropViewController.m */; };
 		605ED51E1F79558A00AD621C /* GKImagePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5051F79550F00AD621C /* GKImagePicker.m */; };
 		605ED51F1F79558A00AD621C /* GKResizeableCropOverlayView.m in Sources */ = {isa = PBXBuildFile; fileRef = 605ED5091F79551000AD621C /* GKResizeableCropOverlayView.m */; };
+		606638BD1F81EFB80097AD62 /* CreateGroupChatThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 606638BC1F81EFB80097AD62 /* CreateGroupChatThread.m */; };
 		60CD1FD51F7D632C005CA3B4 /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 60CD1FD41F7D632C005CA3B4 /* db.sql */; };
 		60DE2A3C1F79605100F77FEB /* UpdatePictureProfileThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */; };
 		60E4A4FA1F7F546900536B58 /* GroupTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A4F81F7F546900536B58 /* GroupTableViewCell.m */; };
@@ -208,6 +209,8 @@
 		605ED5171F79552600AD621C /* PLCameraSheetDoneButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = PLCameraSheetDoneButton.png; path = GKImagePicker/GKImages/PLCameraSheetDoneButton.png; sourceTree = SOURCE_ROOT; };
 		605ED5181F79552600AD621C /* PLCameraSheetButtonPressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = PLCameraSheetButtonPressed.png; path = GKImagePicker/GKImages/PLCameraSheetButtonPressed.png; sourceTree = SOURCE_ROOT; };
 		605ED5191F79552600AD621C /* PLCameraSheetDoneButton@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "PLCameraSheetDoneButton@2x.png"; path = "GKImagePicker/GKImages/PLCameraSheetDoneButton@2x.png"; sourceTree = SOURCE_ROOT; };
+		606638BB1F81EFB80097AD62 /* CreateGroupChatThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CreateGroupChatThread.h; sourceTree = "<group>"; };
+		606638BC1F81EFB80097AD62 /* CreateGroupChatThread.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CreateGroupChatThread.m; sourceTree = "<group>"; };
 		60CD1FD41F7D632C005CA3B4 /* db.sql */ = {isa = PBXFileReference; lastKnownFileType = file; name = db.sql; path = ../../../../../../../db.sql; sourceTree = "<group>"; };
 		60DE2A3A1F79605100F77FEB /* UpdatePictureProfileThread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UpdatePictureProfileThread.h; sourceTree = "<group>"; };
 		60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UpdatePictureProfileThread.m; sourceTree = "<group>"; };
@@ -497,6 +500,8 @@
 				6051292F1F79E025008CB2B9 /* UpdateMyProfileThread.m */,
 				60DE2A3A1F79605100F77FEB /* UpdatePictureProfileThread.h */,
 				60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */,
+				606638BB1F81EFB80097AD62 /* CreateGroupChatThread.h */,
+				606638BC1F81EFB80097AD62 /* CreateGroupChatThread.m */,
 			);
 			path = Thread;
 			sourceTree = "<group>";
@@ -719,6 +724,7 @@
 				604A70181F791C7500807966 /* HJMOHandler.m in Sources */,
 				604A70191F791C7500807966 /* HJMOPolicy.m in Sources */,
 				605ED4F31F794F8700AD621C /* AnNmousUThread.m in Sources */,
+				606638BD1F81EFB80097AD62 /* CreateGroupChatThread.m in Sources */,
 				604A701A1F791C7500807966 /* HJMOUserBase.m in Sources */,
 				603BB8BC1F7A56B5006AC6D8 /* Message.m in Sources */,
 				60350E1A1F7EAC6400990C49 /* UIView+KeyBoardShowAndHidden.m in Sources */,

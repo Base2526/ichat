@@ -10,6 +10,7 @@
 #import "Configs.h"
 #import "HJManagedImageV.h"
 #import "AppDelegate.h"
+#import "CreateGroupChatThread.h"
 
 @interface CreateGroup (){
     // NSMutableDictionary *friends;
@@ -156,6 +157,7 @@
 
          */
         
+        /*
         NSMutableDictionary* members =[NSMutableDictionary dictionary];
         
         for (NSString* key in selectedIndex) {
@@ -177,6 +179,44 @@
             
             [self.navigationController popViewControllerAnimated:YES];
         }];
+        */
+        
+        NSMutableDictionary* members =[NSMutableDictionary dictionary];
+        for (NSString* key in selectedIndex) {
+            id value = [selectedIndex objectForKey:key];
+            // do stuff
+            [members setObject:@"" forKey:value];
+        }
+
+        [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Wait."];
+        CreateGroupChatThread *createGroup = [[CreateGroupChatThread alloc] init];
+        [createGroup setCompletionHandler:^(NSString *data) {
+            
+            NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
+            
+            [[Configs sharedInstance] SVProgressHUD_Dismiss];
+            
+            /*
+            if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
+                
+                [imageV clear];
+                [imageV showLoadingWheel];
+                [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
+                [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+                
+                [self updateURI:jsonDict[@"url"]];
+            }
+            */
+            
+            [self.navigationController popViewControllerAnimated:YES];
+            
+            [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+        }];
+        
+        [createGroup setErrorHandler:^(NSString *error) {
+            [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
+        }];
+        [createGroup start:str_name :[ImageVGroup image] : members];
     }else{
         NSLog(@"Name group empty or Not select Friend?");
     }

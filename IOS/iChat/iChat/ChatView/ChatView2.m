@@ -278,9 +278,7 @@
 }
 
 - (IBAction)onSend:(id)sender {
-    
     NSString *text = self.txtMessage.text;
-    
     
     NSString *ccmessage = [NSString stringWithFormat:@"toonchat_message/%@/", [friend objectForKey:@"chat_id"]];
     NSString *object_id = [[ref child:ccmessage] childByAutoId].key;

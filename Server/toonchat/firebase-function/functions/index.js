@@ -14,9 +14,26 @@ var db = admin.database();
 //  response.send("Hello from Firebase!");
 // });
 
+// https://stackoverflow.com/questions/43415759/use-firebase-cloud-function-to-send-post-request-to-non-google-server/43645498#43645498
+/*
+เป็นส่วน call api Drupal
+*/
+// var request = require('request');
+
+// request('http://128.199.247.179', function (error, response, body) {
+//   console.log('google > error:', error); // Print the error if one occurred
+//   console.log('google > statusCode:', response && response.statusCode); // Print the response status code if a response was received
+//   console.log('google > body:', body); // Print the HTML for the Google homepage.
+// });
+
+
 var path = 'toonchat';
 var path_message = 'toonchat_message';
 // https://github.com/firebase/firebase-functions/blob/master/src/providers/database.ts
+
+/*
+ เมือมีการ write /toochat/uid/{friends, invite_group, profile, group}/{key}
+*/
 exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWrite(event => {
 	// console.log(event.data);
 
@@ -28,6 +45,8 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 	//     return;
 	// }
 	if (!event.data.exists()) {
+		console.log("Removed : " + event.params.type);
+
 		return;
 	}
 
@@ -39,9 +58,9 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
         console.log('Created: send push notification');
     } else if (!crnt.val() && prev.val()) {
         // value removed
-        console.log('Removed: send push notification');
+        // console.log('Removed: send push notification');
     } else {
-        // value updated
+        // value edit & updated
         console.log('Updated');
     }
 
@@ -131,6 +150,10 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		               	'owner_id':event.params.uid,
 		               	'status':obj.status
 		               });
+
+		               /*
+						ต้องวิ่งไป update ที่ api ด้วย
+		               */
 		           }
 		        });
 
@@ -187,7 +210,6 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		      	console.log(">###< | " + event.params.key + " & "+ childSnapshot.key);
 		      }
 		      */
-
 
 		      if(childSnapshot.key == 'members'){
 		      	// var members = JSON.parse(childSnapshot.val());
@@ -278,10 +300,8 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		break;
 	}
 	
-
 	return;
 });
-
 
 exports.tiggerMessage = functions.database.ref(path_message + '/{chat_id}/{key}/').onWrite(event => {
 

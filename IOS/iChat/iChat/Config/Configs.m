@@ -132,7 +132,7 @@
         
         self.GET_PROFILES           = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/get_profiles"];
         
-        
+        self.CREATE_GROUP_CHAT      = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/create_group_chat"];
         
     
         self.kBarHeight = 50.0f;

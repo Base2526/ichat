@@ -47,6 +47,8 @@
 
 @property(nonatomic)NSString* UPDATE_PICTURE_PROFILE;
 
+@property(nonatomic)NSString* CREATE_GROUP_CHAT;
+
 @property(nonatomic)NSString* EDIT_PHONE;
 @property(nonatomic)NSString* EDIT_MULTI_PHONE;
 @property(nonatomic)NSString* EDIT_MULTI_EMAIL;

@@ -384,6 +384,37 @@ function toonchat_services_resources()
       ),
     ),
 
+    // 'create_group_chat'=>array(
+    //   'create' =>array(
+    //     'help'=>'Services สร้าง Group Chat : param uid, name(ชื่อกลุ่ม),image, members(array)',
+    //     'callback'=>'create_grouuid, imagep_chat',
+    //     'access callback' => 'user_access',
+    //     'access arguments' => array('access content'),
+    //     'access arguments append' => FALSE,
+    //   ),
+    // ),
+
+    'create_group_chat'=>array(
+      'create' =>array(
+        'help'=>'Services สร้าง Group Chat : param uid, name(ชื่อกลุ่ม),image, members(array)',
+        'callback'=>'create_group_chat',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
   );
   
   return $services;
@@ -554,6 +585,130 @@ function update_my_profile(){
 
 
   $result['result'] = TRUE;
+  return  $result;
+}
+
+function create_group_chat(){
+  $result = array();
+
+  if (empty($_REQUEST['uid'])) {
+    $result['result'] = FALSE;
+    $result['uid']    = "empty uid.";
+    return $result;
+  }
+
+  /*
+  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+  $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['status_message'];
+
+  profile2_save($profile);
+
+  // Firebase : udate name, status message
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $data_update = array(
+      "name"           =>$_REQUEST['name'],
+      "status_message" => $_REQUEST['status_message']
+  );
+
+  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);
+  // Firebase : udate name, status message
+  */
+
+  
+  // $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/', $values); 
+
+  // NSString *object_id = [[ref child:ccmessage] childByAutoId].key;
+
+  
+  $object_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  $values = array();
+  $values['field_name'] = 'field_profile_group'; 
+
+  // #1 object_id
+  $values['field_object_id'][LANGUAGE_NONE][0]['value'] = $object_id;
+
+
+  $image_url = array();
+  if($_REQUEST['image'] != ""){
+
+    $image = $_POST['image'];
+
+    // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+    $binary = base64_decode($image);
+
+    //Create the directory if it does not already exist, otherwise check the permissions
+    $directory = 'public://';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+    $currentDate = date("Ymd");
+    $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+    
+    //Saves a file to the specified destination and creates a database entry.
+    $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+    // save รูป profile
+    // $profile->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
+
+
+    $image_url= (array)$file;
+  }
+
+  // #2 fiele_picture_group
+  $values['field_picture_group'][LANGUAGE_NONE][0] = $image_url;
+  
+  
+  // #3 field_name_group
+  $values['field_name_group'][LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+
+  // Create the field collection entry and associate it with the profile
+  $field_entity = entity_create('field_collection_item', $values);
+  $field_entity->setHostEntity('profile2', $profile);
+  $field_entity->save();
+ 
+
+  // load field_profile_group by id ขึ้นมาเพือ insert  field_members_group ลงไป
+  $data_profile_group = field_collection_item_load($field_entity->item_id);
+
+  $members = array();
+  foreach ($_REQUEST['members'] as $key => $value){
+    $values_profile_group = array();
+    $values_profile_group['field_name'] = 'field_members_group'; 
+    $values_profile_group['field_members_group_friend_id'][LANGUAGE_NONE][0]['value'] = $value;
+    $values_profile_group['field_members_group_status'][LANGUAGE_NONE][0]['value'] = "pedding";
+
+    $field_entity_members_group = entity_create('field_collection_item', $values_profile_group);
+    $field_entity_members_group->setHostEntity("field_members_group", $data_profile_group);
+    $field_entity_members_group->save(); 
+
+
+    $members[$value] = array("status"=>"pedding");
+  }
+
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $f_value = array(
+      "create"   =>time(),
+      "is_owner" => $_REQUEST['status_message'],
+      "name"     => $_REQUEST['name'],
+      "image_url"=> $image_url,
+      "members"  => $members,
+      "owner_id" => $_REQUEST['uid']
+  );
+
+// [2]  (null)  @"x" : @"toonchat/1028/groupsohF32A7Y0jM9mHMNYyO7toonchat/" 
+  $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $object_id . '/' , $f_value);
+
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+  // $result['members']   = $_REQUEST['members'] ; 
+  // $result['x'] = FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $object_id . '/' ;
   return  $result;
 }
 

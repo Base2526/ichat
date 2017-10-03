@@ -480,7 +480,7 @@
                     <navigationItem key="navigationItem" title="Create Group" id="UC4-Rr-CKd">
                         <barButtonItem key="rightBarButtonItem" title="Create" id="fCU-qM-3Wf">
                             <connections>
-                                <action selector="onCreateGroup:" destination="CIj-rj-10j" id="4QZ-rA-LSy"/>
+                                <action selector="onCreateGroup:" destination="CIj-rj-10j" id="I0d-Ek-Pib"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>

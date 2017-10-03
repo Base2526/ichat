@@ -29,6 +29,8 @@
 	define("FIREBASE_DEFAULT_UPDATE", 'update/');
 
 
+	define("PATH_GROUPS", "groups");
+
 
 	// Bundle Identifier  
 	define("BI_IOS_BASIC", "heart.basic");
