@@ -1,18 +1,22 @@
 //
-//  UpdatePictureProfileThread.m
-//  Heart
+//  GroupDeleteMemberThread.m
+//  iChat
 //
-//  Created by Somkid on 12/22/2559 BE.
-//  Copyright © 2559 Klovers.org. All rights reserved.
+//  Created by Somkid on 5/10/2560 BE.
+//  Copyright © 2560 klovers.org. All rights reserved.
 //
 
-#import "UpdatePictureProfileThread.h"
+#import "GroupDeleteMemberThread.h"
+//
+//@implementation
+//
+//@end
+
 #import "Configs.h"
 #import "AppConstant.h"
 
-@implementation UpdatePictureProfileThread
-
--(void)start: (UIImage *)image
+@implementation GroupDeleteMemberThread
+-(void)start: (NSString*)group_id :(NSString *)member_id
 {
     //if there is a connection going on just cancel it.
     [self.connection cancel];
@@ -22,7 +26,7 @@
     // [data release];
     
     // http://localhost/test-parse/gen_qrcode.php?user=52So6zp2om
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@.json",  [Configs sharedInstance].API_URL, [Configs sharedInstance].UPDATE_PICTURE_PROFILE ]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@.json",  [Configs sharedInstance].API_URL, [Configs sharedInstance].GROUP_INVITE_NEW_MEMBERS]];
     
     //initialize a request from url
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:[Configs sharedInstance].timeOut];;//[NSMutableURLRequest requestWithURL:[url standardizedURL]];
@@ -31,16 +35,11 @@
     [request setHTTPMethod:@"POST"];
     [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
     
-    NSString *imgString =@"";
-    if (image != nil) {
-        NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
-        imgString = [[self base64forData:imageData] stringByReplacingOccurrencesOfString:@"+" withString:@"%2B"];
-    }
-    
-    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
-    
     UIDevice *deviceInfo = [UIDevice currentDevice];
-    NSString *dataToSend = [[NSString alloc] initWithFormat:@"uid=%@&image=%@", [[Configs sharedInstance] getUIDU], imgString];
+    NSMutableString *dataToSend = [NSMutableString string];
+
+    [dataToSend appendFormat:@"uid=%@&group_id=%@&member_id=%@", [[Configs sharedInstance] getUIDU], group_id, member_id];
+    
     [request setHTTPBody:[dataToSend dataUsingEncoding:NSUTF8StringEncoding]];
     
     //initialize a connection from request
@@ -87,35 +86,5 @@
         self.completionHandler(self.receivedData);
     }
 }
-
-- (NSString*)base64forData:(NSData*) theData {
-    const uint8_t* input = (const uint8_t*)[theData bytes];
-    NSInteger length = [theData length];
-    
-    static char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    
-    NSMutableData* data = [NSMutableData dataWithLength:((length + 2) / 3) * 4];
-    uint8_t* output = (uint8_t*)data.mutableBytes;
-    
-    NSInteger i;
-    for (i=0; i < length; i += 3) {
-        NSInteger value = 0;
-        NSInteger j;
-        for (j = i; j < (i + 3); j++) {
-            value <<= 8;
-            
-            if (j < length) {
-                value |= (0xFF & input[j]);
-            }
-        }
-        
-        NSInteger theIndex = (i / 3) * 4;
-        output[theIndex + 0] =                    table[(value >> 18) & 0x3F];
-        output[theIndex + 1] =                    table[(value >> 12) & 0x3F];
-        output[theIndex + 2] = (i + 1) < length ? table[(value >> 6)  & 0x3F] : '=';
-        output[theIndex + 3] = (i + 2) < length ? table[(value >> 0)  & 0x3F] : '=';
-    }
-    
-    return [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-}
 @end
+

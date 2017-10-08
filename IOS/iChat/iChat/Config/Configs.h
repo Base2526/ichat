@@ -48,6 +48,13 @@
 @property(nonatomic)NSString* UPDATE_PICTURE_PROFILE;
 
 @property(nonatomic)NSString* CREATE_GROUP_CHAT;
+@property(nonatomic)NSString* DELETE_GROUP_CHAT;
+@property(nonatomic)NSString* GROUP_INVITE_NEW_MEMBERS;
+@property(nonatomic)NSString* CREATE_MUTI_CHAT;
+@property(nonatomic)NSString* MUTI_CHAT_INVITE_NEW_MEMBERS;
+
+// update_picture_group
+@property(nonatomic)NSString* UPDATE_PROFLIE_GROUP;
 
 @property(nonatomic)NSString* EDIT_PHONE;
 @property(nonatomic)NSString* EDIT_MULTI_PHONE;

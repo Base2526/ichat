@@ -12,8 +12,8 @@
 #import "MessageRepo.h"
 #import "Message.h"
 
-#import "Members.h"
-#import "Invite.h"
+#import "GroupMembers.h"
+#import "GroupInvite.h"
 
 #import "UIView+KeyBoardShowAndHidden.h"
 
@@ -104,14 +104,12 @@
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if ([segue.identifier isEqualToString:@"members"]) {
-        Members *members = (Members*)segue.destinationViewController;
+    if ([segue.identifier isEqualToString:@"GroupMembers"]) {
+        GroupMembers *members = (GroupMembers*)segue.destinationViewController;
         members.group = self.group;
-        NSLog(@"");
-    }else if([segue.identifier isEqualToString:@"invite"]){
-        Invite *invite = (Invite*)segue.destinationViewController;
+    }else if([segue.identifier isEqualToString:@"GroupInvite"]){
+        GroupInvite *invite = (GroupInvite*)segue.destinationViewController;
         invite.group = self.group;
-        NSLog(@"");
     }
 }
 
@@ -459,5 +457,4 @@
 - (void)hidden{
     [self.view endEditing:YES];
 }
-
 @end

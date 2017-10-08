@@ -11,9 +11,10 @@
 #import "InviteFriends.h"
 #import "MessageRepo.h"
 #import "Message.h"
-
-
 #import "UIView+KeyBoardShowAndHidden.h"
+#import "MultiInvite.h"
+#import "MultiMembers.h"
+#import "UserDataUIAlertView.h"
 
 @interface ChatView2 (){
     
@@ -31,12 +32,11 @@
 @synthesize friend, msRepo, _viewBottom;
 @synthesize ref, messages;
 
+@synthesize barItemMembers;
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
-    
 
-    
     [self.view addSubview:_viewBottom];
     
     [_viewBottom showAccessoryViewAnimation];
@@ -92,6 +92,19 @@
     
     [self reloadData:nil];
     [self detectOnline:nil];
+    
+    
+    if ([self.typeChat isEqualToString:@"1"] || [self.typeChat isEqualToString:@"2"]) {
+        
+        [self.barItemMembers setEnabled:NO];
+        [self.barItemMembers setTintColor: [UIColor clearColor]];
+    }else if([self.typeChat isEqualToString:@"4"]){
+        [self.barItemMembers setEnabled:YES];
+        [self.barItemMembers setTintColor:nil];
+        
+        NSDictionary *members = [self.friend valueForKey:@"members"];
+        self.barItemMembers.title = [NSString stringWithFormat:@"Members(%d)", [members count]];
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -113,6 +126,7 @@
     // [self.messages removeAllObjects];
     
     if (notification == nil) {
+        /*
         NSMutableArray *all_message = [msRepo getMessageByChatId:[friend objectForKey:@"chat_id"]];
         
         NSInteger ichat_id = [msRepo.dbManager.arrColumnNames indexOfObject:@"chat_id"];
@@ -147,20 +161,9 @@
             ms.create  = [message objectAtIndex:icreate];
             ms.update  = [message objectAtIndex:iupdate];
             
-//            Message *ms = [[Message alloc] init];
-//            ms.chat_id = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)ichat_id]];
-//            ms.object_id  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)iobject_id]];
-//            ms.text  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)itext]];
-//            ms.type  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)itype]];
-//            ms.sender_id  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)isender_id]];
-//            ms.receive_id  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)ireceive_id]];
-//            ms.status  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)istatus]];
-//            ms.reader  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)ireader]];
-//            ms.create  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)icreate]];
-//            ms.update  = [[all_message objectAtIndex:i] objectForKey:[NSString stringWithFormat:@"%ld",(long)iupdate]];
-            
             [self.messages addObject:ms];
         }
+        */
     }else{
     
         if ([notification.name isEqualToString:@"ChatView_reloadData"]) {
@@ -204,15 +207,44 @@
     NSLog(@"");
 }
 
-/*
-#pragma mark - Navigation
 
+#pragma mark - Navigation
 // In a storyboard-based application, you will often want to do a little preparation before navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     // Get the new view controller using [segue destinationViewController].
     // Pass the selected object to the new view controller.
+    
+    if ([segue.identifier isEqualToString:@"MultiInvite"]) {
+        MultiInvite *muti = (MultiInvite*)segue.destinationViewController;
+        
+    
+        if ([self.typeChat isEqualToString:@"1"] || [self.typeChat isEqualToString:@"2"]) {
+            muti.typeChat = self.typeChat;
+            muti.friend_id = [friend objectForKey:@"friend_id"];
+        }else if([self.typeChat isEqualToString:@"4"]){
+            // Multi Chat
+            muti.typeChat = self.typeChat;
+            muti.friend_id = @"";
+            muti.multi_members = self.friend;
+        }
+        
+    }else if ([segue.identifier isEqualToString:@"MultiMembers"]) {
+        MultiMembers *members = (MultiMembers*)segue.destinationViewController;
+        members.group = self.friend;
+        
+    }
 }
-*/
+
+//- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+//{
+//    if ([segue.identifier isEqualToString:@"MultiMembers"]) {
+//        MultiMembers *members = (MultiMembers*)segue.destinationViewController;
+//        members.group = self.group;
+//    }else if([segue.identifier isEqualToString:@"MultiInvite"]){
+//        MutiInvite *invite = (MutiInvite*)segue.destinationViewController;
+//        invite.friend_id = @"";
+//    }
+//}
 
 -(void) tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath{
     if([indexPath row] == ((NSIndexPath*)[[tableView indexPathsForVisibleRows] lastObject]).row){
@@ -413,22 +445,105 @@
             }
         }];
     }
-    
-    
-    //Update data source with the object that you need to add
-    
-    
+}
 
+- (IBAction)onSettings:(id)sender {
     
-   
-    
-    // [self scrollToBottom];
+    if ([self.typeChat isEqualToString:@"1"] || [self.typeChat isEqualToString:@"2"]) {
+        
+        //Do Whatever You want on End of Gesture
+        UserDataUIAlertView *alert = [[UserDataUIAlertView alloc] initWithTitle:nil
+                                                   message:nil
+                                                  delegate:self
+                                         cancelButtonTitle:@"Close"
+                                         otherButtonTitles:@"Invite friend(สร้าง Multi-Chat)", nil];
+        
+        alert.userData = @"";
+        alert.tag = 1;
+        [alert show];
+    }else if([self.typeChat isEqualToString:@"4"]){
+        
+        NSDictionary *members = [self.friend valueForKey:@"members"];
+        
+        //Do Whatever You want on End of Gesture
+        UserDataUIAlertView * alert = [[UserDataUIAlertView alloc] initWithTitle:nil
+                                                   message:nil
+                                                  delegate:self
+                                         cancelButtonTitle:@"Close"
+                                         otherButtonTitles:@"Invite friend(เพิ่มเพื่อนใหม่เข้า Multi-Chat)", [NSString stringWithFormat:@"Members(%d)", [members count]], nil];
+        
+        alert.userData = @"";
+        alert.tag = 2;
+        [alert show];
+    }
+}
+
+- (void)alertView:(UserDataUIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    // the user clicked one of the OK/Cancel buttons
+    if (alertView.tag == 1) {
+        
+        NSIndexPath * indexPath = alertView.userData;
+        
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+            }
+                break;
+                
+            case 1:{
+                // Invite friend(สร้าง Multi-Chat)
+                
+                UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+                MultiInvite *muti = [storybrd instantiateViewControllerWithIdentifier:@"MultiInvite"];
+                
+                muti.typeChat = self.typeChat;
+                muti.friend_id = [friend objectForKey:@"friend_id"];
+                [self.navigationController pushViewController:muti animated:YES];
+            }
+                break;
+        }
+    }else if(alertView.tag == 2){
+        NSIndexPath * indexPath = alertView.userData;
+        
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+            }
+                break;
+                
+            case 1:{
+                // Invite friend(เพิ่มเพื่อนใหม่เข้า Multi-Chat)
+                NSLog(@"");
+                
+                UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+                MultiInvite *muti = [storybrd instantiateViewControllerWithIdentifier:@"MultiInvite"];
+                
+                muti.typeChat = self.typeChat;
+                muti.friend_id = @"";
+                muti.multi_members = self.friend;
+                [self.navigationController pushViewController:muti animated:YES];
+            }
+                break;
+                
+            case 2:{
+                // Members
+                NSLog(@"");
+                
+                // MultiMembers *members = (MultiMembers*)segue.destinationViewController;
+                
+                UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+                MultiMembers *members = [storybrd instantiateViewControllerWithIdentifier:@"MultiMembers"];
+                members.group = self.friend;
+                
+                [self.navigationController pushViewController:members animated:YES];
+            }
+                break;
+        }
+    }
 }
 
 -(void)scrollToBottom{
-    
     [self.tableView scrollRectToVisible:CGRectMake(0, self.tableView.contentSize.height - self.tableView.bounds.size.height, self.tableView.bounds.size.width, self.tableView.bounds.size.height) animated:NO];
-    
 }
 
 
@@ -451,7 +566,6 @@
     [UIView animateWithDuration:time delay:0 options: [dic[UIKeyboardAnimationCurveUserInfoKey] integerValue] << 16 animations:^{
         _viewBottom.transform = CGAffineTransformIdentity;
     } completion:nil];
-    
 }
 
 - (void)hidden{

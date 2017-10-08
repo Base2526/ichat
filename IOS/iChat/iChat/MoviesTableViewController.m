@@ -21,6 +21,9 @@
 #import "ChatView2.h"
 #import "GroupChatView.h"
 #import "ManageGroup.h"
+#import "ManageMultiChat.h"
+
+//#import "MultiChatView.h"
 
 @interface MoviesTableViewController (){
     NSMutableDictionary *data;
@@ -226,34 +229,38 @@
     
     // #4 groups
     NSMutableDictionary *groups = [[NSMutableDictionary alloc] init];
+    [data setValue:groups forKey:@"groups"];
     if ([all_data objectForKey:@"groups"]) {
         [data setValue:[all_data objectForKey:@"groups"] forKey:@"groups"];
     }
-    [data setValue:[all_data objectForKey:@"groups"] forKey:@"groups"];
+    
     // #4 groups
     
     // #5 multi_chat
     NSMutableDictionary *multi_chat = [[NSMutableDictionary alloc] init];
+    [data setValue:multi_chat forKey:@"multi_chat"];
     if ([all_data objectForKey:@"multi_chat"]) {
         [data setValue:[all_data objectForKey:@"multi_chat"] forKey:@"multi_chat"];
     }
-    [data setValue:multi_chat forKey:@"multi_chat"];
+    
     // #5 multi_chat
     
     // #6 invite_group
     NSMutableDictionary *invite_group = [[NSMutableDictionary alloc] init];
+    [data setValue:invite_group forKey:@"invite_group"];
     if ([all_data objectForKey:@"invite_group"]) {
         [data setValue:[all_data objectForKey:@"invite_group"] forKey:@"invite_group"];
     }
-    [data setValue:invite_group forKey:@"invite_group"];
+    
     // #6 invite_group
     
     // #7 invite_multi_chat
     NSMutableDictionary *invite_multi_chat = [[NSMutableDictionary alloc] init];
+    [data setValue:invite_multi_chat forKey:@"invite_multi_chat"];
     if ([all_data objectForKey:@"invite_multi_chat"]) {
         [data setValue:[all_data objectForKey:@"invite_multi_chat"] forKey:@"invite_multi_chat"];
     }
-    [data setValue:invite_multi_chat forKey:@"invite_multi_chat"];
+    
     // #7 invite_multi_chat
     
     
@@ -574,9 +581,9 @@
     }else{
 
         FriendTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"FriendTableViewCell"];
-         if (!cell){
+         // if (!cell){
             cell = [tableView dequeueReusableCellWithIdentifier:@"FriendTableViewCell"];
-         }
+         // }
     
         switch (indexPath.section) {
             case 1:{
@@ -590,6 +597,15 @@
                 
             
                 NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:key];
+                
+                if ([f objectForKey:@"image_url"]) {
+                    [cell.imgPerson clear];
+                    [cell.imgPerson showLoadingWheel]; // API_URL
+                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [f objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                }else{
+                    [cell.imgPerson clear];
+                }
                 
                 cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], key] ;
                 
@@ -651,6 +667,15 @@
                 id item = [friends objectForKey:key];
                 
                 NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:key];
+                
+                if ([f objectForKey:@"image_url"]) {
+                    [cell.imgPerson clear];
+                    [cell.imgPerson showLoadingWheel]; // API_URL
+                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [f objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                }else{
+                    [cell.imgPerson clear];
+                }
                 
                 cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], key] ;
                 
@@ -718,6 +743,19 @@
                  - members
                  */
                 
+                // imgPerson
+                
+                // NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+                if ([item objectForKey:@"image_url"]) {
+                    [cell.imgPerson clear];
+                    [cell.imgPerson showLoadingWheel]; // API_URL
+                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                }else{
+                    [cell.imgPerson clear];
+                }
+                
+                
                 cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], key] ;
                 // cell.lblMember.text = [NSString stringWithFormat:@"%@", [(NSDictionary *)[item objectForKey:@"members"] count] ] ;
                 NSDictionary * member= [item objectForKey:@"members"];
@@ -744,12 +782,78 @@
                 // @"Multi Chat";
                 NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
                 
-                NSLog(@"");
+                NSArray *keys = [multi_chat allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                id item = [multi_chat objectForKey:key];
+                
+                if ([item objectForKey:@"image_url"]) {
+                    [cell.imgPerson clear];
+                    [cell.imgPerson showLoadingWheel]; // API_URL
+                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                }else{
+                    [cell.imgPerson clear];
+                }
+                
+                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"chat_id"], key] ;
+                // cell.lblMember.text = [NSString stringWithFormat:@"%@", [(NSDictionary *)[item objectForKey:@"members"] count] ] ;
+                NSDictionary * member= [item objectForKey:@"members"];
+                
+                cell.lblChangeFriendsName.text = [NSString stringWithFormat:@"%d people", [member count] ] ;
+                cell.lblType.text = @"";
+                cell.lblIsFavorites.text = @"";
+                cell.lblIsHide.text = @"";
+                cell.lblIsBlock.text = @"";
+                cell.lblOnline.text = @"";
+                
+                // UserDataUILongPressGestureRecognizer
+                UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
+                
+                lpgr.userData = indexPath;
+                // lpgr.minimumPressDuration = 1.0; //seconds
+                [cell addGestureRecognizer:lpgr];
+                
                 break;
             }
             case 5:{
                 // @"Invite Group";
                 NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
+                
+                NSArray *keys = [invite_group allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+//                id item = [invite_group objectForKey:key];
+                
+                
+                id item = [[Configs sharedInstance] loadData:key];
+                
+                if ([item objectForKey:@"image_url"]) {
+                    [cell.imgPerson clear];
+                    [cell.imgPerson showLoadingWheel]; // API_URL
+                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                }else{
+                    [cell.imgPerson clear];
+                }
+                
+                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], key] ;
+                
+                NSDictionary * member= [item objectForKey:@"members"];
+                
+                cell.lblChangeFriendsName.text = [NSString stringWithFormat:@"%d people", [member count] ] ;
+                cell.lblType.text = @"";
+                cell.lblIsFavorites.text = @"";
+                cell.lblIsHide.text = @"";
+                cell.lblIsBlock.text = @"";
+                cell.lblOnline.text = @"";
+                
+                // UserDataUILongPressGestureRecognizer
+                UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
+                
+                lpgr.userData = indexPath;
+                // lpgr.minimumPressDuration = 1.0; //seconds
+                [cell addGestureRecognizer:lpgr];
                 
                 NSLog(@"");
                 break;
@@ -757,6 +861,29 @@
             case 6:{
                 // @"Invite Multi Chat";
                 NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
+     
+                NSArray *keys = [invite_multi_chat allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                id item = [invite_multi_chat objectForKey:key];
+                
+                [cell.imgPerson clear];
+                
+                cell.lblName.text = [NSString stringWithFormat:@"%@", key] ;
+                
+                cell.lblChangeFriendsName.text = @"";
+                cell.lblType.text = @"";
+                cell.lblIsFavorites.text = @"";
+                cell.lblIsHide.text = @"";
+                cell.lblIsBlock.text = @"";
+                cell.lblOnline.text = @"";
+                
+                // UserDataUILongPressGestureRecognizer
+                UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
+                
+                lpgr.userData = indexPath;
+                // lpgr.minimumPressDuration = 1.0; //seconds
+                [cell addGestureRecognizer:lpgr];
                 
                 NSLog(@"");
                 break;
@@ -764,59 +891,6 @@
             default:
                 break;
         }
-        
-        /*
-        NSMutableArray *friends = [data valueForKey:@"friends"];
-        NSMutableDictionary *item = [friends objectAtIndex:indexPath.row];
-    
-        NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[item objectForKey:@"friend_id"]];
-        
-        cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], [item objectForKey:@"friend_id"]] ;
-        
-        cell.lblChangeFriendsName.text = @"";
-        if ([item objectForKey:@"change_friends_name"]) {
-            cell.lblChangeFriendsName.text = [item objectForKey:@"change_friends_name"];
-        }
-        
-        cell.lblType.text = [item objectForKey:@"type"];
-    
-        cell.lblIsFavorites.text = @"NO";
-        if ([item objectForKey:@"favorite"]) {
-         
-            if ([[item objectForKey:@"favorite"] isEqualToString:@"1"]) {
-                cell.lblIsFavorites.text = @"YES";
-            }
-        }
-        
-        cell.lblIsHide.text = @"NO";
-        if ([item objectForKey:@"hide"]) {
-            
-            if ([[item objectForKey:@"hide"] isEqualToString:@"1"]) {
-                cell.lblIsHide.text = @"YES";
-            }
-        }
-        
-        cell.lblIsBlock.text = @"NO";
-        if ([item objectForKey:@"block"]) {
-            if ([[item objectForKey:@"block"] isEqualToString:@"1"]) {
-                cell.lblIsBlock.text = @"YES";
-            }
-        }
-        
-        cell.lblOnline.text = @"NO";
-        
-        // UserDataUILongPressGestureRecognizer
-        UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-        // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
-        
-        
-        
-        lpgr.userData = indexPath;
-        // lpgr.minimumPressDuration = 1.0; //seconds
-        [cell addGestureRecognizer:lpgr];
-        
-        */
-        
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
     
         return cell;
@@ -831,7 +905,6 @@
         MyProfile* profile = [storybrd instantiateViewControllerWithIdentifier:@"MyProfile"];
         [self.navigationController pushViewController:profile animated:YES];
     }else{
-        
         switch (indexPath.section) {
             case 1:{
                 // @"Favorite"
@@ -849,7 +922,7 @@
                 
                 ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
                 chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
-                chatView2.isType =@"1";
+                chatView2.typeChat =@"1";
                 [self.navigationController pushViewController:chatView2 animated:YES];
             }
                 break;
@@ -869,25 +942,59 @@
                 
                 ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
                 chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
-                chatView2.isType =@"2";
+                chatView2.typeChat =@"2";
                 [self.navigationController pushViewController:chatView2 animated:YES];
             }
                 break;
                 
             case 3:{
                 // Groups
-                NSMutableDictionary *friends = [data valueForKey:@"groups"];
+                NSMutableDictionary *groups = [data valueForKey:@"groups"];
                 
-                NSArray *keys = [friends allKeys];
+                NSArray *keys = [groups allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
-                NSMutableDictionary*  item = [friends objectForKey:key];
-                [item setValue:key forKey:@"chat_id"];
+                NSMutableDictionary*  item = [groups objectForKey:key];
+                [item setValue:key forKey:@"group_id"];
   
                 GroupChatView *groupChatView = [storybrd instantiateViewControllerWithIdentifier:@"GroupChatView"];
                 groupChatView.group =item;//[friends objectAtIndex:indexPath.row];
    
                 [self.navigationController pushViewController:groupChatView animated:YES];
             }
+                break;
+                
+            case 4:{
+                // Multi Chat
+                NSMutableDictionary *groups = [data valueForKey:@"multi_chat"];
+                
+                NSArray *keys = [groups allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                NSMutableDictionary*  item = [groups objectForKey:key];
+                [item setValue:key forKey:@"multi_chat_id"];
+                
+//                MultiChatView *groupChatView = [storybrd instantiateViewControllerWithIdentifier:@"MultiChatView"];
+//                groupChatView.group =item;//[friends objectAtIndex:indexPath.row];
+//
+//                [self.navigationController pushViewController:groupChatView animated:YES];
+                
+                
+                ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
+                chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
+                chatView2.typeChat =@"4";
+                [self.navigationController pushViewController:chatView2 animated:YES];
+            }
+                break;
+                
+            case 5:{
+                // Invite Group
+                NSLog(@"");
+            }
+                break;
+            case 6:{
+                // @"Invite Multi Chat";
+                NSLog(@"");
+            }
+                
                 break;
         }
     }
@@ -930,11 +1037,56 @@
                                                                                 message:nil
                                                                                delegate:self
                                                                       cancelButtonTitle:@"Close"
-                                                                      otherButtonTitles:@"Manage group", nil];
+                                                                      otherButtonTitles:@"Manage group", @"Delete Group", nil];
                 
                 alert.userData = section;
                 alert.tag = 2;
                 [alert show];
+                break;
+                
+            case 4:{
+                // Multi Chat
+                NSLog(@"");
+                
+                alert = [[UserDataUIAlertView alloc] initWithTitle:@"Multi Chat"
+                                                           message:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:@"Close"
+                                                 otherButtonTitles:@"Manage Multi Chat", @"Delete Multi Chat", nil];
+                
+                alert.userData = section;
+                alert.tag = 4;
+                [alert show];
+            }
+                break;
+                
+            case 5:{
+                // Invite Group
+                alert = [[UserDataUIAlertView alloc] initWithTitle:@"Invite Group"
+                                                           message:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:@"Close"
+                                                 otherButtonTitles:@"Reject", @"Join", nil];
+                
+                alert.userData = section;
+                alert.tag = 5;
+                [alert show];
+                NSLog(@"");
+            }
+                break;
+            case 6:{
+                // @"Invite Multi Chat";
+                alert = [[UserDataUIAlertView alloc] initWithTitle:@"Invite Multi Chat"
+                                                           message:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:@"Close"
+                                                 otherButtonTitles:@"Reject", @"Join", nil];
+                
+                alert.userData = section;
+                alert.tag = 6;
+                [alert show];
+                NSLog(@"");
+            }
                 break;
             default:
                 break;
@@ -1176,6 +1328,8 @@
         }
         
     }else if (alertView.tag == 2) {
+        
+        NSIndexPath * indexPath = alertView.userData;
         switch (buttonIndex) {
             case 0:{
                 // Close
@@ -1184,11 +1338,191 @@
                 break;
          
             case 1:{
+                
+                NSMutableDictionary *friends = [data valueForKey:@"groups"];
+                
+                NSArray *keys = [friends allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                NSMutableDictionary*  item = [friends objectForKey:key];
+                [item setValue:key forKey:@"group_id"];
+                
                 UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
                 ManageGroup *manageGroup = [storybrd instantiateViewControllerWithIdentifier:@"ManageGroup"];
-                // groupChatView.group =item;//[friends objectAtIndex:indexPath.row];
+                manageGroup.group =item;//[friends objectAtIndex:indexPath.row];
                 
                 [self.navigationController pushViewController:manageGroup animated:YES];
+            }
+                break;
+            case 2:{
+                
+                NSMutableDictionary *friends = [data valueForKey:@"groups"];
+                
+                NSArray *keys = [friends allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                NSMutableDictionary*  item = [friends objectForKey:key];
+                [item setValue:key forKey:@"group_id"];
+                
+                UserDataUIAlertView *alert = [[UserDataUIAlertView alloc] initWithTitle:@"Delete group"
+                                                           message:@"Are you sure delete group?"
+                                                          delegate:self
+                                                 cancelButtonTitle:@"Close"
+                                                 otherButtonTitles:@"Delete", nil];
+            
+                alert.userData = item;
+                alert.tag = 3;
+                [alert show];
+            }
+                break;
+        }
+    }else if(alertView.tag == 3){
+        NSMutableDictionary *item = alertView.userData;
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+                NSLog(@"Close");
+            }
+                break;
+            case 1:{
+                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [item objectForKey:@"group_id"]];
+                [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                    
+                    if (error == nil) {
+                        // [ref parent]
+                        //NSString* parent = ref.parent.key;
+                        
+                        // จะได้ Group id
+                        NSString* key = [ref key];
+                        
+                        NSLog(@"");
+                    }
+                }];
+            }
+                break;
+        }
+    }else if(alertView.tag == 4){
+        // Multi Chat
+        NSIndexPath *indexPath = alertView.userData;
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+                NSLog(@"Close");
+            }
+                break;
+            case 1:{
+                // Manage Multi Chat
+                
+                
+                NSMutableDictionary *groups = [data valueForKey:@"multi_chat"];
+                
+                NSArray *keys = [groups allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                NSMutableDictionary*  item = [groups objectForKey:key];
+                [item setValue:key forKey:@"multi_chat_id"];
+             
+                // ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
+                // chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
+                // chatView2.typeChat =@"4";
+
+                UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+                ManageMultiChat *manageMultiChat = [storybrd instantiateViewControllerWithIdentifier:@"ManageMultiChat"];
+                manageMultiChat.friend =item;
+                manageMultiChat.typeChat =@"4";
+                
+                [self.navigationController pushViewController:manageMultiChat animated:YES];
+            }
+                break;
+            case 2:{
+                
+                NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
+                
+                NSArray *keys = [multi_chat allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                id item = [multi_chat objectForKey:key];
+                
+                NSLog(@"Delete Multi Chat");
+                NSString *child = [NSString stringWithFormat:@"toonchat/%@/multi_chat/%@/", [[Configs sharedInstance] getUIDU], key];
+                [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+
+                    if (error == nil) {
+                        // [ref parent]
+                        //NSString* parent = ref.parent.key;
+
+                        // จะได้ Group id
+                        NSString* key = [ref key];
+
+                        NSLog(@"");
+                    }
+                }];
+            }
+                break;
+        }
+    }else if(alertView.tag == 5){
+        // Invite Group
+        
+        // @"Reject", @"Join"
+        NSLog(@"");
+        
+        NSMutableDictionary *item = alertView.userData;
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+                NSLog(@"Close");
+            }
+                break;
+            case 1:{
+                NSLog(@"Reject");
+                //                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [item objectForKey:@"group_id"]];
+                //                [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                //
+                //                    if (error == nil) {
+                //                        // [ref parent]
+                //                        //NSString* parent = ref.parent.key;
+                //
+                //                        // จะได้ Group id
+                //                        NSString* key = [ref key];
+                //
+                //                        NSLog(@"");
+                //                    }
+                //                }];
+            }
+                break;
+            case 2:{
+                NSLog(@"Join");
+            }
+                break;
+        }
+    }else if(alertView.tag == 6){
+        // @"Invite Multi Chat";
+        
+        // @"Reject", @"Join"
+        NSLog(@"");
+        
+        NSMutableDictionary *item = alertView.userData;
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+                NSLog(@"Close");
+            }
+                break;
+            case 1:{
+                NSLog(@"Reject");
+                //                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [item objectForKey:@"group_id"]];
+                //                [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                //
+                //                    if (error == nil) {
+                //                        // [ref parent]
+                //                        //NSString* parent = ref.parent.key;
+                //
+                //                        // จะได้ Group id
+                //                        NSString* key = [ref key];
+                //
+                //                        NSLog(@"");
+                //                    }
+                //                }];
+            }
+                break;
+            case 2:{
+                NSLog(@"Join");
             }
                 break;
         }
@@ -1197,8 +1531,6 @@
 
 - (IBAction)onLogout:(id)sender {
     [[Configs sharedInstance] removeData:_USER];
-    
     [self viewWillAppear:false];
-
 }
 @end

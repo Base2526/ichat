@@ -134,6 +134,15 @@
         
         self.CREATE_GROUP_CHAT      = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/create_group_chat"];
         
+        self.DELETE_GROUP_CHAT      = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/delete_group_chat"];
+        
+        self.GROUP_INVITE_NEW_MEMBERS = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/group_invite_new_members"];
+        
+        self.CREATE_MUTI_CHAT       = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/create_muti_chat"];
+        
+        self.MUTI_CHAT_INVITE_NEW_MEMBERS       = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/muti_chat_invite_new_members"];
+        
+        self.UPDATE_PROFLIE_GROUP   = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/update_profile_group"];
     
         self.kBarHeight = 50.0f;
         

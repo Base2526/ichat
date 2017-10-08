@@ -1,18 +1,18 @@
 //
-//  UpdatePictureProfileThread.m
-//  Heart
+//  UpdatePictureGroupThread.m
+//  iChat
 //
-//  Created by Somkid on 12/22/2559 BE.
-//  Copyright © 2559 Klovers.org. All rights reserved.
+//  Created by Somkid on 8/10/2560 BE.
+//  Copyright © 2560 klovers.org. All rights reserved.
 //
 
-#import "UpdatePictureProfileThread.h"
+#import "UpdateProfileGroupThread.h"
 #import "Configs.h"
 #import "AppConstant.h"
 
-@implementation UpdatePictureProfileThread
+@implementation UpdateProfileGroupThread
 
--(void)start: (UIImage *)image
+-(void)start :(NSString *)group_id :(NSString *)name : (UIImage *)image
 {
     //if there is a connection going on just cancel it.
     [self.connection cancel];
@@ -22,7 +22,7 @@
     // [data release];
     
     // http://localhost/test-parse/gen_qrcode.php?user=52So6zp2om
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@.json",  [Configs sharedInstance].API_URL, [Configs sharedInstance].UPDATE_PICTURE_PROFILE ]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@.json",  [Configs sharedInstance].API_URL, [Configs sharedInstance].UPDATE_PROFLIE_GROUP ]];
     
     //initialize a request from url
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:[Configs sharedInstance].timeOut];;//[NSMutableURLRequest requestWithURL:[url standardizedURL]];
@@ -40,7 +40,7 @@
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     
     UIDevice *deviceInfo = [UIDevice currentDevice];
-    NSString *dataToSend = [[NSString alloc] initWithFormat:@"uid=%@&image=%@", [[Configs sharedInstance] getUIDU], imgString];
+    NSString *dataToSend = [[NSString alloc] initWithFormat:@"uid=%@&group_id=%@&name=%@&image=%@", [[Configs sharedInstance] getUIDU], group_id, name, imgString];
     [request setHTTPBody:[dataToSend dataUsingEncoding:NSUTF8StringEncoding]];
     
     //initialize a connection from request
@@ -119,3 +119,4 @@
     return [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
 }
 @end
+

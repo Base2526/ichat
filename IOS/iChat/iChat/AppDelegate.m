@@ -325,6 +325,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
                         NSDictionary *childUpdates = @{[NSString stringWithFormat:@"%@/%@/", child, snap.key]: refreshedToken};
                         [ref updateChildValues:childUpdates];
                         
+                        
                         flag = false;
                         
                         break;
@@ -390,7 +391,50 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 //        
 //        [childObserver_Friends addObject:[ref child:child]];
 
-        if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"] || [snapshot.key isEqualToString:@"groups"] || [snapshot.key isEqualToString:@"multi_chat"] || [snapshot.key isEqualToString:@"invite_multi_chat"] || [snapshot.key isEqualToString:@"invite_group"]) {
+        if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"] || [snapshot.key isEqualToString:@"groups"] || [snapshot.key isEqualToString:@"multi_chat"] || [snapshot.key isEqualToString:@"invite_multi_chat"]) {
+            
+            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+            [newDict removeObjectForKey:snapshot.key];
+            
+            [newDict setObject:snapshot.value forKey:snapshot.key];
+            
+            [[Configs sharedInstance] saveData:_DATA :newDict];
+            
+        }else if([snapshot.key isEqualToString:@"invite_group"]){
+            
+            
+            NSDictionary *invite_group = snapshot.value;
+            
+            for (NSString* id_invite_group in invite_group) {
+                NSDictionary* value = [invite_group objectForKey:id_invite_group];
+                NSString*owner_id = [value objectForKey:@"owner_id"];
+                
+                
+                __block NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@", owner_id, id_invite_group];
+                
+                [[ref child:child] observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                    
+                    NSLog(@"%@", snapshot.key);
+                    NSLog(@"%@", snapshot.value);
+                    NSLog(@"");
+                    
+                    // เป็นการเก้บข้อมูล ชื่อกลุ่ม, image_url ของกลุ่มที่ invite มาเราจะเก็บแบบชั่วคราวเท่านั้น
+                    [[Configs sharedInstance] saveData:snapshot.key :snapshot.value];
+//                    for(FIRDataSnapshot* snap in snapshot.children){
+//                        NSLog(@"%@", snap.key);
+//                        NSLog(@"%@", snap.value);
+//                        NSLog(@"");
+//                    }
+                    
+                    NSLog(@"%@", [[Configs sharedInstance] loadData:snapshot.key]);
+                    NSLog(@"");
+                }];
+                
+                // do stuff
+                NSLog(@"");
+            }
+            
             NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
             [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
             [newDict removeObjectForKey:snapshot.key];

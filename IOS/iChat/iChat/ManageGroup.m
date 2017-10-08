@@ -9,6 +9,10 @@
 #import "ManageGroup.h"
 #import "Configs.h"
 #import "AppDelegate.h"
+#import "UpdateProfileGroupThread.h"
+#import "GroupMembers.h"
+#import "GroupInvite.h"
+#import "UserDataUIAlertView.h"
 
 @interface ManageGroup ()
 
@@ -30,6 +34,17 @@
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                           action:@selector(dismissKeyboard)];
     [self.view addGestureRecognizer:tap];
+    
+    if ([self.group objectForKey:@"image_url"]) {
+        [imageV clear];
+        [imageV showLoadingWheel]; // API_URL
+        [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [self.group objectForKey:@"image_url"]]]];
+        [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV];
+    }else{
+        [imageV clear];
+    }
+    
+    self.txtGroupName.text = [self.group objectForKey:@"name"];
 }
 
 -(void)dismissKeyboard {
@@ -50,7 +65,6 @@
     // Pass the selected object to the new view controller.
 }
 */
-
 
 -(void)selectImage:(UITapGestureRecognizer *)gestureRecognizer{
     NSLog(@">%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
@@ -106,32 +120,30 @@
 
 - (void)imagePicker:(GKImagePicker *)imagePicker pickedImage:(UIImage *)image{
     
-    /*
-    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
-    UpdatePictureProfileThread *uThread = [[UpdatePictureProfileThread alloc] init];
-    [uThread setCompletionHandler:^(NSString *data) {
-        
-        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
-        
-        [[Configs sharedInstance] SVProgressHUD_Dismiss];
-        
-        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
-            
-            [imageV clear];
-            [imageV showLoadingWheel];
-            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
-            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
-            
-            [self updateURI:jsonDict[@"url"]];
-        }
-        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
-    }];
-    
-    [uThread setErrorHandler:^(NSString *error) {
-        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
-    }];
-    [uThread start:image];
-    */
+//    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
+//    UpdateProfileGroupThread *uThread = [[UpdateProfileGroupThread alloc] init];
+//    [uThread setCompletionHandler:^(NSString *data) {
+//
+//        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
+//
+//        [[Configs sharedInstance] SVProgressHUD_Dismiss];
+//
+//        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
+//
+////            [imageV clear];
+////            [imageV showLoadingWheel];
+////            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
+////            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+////
+////            [self updateURI:jsonDict[@"url"]];
+//        }
+//        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+//    }];
+//
+//    [uThread setErrorHandler:^(NSString *error) {
+//        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
+//    }];
+//    [uThread start:[self.group objectForKey:@"group_id"] :image];
     
     [self.imageV setImage:image];
     
@@ -163,31 +175,8 @@
     
     [self.imageV setImage:chosenImage];
     
-    /*
-    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
-    UpdatePictureProfileThread *uThread = [[UpdatePictureProfileThread alloc] init];
-    [uThread setCompletionHandler:^(NSString *data) {
-        
-        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
-        
-        [[Configs sharedInstance] SVProgressHUD_Dismiss];
-        
-        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
-            [imageV clear];
-            [imageV showLoadingWheel];
-            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
-            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
-            
-            [self updateURI:jsonDict[@"url"]];
-        }
-        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
-    }];
+   
     
-    [uThread setErrorHandler:^(NSString *error) {
-        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
-    }];
-    [uThread start:chosenImage];
-    */
     //
     //    img = chosenImage;
     //    // [self hideImagePicker];
@@ -198,44 +187,102 @@
 
 - (IBAction)onSave:(id)sender {
     // UpdateMyProfileThread
-    
-    /*
+
     [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
-    UpdateMyProfileThread *uMPThread = [[UpdateMyProfileThread alloc] init];
-    [uMPThread setCompletionHandler:^(NSString *data) {
+    UpdateProfileGroupThread *uThread = [[UpdateProfileGroupThread alloc] init];
+    [uThread setCompletionHandler:^(NSString *data) {
+        
         NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
+        
         [[Configs sharedInstance] SVProgressHUD_Dismiss];
         
         if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
-            NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
-            [profiles setValue:txtFName.text forKey:@"name"];
-            [profiles setValue:txtFStatus.text forKey:@"status_message"];
             
-            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
-            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
-            [newDict removeObjectForKey:@"profiles"];
+            //            [imageV clear];
+            //            [imageV showLoadingWheel];
+            //            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
+            //            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+            //
+            //            [self updateURI:jsonDict[@"url"]];
             
-            [newDict setObject:profiles forKey:@"profiles"];
-            
-            [[Configs sharedInstance] saveData:_DATA :newDict];
+            [self.navigationController popViewControllerAnimated:YES];
         }
         [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
     }];
     
-    [uMPThread setErrorHandler:^(NSString *error) {
+    [uThread setErrorHandler:^(NSString *error) {
         [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
     }];
-    [uMPThread start:txtFName.text :txtFStatus.text];
-    */
+    [uThread start:[self.group objectForKey:@"group_id"] :self.txtGroupName.text : [imageV image]];
 }
 
 - (IBAction)onManageMembers:(id)sender {
+    
+    UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    GroupMembers *members = [storybrd instantiateViewControllerWithIdentifier:@"GroupMembers"];
+    members.group = self.group;
+    
+    [self.navigationController pushViewController:members animated:YES];
 }
 
 - (IBAction)onInviteMember:(id)sender {
+    
+    UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    GroupInvite *invite = [storybrd instantiateViewControllerWithIdentifier:@"GroupInvite"];
+    invite.group = self.group;
+    
+    [self.navigationController pushViewController:invite animated:YES];
 }
 
 - (IBAction)onDeleteGroup:(id)sender {
+    
+    UserDataUIAlertView *alert = [[UserDataUIAlertView alloc] initWithTitle:@"Are you sure delete group?"
+                                               message:nil
+                                              delegate:self
+                                     cancelButtonTitle:@"Close"
+                                     otherButtonTitles:@"Delete", nil];
+    
+    alert.userData = @"";
+    alert.tag = 1;
+    [alert show];
+}
+
+- (void)alertView:(UserDataUIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    // the user clicked one of the OK/Cancel buttons
+    if (alertView.tag == 1) {
+        
+        NSIndexPath * indexPath = alertView.userData;
+        
+        switch (buttonIndex) {
+            case 0:{
+                // Close
+                NSLog(@"Close");
+            }
+                break;
+                
+            case 1:{
+                // Close
+                NSLog(@"Delete");
+                
+                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [self.group objectForKey:@"group_id"]];
+                [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                    
+                    if (error == nil) {
+                        // [ref parent]
+                        //NSString* parent = ref.parent.key;
+                        
+                        // จะได้ Group id
+                        NSString* key = [ref key];
+                        
+                        NSLog(@"");
+                        
+                        [self.navigationController popViewControllerAnimated:YES];
+                    }
+                }];
+            }
+                break;
+        }
+    }
 }
 
 -(void)updateURI:(NSString *)uri{

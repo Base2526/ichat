@@ -4,6 +4,11 @@ var functions = require('firebase-functions');
 var admin = require("firebase-admin");
 admin.initializeApp(functions.config().firebase);
 
+/*
+เป็นส่วน call api Drupal
+*/
+var request = require('request');
+
 // Get a database reference to our posts
 var db = admin.database();
 
@@ -15,21 +20,40 @@ var db = admin.database();
 // });
 
 // https://stackoverflow.com/questions/43415759/use-firebase-cloud-function-to-send-post-request-to-non-google-server/43645498#43645498
-/*
-เป็นส่วน call api Drupal
-*/
-// var request = require('request');
 
-// request('http://128.199.247.179', function (error, response, body) {
+
+// <---------- PATH CONFIG
+var path = 'toonchat';
+var path_message = 'toonchat_message';
+
+var API_URL 	= 'http://128.199.247.179';
+var END_POINT 	= '/api';
+var DELETE_GROUP_CHAT = "/delete_group_chat";
+var GROUP_DELETE_MEMBERS = "/group_delete_members"; 
+
+var MULTI_CHAT_DELETE_MEMBERS = "/multi_chat_delete_members"; 
+var DELETE_MULTI_CHAT         = "/delete_multi_chat";
+// ----------> PATH CONFIG
+
+
+/*
+Refer :
+call api delete_group_chat
+https://www.npmjs.com/package/request
+
+nodejs
+array : https://www.npmjs.com/package/node-array
+	*/
+
+
+// https://github.com/firebase/firebase-functions/blob/master/src/providers/database.ts
+
+// request(API_URL, function (error, response, body) {
 //   console.log('google > error:', error); // Print the error if one occurred
 //   console.log('google > statusCode:', response && response.statusCode); // Print the response status code if a response was received
 //   console.log('google > body:', body); // Print the HTML for the Google homepage.
 // });
 
-
-var path = 'toonchat';
-var path_message = 'toonchat_message';
-// https://github.com/firebase/firebase-functions/blob/master/src/providers/database.ts
 
 /*
  เมือมีการ write /toochat/uid/{friends, invite_group, profile, group}/{key}
@@ -45,7 +69,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 	//     return;
 	// }
 	if (!event.data.exists()) {
-		console.log("Removed : " + event.params.type);
+		// console.log("Removed : " + event.params.type);
 
 		return;
 	}
@@ -136,7 +160,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 				//   console.log('>## element :' + element);
 				// }
 
-				console.log('>## numChildren() :' + childSnapshot.numChildren());
+				// console.log('>## numChildren() :' + childSnapshot.numChildren());
 
 				var ref = db.ref(path);
 
@@ -146,7 +170,14 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		               // console.log("uid : " + snapshot.key + ", status = " + obj.status);
 
 		               // เราต้อง เพิ่ม invite_group เพือ่นที่เรา invite ไปด้วย
+		               /*
 		               ref.child(snapshot.key).child("invite_group").child(event.params.key).set({
+		               	'owner_id':event.params.uid,
+		               	'status':obj.status
+		               });
+		               */
+
+		               ref.child(obj.friend_id).child("invite_group").child(event.params.key).set({
 		               	'owner_id':event.params.uid,
 		               	'status':obj.status
 		               });
@@ -191,7 +222,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		break;
 
 		case 'multi_chat':{
-			// console.log('#4 : multi_chat');
+			console.log('#5 : multi_chat');
 
 			event.data.forEach(function(childSnapshot) {
 		      // key will be "ada" the first time and "alan" the second time
@@ -226,17 +257,20 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 				//   console.log('>## element :' + element);
 				// }
 
-				console.log('>## numChildren() :' + childSnapshot.numChildren());
+				console.log('>## multi_chat numChildren() :' + childSnapshot.numChildren());
 
 				var ref = db.ref(path);
 
 				childSnapshot.forEach(function (snapshot) {
 		           var obj = snapshot.val();
+		           // console.log("----- multi_chat ----- 1");
+		           // console.log(obj);
+		           // console.log("----- multi_chat ----- 2");
 		           if(obj.status == "pedding") {
 		               // console.log("uid : " + snapshot.key + ", status = " + obj.status);
 
 		               // เราต้อง เพิ่ม invite_group เพือ่นที่เรา invite ไปด้วย
-		               ref.child(snapshot.key).child("invite_multi_chat").child(event.params.key).set({
+		               ref.child(obj.friend_id).child("invite_multi_chat").child(event.params.key).set({
 		               	'owner_id':event.params.uid,
 		               	'status':obj.status
 		               });
@@ -301,6 +335,104 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 	}
 	
 	return;
+});
+
+/*
+	กรณี ลบ Group
+*/
+exports.tiggerDeleteGroupAndMutiChat = functions.database.ref(path + '/{uid}/{type}/{key}/').onDelete(event => {
+
+	console.log('#x : tiggerUserDelete');
+	console.log('#x1 : ' + event.params.uid);
+	// console.log('#x2 : ' + event.params.type);
+	console.log('#x3 : ' + event.params.key);
+
+	// request(API_URL + END_POINT + DELETE_GROUP_CHAT , function (error, response, body) {
+	//   console.log('google > error:', error); // Print the error if one occurred
+	//   console.log('google > statusCode:', response && response.statusCode); // Print the response status code if a response was received
+	//   console.log('google > body:', body); // Print the HTML for the Google homepage.
+	// });
+
+
+	/*
+	call api delete_group_chat
+	https://www.npmjs.com/package/request
+
+	nodejs
+	*/
+	
+
+	
+	switch(event.params.type) {
+		case 'profiles':{
+			console.log('#1 : profiles');
+		}
+		break;
+
+		case 'friends':{
+			console.log('#2 : friends');
+		}
+		break;
+
+		case 'groups':{
+			// https://stackoverflow.com/questions/43415759/use-firebase-cloud-function-to-send-post-request-to-non-google-server
+			request.post({url:API_URL + END_POINT + DELETE_GROUP_CHAT, form: {uid:event.params.uid, group_id:event.params.key, text_array:[ 1, 2, 3, 4, 5 ]}}, function(err,httpResponse,body){ 
+				/* ... */ 
+				console.log(body);
+			});
+		}
+		break;
+
+		case 'multi_chat':{
+			request.post({url:API_URL + END_POINT + DELETE_MULTI_CHAT, form: {uid:event.params.uid, multi_id:event.params.key, text_array:[ 1, 2, 3, 4, 5 ]}}, function(err,httpResponse,body){ 
+				/* ... */ 
+				console.log(body);
+			});
+		}
+		break;
+	}
+	
+});
+
+/*
+	กรณีเราลบ member ของ Group & Multi
+*/
+exports.tiggerDeleteMemberGroupAndMutiChat = functions.database.ref(path + '/{uid}/{type}/{group_id}/members/{friend_id}/').onDelete(event => {
+
+	console.log('#y : tiggerDeleteMemberGroup');
+	console.log('#y1 : ' + event.params.uid);
+	// console.log('#y2 : ' + event.params.type);
+	console.log('#y3 : ' + event.params.group_id);
+	// console.log('#y4 : ' + event.params.members);
+	console.log('#y5 : ' + event.params.friend_id);
+
+	switch(event.params.type) {
+		case 'groups':{
+			console.log('#2 : multi_chat > delete member');
+			request.post({url:API_URL + END_POINT + GROUP_DELETE_MEMBERS, form: {uid:event.params.uid, group_id:event.params.group_id, member_id:event.params.friend_id, text_array:[ 1, 2, 3, 4, 5 ]}}, function(err,httpResponse,body){ 
+				
+				/* ... */ 
+				console.log(err);
+				console.log(httpResponse);
+				console.log(body);
+			});
+		}
+		break;
+
+		case 'multi_chat':{
+			console.log('#2 : multi_chat > delete member');
+			request.post({url:API_URL + END_POINT + MULTI_CHAT_DELETE_MEMBERS, form: {uid:event.params.uid, group_id:event.params.group_id, member_id:event.params.friend_id, text_array:[ 1, 2, 3, 4, 5 ]}}, function(err,httpResponse,body){ 
+				
+				/* ... */ 
+				console.log(err);
+				console.log(httpResponse);
+				console.log(body);
+			});
+		}
+		break;
+	}
+
+	
 });
 
 exports.tiggerMessage = functions.database.ref(path_message + '/{chat_id}/{key}/').onWrite(event => {

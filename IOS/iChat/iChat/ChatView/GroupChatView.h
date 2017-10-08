@@ -25,7 +25,5 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *bbItemMembers;
 
 - (IBAction)onSend:(id)sender;
-- (IBAction)onMembers:(id)sender;
-- (IBAction)onInvite:(id)sender;
 
 @end

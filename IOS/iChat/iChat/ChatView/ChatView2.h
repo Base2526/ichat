@@ -25,8 +25,10 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *barItemMembers;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *barItemInvite;
 
-@property(nonatomic)NSString* isType;
+@property(nonatomic)NSString* typeChat;
+
 
 - (IBAction)onSend:(id)sender;
+- (IBAction)onSettings:(id)sender;
 
 @end

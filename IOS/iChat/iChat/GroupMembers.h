@@ -7,9 +7,17 @@
 //
 
 #import <UIKit/UIKit.h>
+@import Firebase;
+@import FirebaseMessaging;
+@import FirebaseDatabase;
 
-@interface Members : UIViewController<UITableViewDelegate, UITableViewDataSource>
+@interface GroupMembers : UIViewController<UITableViewDelegate, UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
 @property(nonatomic)NSDictionary *group;
+@property (strong, nonatomic) FIRDatabaseReference *ref;
+- (IBAction)onEdit:(id)sender;
 @end
+
+
+

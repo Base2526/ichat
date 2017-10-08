@@ -6,30 +6,29 @@
 //  Copyright © 2560 klovers.org. All rights reserved.
 //
 
-#import "Members.h"
+#import "GroupMembers.h"
 #import "AppDelegate.h"
 #import "HJManagedImageV.h"
+#import "GroupInvite.h"
 
-@interface Members ()
+@interface GroupMembers ()
 {
-    NSDictionary *members;
+    NSMutableDictionary *members;
     NSMutableDictionary *friendsProfile;
 }
+
+@property(nonatomic, getter=isEditing) BOOL editing;
 @end
 
-@implementation Members
-
+@implementation GroupMembers
+@synthesize ref;
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    ref = [[FIRDatabase database] reference];
     members = [self.group objectForKey:@"members"];
-    
-    // NSMutableDictionary *f = [(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile];
-    
-    
     friendsProfile = [(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] ;
-    NSLog(@"");
 }
 
 - (void)didReceiveMemoryWarning {
@@ -46,6 +45,14 @@
     // Pass the selected object to the new view controller.
 }
 */
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
+    if([segue.identifier isEqualToString:@"GroupInvite"]){
+        GroupInvite *groupInvite = (GroupInvite*)segue.destinationViewController;
+        groupInvite.group = self.group;
+    }
+}
+
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     return 80.0f;
 }
@@ -72,8 +79,7 @@
     id key = [keys objectAtIndex:indexPath.row];
     id item = [members objectForKey:key];
     
-    
-    NSMutableDictionary *fprofile = [friendsProfile objectForKey:key];
+    NSMutableDictionary *fprofile = [friendsProfile objectForKey:[item objectForKey:@"friend_id"]];
     
     HJManagedImageV *imageV = (HJManagedImageV *)[cell viewWithTag:100];
     UILabel *label = (UILabel *)[cell viewWithTag:101];
@@ -89,8 +95,51 @@
         [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
     }else{}
     
-    
     return cell;
 }
 
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    if ( editingStyle== UITableViewCellEditingStyleDelete) {
+        NSArray *keys = [members allKeys];
+        id key = [keys objectAtIndex:indexPath.row];
+        
+        
+        NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/members/%@", [[Configs sharedInstance] getUIDU], [self.group objectForKey:@"group_id"], key];
+        [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+
+            if (error == nil) {
+                // [ref parent]
+                //NSString* parent = ref.parent.key;
+
+                // จะได้ Group id
+                NSString* key = [ref key];
+
+                NSLog(@"");
+                
+                [members removeObjectForKey:key];
+                [self.tableView deleteRowsAtIndexPaths:[NSMutableArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                [self.tableView setEditing:NO animated:YES];
+            }
+        }];
+
+        
+    }
+}
+
+#pragma mark - UITableView Delegate Methods
+
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath{
+//    if (indexPath.row == 0) {
+//        return UITableViewCellEditingStyleNone;
+//    }
+    return UITableViewCellEditingStyleDelete;
+}
+
+- (IBAction)onEdit:(id)sender {
+    if([self.tableView isEditing]){
+        [self.tableView setEditing:NO animated:YES];
+    }else{
+        [self.tableView setEditing:YES animated:YES];
+    }
+}
 @end

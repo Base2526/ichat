@@ -230,11 +230,8 @@ function toonchat_menu()
  * 
 */
 function  _toonchat_test(){
-
   global $user;
-
   dpm($user);
-
   return "_toonchat_test";
 }
 
@@ -265,6 +262,7 @@ function test_create_group(){
 
   // invite_groups
 
+  /*
   $name_group = generateRandomString(10);
 
   $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
@@ -288,11 +286,11 @@ function test_create_group(){
 
     }
   }
+  */
 
 
   return "test_create_group";
 }
-
 
 function load_user(){
   $uids = db_select('users', 'ur')
@@ -398,6 +396,173 @@ function toonchat_services_resources()
       'create' =>array(
         'help'=>'Services สร้าง Group Chat : param uid, name(ชื่อกลุ่ม),image, members(array)',
         'callback'=>'create_group_chat',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+     'update_profile_group'=>array(
+      'create' =>array(
+        'help'=>'Update Profile Group : name, picture',
+        'callback'=>'update_profile_group',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    'delete_group_chat'=>array(
+      'create' =>array(
+        'help'=>'Services สร้าง Delete Chat : param uid, group_id',
+        'callback'=>'delete_group_chat',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'group_invite_new_members'=>array(
+      'create' =>array(
+        'help'=>'Services การเพิ่ม member ใหม่ใน Group : param uid, group_id, members(array)',
+        'callback'=>'group_invite_new_members',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'group_delete_members'=>array(
+      'create' =>array(
+        'help'=>'Services การลบ member ใน Group : param uid, group_id, member_id',
+        'callback'=>'group_delete_members',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'create_muti_chat'=>array(
+      'create' =>array(
+        'help'=>'Services สร้าง Multi Chat : param uid, members(array)',
+        'callback'=>'create_muti_chat',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    // muti_chat_invite_new_members
+    'muti_chat_invite_new_members'=>array(
+      'create' =>array(
+        'help'=>'Services: เป้นการ invite เพื่อนใหม่เข้า multi chat Multi Chat : param uid, group_id ,members(array)',
+        'callback'=>'muti_chat_invite_new_members',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'multi_chat_delete_members'=>array(
+      'create' =>array(
+        'help'=>'Services ลบสมาชิก Multi Chat : param uid, member_id',
+        'callback'=>'multi_chat_delete_members',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
+    'delete_multi_chat'=>array(
+      'create' =>array(
+        'help'=>'Services สร้าง Delete Multi Chat : param uid, multi_id',
+        'callback'=>'delete_multi_chat',
         'access callback' => 'user_access',
         'access arguments' => array('access content'),
         'access arguments append' => FALSE,
@@ -593,45 +758,20 @@ function create_group_chat(){
 
   if (empty($_REQUEST['uid'])) {
     $result['result'] = FALSE;
-    $result['uid']    = "empty uid.";
+    $result['message']    = "empty uid.";
     return $result;
   }
-
-  /*
-  // Load Profile ขึ้นมาเพือจะทำการแก้ไข
-  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
-  $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
-  $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
-  $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['status_message'];
-
-  profile2_save($profile);
-
-  // Firebase : udate name, status message
-  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
-  $data_update = array(
-      "name"           =>$_REQUEST['name'],
-      "status_message" => $_REQUEST['status_message']
-  );
-
-  $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);
-  // Firebase : udate name, status message
-  */
-
   
-  // $firebase->set(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH . $account->uid . '/', $values); 
-
-  // NSString *object_id = [[ref child:ccmessage] childByAutoId].key;
-
-  
-  $object_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
+  // chat_id เป้น id ที่ไว้สำหรับอ้างอิงเป้น chat id  
+  $chat_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
 
   $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
 
   $values = array();
   $values['field_name'] = 'field_profile_group'; 
 
-  // #1 object_id
-  $values['field_object_id'][LANGUAGE_NONE][0]['value'] = $object_id;
+  // #1 chat_id
+  $values['field_object_id'][LANGUAGE_NONE][0]['value'] = $chat_id;
 
 
   $image_url = array();
@@ -655,7 +795,6 @@ function create_group_chat(){
     // save รูป profile
     // $profile->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
 
-
     $image_url= (array)$file;
   }
 
@@ -666,14 +805,19 @@ function create_group_chat(){
   // #3 field_name_group
   $values['field_name_group'][LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
 
+  // #4 field_status_group
+  $values['field_status_group'][LANGUAGE_NONE][0]['value'] = 'active';
+
   // Create the field collection entry and associate it with the profile
   $field_entity = entity_create('field_collection_item', $values);
   $field_entity->setHostEntity('profile2', $profile);
   $field_entity->save();
  
+  // เป็น node id ของ group
+  $group_id = $field_entity->item_id;
 
   // load field_profile_group by id ขึ้นมาเพือ insert  field_members_group ลงไป
-  $data_profile_group = field_collection_item_load($field_entity->item_id);
+  $data_profile_group = field_collection_item_load($group_id);
 
   $members = array();
   foreach ($_REQUEST['members'] as $key => $value){
@@ -686,24 +830,27 @@ function create_group_chat(){
     $field_entity_members_group->setHostEntity("field_members_group", $data_profile_group);
     $field_entity_members_group->save(); 
 
-
-    $members[$value] = array("status"=>"pedding");
+    /*
+    $field_entity_members_group->item_id : node id ของ member 
+    $value  : เป็น friend id
+    $status : สถานะ 3 status : accept, pedding, reject
+    */
+    $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
   }
 
   $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
   $f_value = array(
-      "create"   =>time(),
-      "is_owner" => $_REQUEST['status_message'],
+      "chat_id"  => $chat_id,               // เป็น chat_id ของ group           
+      "create"   => time(),
       "name"     => $_REQUEST['name'],
       // เราจะไม่เอา path host เราจะเอาเฉพาะ ex. /sites/default/files/20171003_570645200.png
       "image_url"=> substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url'])),
       "members"  => $members,
-      "owner_id" => $_REQUEST['uid']
+      "owner_id" => $_REQUEST['uid'],
+      "status"   => 'active'
   );
 
-// [2]  (null)  @"x" : @"toonchat/1028/groupsohF32A7Y0jM9mHMNYyO7toonchat/" 
-  $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $object_id . '/' , $f_value);
-
+  $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $group_id . '/' , $f_value);
 
   $result['result'] = TRUE;
   $result['data']   = $_REQUEST; 
@@ -711,9 +858,338 @@ function create_group_chat(){
   return  $result;
 }
 
+function update_profile_group(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['group_id']) || empty($_REQUEST['image'])) {
+    $result['result'] = FALSE;
+    return $result;
+  }
+
+  if($_REQUEST['image'] != ""){
+
+    $image = $_REQUEST['image'];
+
+    // http://stackoverflow.com/questions/8241242/drupal-7-upload-image-programatically
+    $binary = base64_decode($image);
+
+    //Create the directory if it does not already exist, otherwise check the permissions
+    $directory = 'public://';
+    file_prepare_directory($directory, FILE_CREATE_DIRECTORY);
+
+    $currentDate = date("Ymd");
+    $name  = $currentDate .'_'. rand(0, 999) . rand(0, 999) . rand(0, 999) . ".png";
+    
+    //Saves a file to the specified destination and creates a database entry.
+    $file = klovers_file_save_data($_POST['uid'], $binary, $directory. '/' . $name, FILE_EXISTS_RENAME);
+
+    // save รูป profile
+    // $profile->field_profile_image[LANGUAGE_NONE][0] = (array)$file;
+
+    $image_url= (array)$file;
 
 
+    $data = field_collection_item_load($_REQUEST['group_id']);
+    $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+      
+    $wrapper->field_name_group->set($_REQUEST['name']);
+    $wrapper->field_picture_group->set((array)$file);
+    $wrapper->save();
+
+    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+    $f_value = array(
+      "update"   => time(),
+      "name"     => $_REQUEST['name'],
+      "image_url"=> substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url']))
+    );
+
+    $firebase->update(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $_REQUEST['group_id'] .'/' , $f_value);
+  }
 
 
+  $result['result'] = TRUE;  
+  $result['_REQUEST'] = $_REQUEST;
+
+  return $result;
+
+}
+
+function delete_group_chat(){
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['group_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | group id empty.";
+    return $result;
+  }
+
+  // ลบ group ออกตาม group id
+  $data_item_load = field_collection_item_load($_REQUEST['group_id']);
+
+  $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);    
+  entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+
+  if(!empty($_REQUEST['text_array'])){
+    $result['gettype'] = gettype($_REQUEST['text_array']);
+  }
+
+  return  $result;
+}
+
+function group_invite_new_members(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['group_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | group id empty.";
+    return $result;
+  }
+
+  // $members = array();
+  // foreach ($_REQUEST['members'] as $key => $value){
+  //   $members[$key] =  $value; 
+  // }
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  // load field_profile_group by id ขึ้นมาเพือ insert  field_members_group ลงไป
+  $data_group = field_collection_item_load($_REQUEST['group_id']);
+
+  $members = array();
+  foreach ($_REQUEST['members'] as $key => $value){
+    $values_members_group = array();
+    $values_members_group['field_name'] = 'field_members_group'; 
+    $values_members_group['field_members_group_friend_id'][LANGUAGE_NONE][0]['value'] = $value;
+    $values_members_group['field_members_group_status'][LANGUAGE_NONE][0]['value'] = "pedding";
+
+    $field_entity_members_group = entity_create('field_collection_item', $values_members_group);
+    $field_entity_members_group->setHostEntity("field_members_group", $data_group);
+    $field_entity_members_group->save(); 
+
+    /*
+    $field_entity_members_group->item_id : node id ของ member 
+    $value  : เป็น friend id
+    $status : สถานะ 3 status : accept, pedding, reject
+    */
+    // $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
+
+    // $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
+
+    /*
+      เราต้อง เพิ่ม /groups/{group_id}/members/ ของ firebase
+    */ 
+    $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $_REQUEST['group_id'] . '/members/' . $field_entity_members_group->item_id . '/' , array("friend_id"=>$value, "status"=>"pedding"));
+  }
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+  $result['members']= $members;
+
+  return  $result;
+}
+
+/*
+        'help'=>'Services การลบ member ใน Group : param uid, group_id, member_id',
+        'callback'=>'group_delete_members',
+*/
+function group_delete_members(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['group_id']) || empty($_REQUEST['member_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | group id | members id empty.";
+    return $result;
+  }
+
+  // $data_item_load = field_collection_item_load($_REQUEST['member_id']);
+  // $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);    
+  // entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+
+  if(!empty($_REQUEST['text_array'])){
+    $result['gettype'] = gettype($_REQUEST['text_array']);
+  }
 
 
+  entity_delete_multiple('field_collection_item', array($_REQUEST['member_id']));
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+
+  return  $result;
+
+}
+
+function create_muti_chat(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['members'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | group id | members id empty.";
+    return $result;
+  }
+
+
+  // chat_id เป้น id ที่ไว้สำหรับอ้างอิงเป้น chat id  
+  $chat_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
+
+  $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
+
+  $values = array();
+  $values['field_name'] = 'field_profile_multi_chat'; 
+
+  // #1 chat_id
+  $values['field_object_id'][LANGUAGE_NONE][0]['value']     = $chat_id;
+  $values['field_owner_id'][LANGUAGE_NONE][0]['value']      = $_REQUEST['uid'];
+  $values['field_status_group'][LANGUAGE_NONE][0]['value']  = "active";
+
+    // Create the field collection entry and associate it with the profile
+  $field_entity = entity_create('field_collection_item', $values);
+  $field_entity->setHostEntity('profile2', $profile);
+  $field_entity->save();
+
+  // เป็น node id ของ group
+
+  // load field_profile_group by id ขึ้นมาเพือ insert  field_members_group ลงไป
+  $data_multi_chat = field_collection_item_load($field_entity->item_id);
+
+  $members = array();
+  foreach ($_REQUEST['members'] as $key => $value){
+    $values_members_group = array();
+    $values_members_group['field_name'] = 'field_members_multi_chat'; 
+    $values_members_group['field_friend_uid'][LANGUAGE_NONE][0]['value'] = $value;
+    $values_members_group['field_members_multi_status'][LANGUAGE_NONE][0]['value'] = "pedding";
+
+    $field_entity_members_group = entity_create('field_collection_item', $values_members_group);
+    $field_entity_members_group->setHostEntity("field_members_multi_chat", $data_multi_chat);
+    $field_entity_members_group->save(); 
+
+    $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
+  }
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+  $f_value = array(
+      "chat_id"  => $chat_id,               // เป็น chat_id ของ group           
+      "create"   => time(),
+      "members"  => $members,
+      "owner_id" => $_REQUEST['uid'],
+      "status"   => 'active'
+  );
+
+  $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_MULTI_CHAT . '/' . $field_entity->item_id  . '/' , $f_value);
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+  return  $result;
+}
+
+/*
+  เป้นการ invite เพื่อนใหม่เข้า multi chat
+*/
+function muti_chat_invite_new_members(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['members']) || empty($_REQUEST['group_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | group id | members id empty.";
+    return $result;
+  }
+
+
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+
+  // load field_profile_group by id ขึ้นมาเพือ insert  field_members_group ลงไป
+  $data_group = field_collection_item_load($_REQUEST['group_id']);
+
+  $members = array();
+  foreach ($_REQUEST['members'] as $key => $value){
+    $values_members_group = array();
+    $values_members_group['field_name'] = 'field_members_multi_chat'; 
+    $values_members_group['field_friend_uid'][LANGUAGE_NONE][0]['value'] = $value;
+    $values_members_group['field_members_multi_status'][LANGUAGE_NONE][0]['value'] = "pedding";
+
+    $field_entity_members_group = entity_create('field_collection_item', $values_members_group);
+    $field_entity_members_group->setHostEntity("field_members_multi_chat", $data_group);
+    $field_entity_members_group->save(); 
+
+    /*
+    $field_entity_members_group->item_id : node id ของ member 
+    $value  : เป็น friend id
+    $status : สถานะ 3 status : accept, pedding, reject
+    */
+    // $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
+
+    // $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
+
+    /*
+      เราต้อง เพิ่ม /groups/{group_id}/members/ ของ firebase
+    */ 
+    $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_MULTI_CHAT . '/' . $_REQUEST['group_id'] . '/members/' . $field_entity_members_group->item_id . '/' , array("friend_id"=>$value, "status"=>"pedding"));
+  }
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+  $result['function'] = "muti_chat_invite_new_members";
+  return  $result;
+}
+
+/*
+    'multi_chat_delete_members'=>array(
+      'create' =>array(
+        'help'=>'Services ลบสมาชิก Multi Chat : param uid, member_id',
+*/
+function multi_chat_delete_members(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['member_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | group id | members id empty.";
+    return $result;
+  }
+
+  // $data_item_load = field_collection_item_load($_REQUEST['member_id']);
+  // $wrapper = entity_metadata_wrapper('field_collection_item', $data_item_load);    
+  // entity_delete_multiple('field_collection_item', array($wrapper->getIdentifier()));
+
+  if(!empty($_REQUEST['text_array'])){
+    $result['gettype'] = gettype($_REQUEST['text_array']);
+  }
+
+
+  entity_delete_multiple('field_collection_item', array($_REQUEST['member_id']));
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+
+  return  $result;
+
+}
+
+function delete_multi_chat(){
+  $result = array();
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['multi_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | multi_id id empty.";
+    return $result;
+  }
+
+  // ลบ group ออกตาม multi chat id
+  entity_delete_multiple('field_collection_item', array($_REQUEST['multi_id']));
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+
+  if(!empty($_REQUEST['text_array'])){
+    $result['gettype'] = gettype($_REQUEST['text_array']);
+  }
+
+  return  $result;
+}

@@ -30,6 +30,7 @@
 
 
 	define("PATH_GROUPS", "groups");
+	define("PATH_MULTI_CHAT", "multi_chat");
 
 
 	// Bundle Identifier  
