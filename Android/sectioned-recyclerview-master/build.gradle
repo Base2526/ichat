@@ -1,0 +1,47 @@
+apply from: './dependencies.gradle'
+
+buildscript {
+    apply from: './dependencies.gradle'
+
+    repositories {
+        jcenter()
+        repositories {
+            maven {
+                url 'https://maven.google.com'
+            }
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:' + versions.gradlePlugin
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:" + versions.spotlessPlugin
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://maven.google.com'
+        }
+    }
+
+    buildscript {
+        repositories {
+            maven { url "https://plugins.gradle.org/m2/" }
+        }
+    }
+    apply plugin: "com.diffplug.gradle.spotless"
+    spotless {
+        java {
+            target "**/*.java"
+            trimTrailingWhitespace()
+            removeUnusedImports()
+            googleJavaFormat()
+            endWithNewline()
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
