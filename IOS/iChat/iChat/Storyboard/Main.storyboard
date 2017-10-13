@@ -651,6 +651,9 @@
                     </view>
                     <navigationItem key="navigationItem" title="Manage Multichat" id="aZ9-8x-Ztb"/>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
+                    <connections>
+                        <outlet property="btn_ManageMember" destination="lm4-lz-cN7" id="bq8-2X-u6y"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="2Mo-D2-aSM" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

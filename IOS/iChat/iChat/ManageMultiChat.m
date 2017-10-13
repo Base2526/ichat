@@ -17,13 +17,16 @@
 @end
 
 @implementation ManageMultiChat
-@synthesize friend, ref;
+@synthesize friend, ref, btn_ManageMember;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
     ref = [[FIRDatabase database] reference];
+    
+    NSDictionary *member = [self.friend objectForKey:@"members"];
+    [btn_ManageMember setTitle:[NSString stringWithFormat:@"ManageMember(%d)", [member count]] forState:UIControlStateNormal];
 }
 
 - (void)didReceiveMemoryWarning {

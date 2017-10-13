@@ -144,7 +144,6 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		      }
 		      */
 
-
 		      if(childSnapshot.key == 'members'){
 		      	// var members = JSON.parse(childSnapshot.val());
 
@@ -178,6 +177,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		               */
 
 		               ref.child(obj.friend_id).child("invite_group").child(event.params.key).set({
+		               	'node_id' : snapshot.key,
 		               	'owner_id':event.params.uid,
 		               	'status':obj.status
 		               });
@@ -224,6 +224,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		case 'multi_chat':{
 			console.log('#5 : multi_chat');
 
+			/*
 			event.data.forEach(function(childSnapshot) {
 		      // key will be "ada" the first time and "alan" the second time
 		      // var key = childSnapshot.key;
@@ -232,15 +233,6 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 
 		      // console.log('# key : ' + key + ", childData : " + childData);
 
-				/*
-		      if (event.params.key == childSnapshot.key) {
-		      	var key = childSnapshot.key;
-		      	var childData = childSnapshot.val();
-				console.log('># key : ' + key + ", childData : " + childData);
-		      }else{
-		      	console.log(">###< | " + event.params.key + " & "+ childSnapshot.key);
-		      }
-		      */
 
 		      if(childSnapshot.key == 'members'){
 		      	// var members = JSON.parse(childSnapshot.val());
@@ -271,41 +263,10 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 
 		               // เราต้อง เพิ่ม invite_group เพือ่นที่เรา invite ไปด้วย
 		               ref.child(obj.friend_id).child("invite_multi_chat").child(event.params.key).set({
+		               	'node_id' : snapshot.key,
 		               	'owner_id':event.params.uid,
 		               	'status':obj.status
 		               });
-
-
-		               /*
-						let tokens = [];
-				    	var msg = "-iChat-";
-				        // for (let user of users) {
-				        //     tokens.push(user.pushToken);
-				        // }
-
-				        if (_val.title !== undefined) {
-							msg = _val.title;
-				        }
-
-				        tokens.push(userLogin[key].token);
-
-				        let payload = {
-				            notification: {
-				                title: '',
-				                body: msg ,
-				                sound: 'default',
-				                badge: _badge.toString()
-				            }
-				        };
-
-				        return admin.messaging().sendToDevice(tokens, payload).then(function(response) {
-					    	// See the MessagingDevicesResponse reference documentation for
-					    	// the contents of response.
-					    	console.log("Successfully sent message:", response);
-					  	}).catch(function(error) {
-					    	console.log("Error sending message:", error);
-					  	});
-		               */
 		           }
 		        });
 
@@ -330,6 +291,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 				// });
 		      }
 		  	});
+		  	*/
 		}
 		break;
 	}

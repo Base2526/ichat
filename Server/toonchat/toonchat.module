@@ -1034,6 +1034,7 @@ function create_muti_chat(){
     return $result;
   }
 
+  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
 
   // chat_id เป้น id ที่ไว้สำหรับอ้างอิงเป้น chat id  
   $chat_id = generateRandomString(DEFUALT_LENGTH_CHAT_ID);
@@ -1059,21 +1060,35 @@ function create_muti_chat(){
   $data_multi_chat = field_collection_item_load($field_entity->item_id);
 
   $members = array();
-  foreach ($_REQUEST['members'] as $key => $value){
+  foreach ($_REQUEST['members'] as $key => $friend_id){
     $values_members_group = array();
     $values_members_group['field_name'] = 'field_members_multi_chat'; 
-    $values_members_group['field_friend_uid'][LANGUAGE_NONE][0]['value'] = $value;
+    $values_members_group['field_friend_uid'][LANGUAGE_NONE][0]['value'] = $friend_id;
     $values_members_group['field_members_multi_status'][LANGUAGE_NONE][0]['value'] = "pedding";
 
     $field_entity_members_group = entity_create('field_collection_item', $values_members_group);
     $field_entity_members_group->setHostEntity("field_members_multi_chat", $data_multi_chat);
     $field_entity_members_group->save(); 
 
-    $members[$field_entity_members_group->item_id] = array("friend_id"=>$value, "status"=>"pedding");
+    $members[$field_entity_members_group->item_id] = array("friend_id"=>$friend_id, "status"=>"access");
   }
 
-  $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
-  $f_value = array(
+
+  //**** ส่วนนี้เราอาจย้ายไปที่ tigger firebase ได้แต่ตอนนนี้ทำแบบนี้ไปก่อน
+  foreach ($_REQUEST['members'] as $key => $friend_id){
+    $fvalue = array(
+      "chat_id"  => $chat_id,               // เป็น chat_id ของ group           
+      "create"   => time(),
+      "members"  => $members,
+      "owner_id" => $_REQUEST['uid'],
+      "status"   => 'active'
+    );
+
+    $firebase->set(FIREBASE_LOGIN_PATH . $friend_id . '/' . PATH_MULTI_CHAT . '/' . $field_entity->item_id  . '/' , $fvalue);
+  }
+  //****
+  
+  $fvalue = array(
       "chat_id"  => $chat_id,               // เป็น chat_id ของ group           
       "create"   => time(),
       "members"  => $members,
@@ -1081,10 +1096,11 @@ function create_muti_chat(){
       "status"   => 'active'
   );
 
-  $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_MULTI_CHAT . '/' . $field_entity->item_id  . '/' , $f_value);
+  $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_MULTI_CHAT . '/' . $field_entity->item_id  . '/' , $fvalue);
+
 
   $result['result'] = TRUE;
-  $result['data']   = $_REQUEST; 
+  // $result['data']   = $_REQUEST; 
   return  $result;
 }
 

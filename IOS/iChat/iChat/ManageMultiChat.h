@@ -18,6 +18,7 @@
 
 @property(nonatomic)NSDictionary *friend;
 @property(nonatomic)NSString* typeChat;
+@property (weak, nonatomic) IBOutlet UIButton *btn_ManageMember;
 
 - (IBAction)onManageMember:(id)sender;
 - (IBAction)onInviteMember:(id)sender;

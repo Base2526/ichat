@@ -391,7 +391,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 //        
 //        [childObserver_Friends addObject:[ref child:child]];
 
-        if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"] || [snapshot.key isEqualToString:@"groups"] || [snapshot.key isEqualToString:@"multi_chat"] || [snapshot.key isEqualToString:@"invite_multi_chat"]) {
+        if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"]) {
             
             NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
             [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
@@ -402,7 +402,6 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
             [[Configs sharedInstance] saveData:_DATA :newDict];
             
         }else if([snapshot.key isEqualToString:@"invite_group"]){
-            
             
             NSDictionary *invite_group = snapshot.value;
             
@@ -415,20 +414,39 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
                 
                 [[ref child:child] observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
                     
+                    
+                    [childObserver_Friends addObject:[ref child:child]];
+                    
                     NSLog(@"%@", snapshot.key);
                     NSLog(@"%@", snapshot.value);
                     NSLog(@"");
-                    
-                    // เป็นการเก้บข้อมูล ชื่อกลุ่ม, image_url ของกลุ่มที่ invite มาเราจะเก็บแบบชั่วคราวเท่านั้น
-                    [[Configs sharedInstance] saveData:snapshot.key :snapshot.value];
-//                    for(FIRDataSnapshot* snap in snapshot.children){
-//                        NSLog(@"%@", snap.key);
-//                        NSLog(@"%@", snap.value);
-//                        NSLog(@"");
-//                    }
-                    
-                    NSLog(@"%@", [[Configs sharedInstance] loadData:snapshot.key]);
-                    NSLog(@"");
+                
+                    if (![snapshot.value isEqual:[NSNull null]]){
+                        NSMutableDictionary *value = snapshot.value;
+                        NSMutableDictionary *members = [[value objectForKey:@"members"] mutableCopy];
+                        
+                        NSMutableDictionary *newMembers = [[NSMutableDictionary alloc] init];
+                        for (NSString* key in members) {
+                            id _val = [members objectForKey:key];
+                            // do stuff
+                            
+                            if([[_val objectForKey:@"status"] isEqualToString:@"pedding"]){
+                                
+                            }else{
+                                [newMembers setObject:_val forKey:key];
+                            }
+                        }
+                        
+                        NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+                        [newDict addEntriesFromDictionary:value];
+                        [newDict removeObjectForKey:@"members"];
+                        
+                        [newDict setObject:newMembers forKey:@"members"];
+                        
+                        NSLog(@"");
+                        // เป็นการเก้บข้อมูล ชื่อกลุ่ม, image_url ของกลุ่มที่ invite มาเราจะเก็บแบบชั่วคราวเท่านั้น
+                        [[Configs sharedInstance] saveData:snapshot.key :snapshot.value];
+                    }
                 }];
                 
                 // do stuff
@@ -442,6 +460,52 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
             [newDict setObject:snapshot.value forKey:snapshot.key];
             
             [[Configs sharedInstance] saveData:_DATA :newDict];
+        }else if([snapshot.key isEqualToString:@"groups"]){
+            
+            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+            [newDict removeObjectForKey:snapshot.key];
+            
+            [newDict setObject:snapshot.value forKey:snapshot.key];
+            
+            [[Configs sharedInstance] saveData:_DATA :newDict];
+            
+            for (NSString* _id in snapshot.value) {
+                NSDictionary* item = [snapshot.value objectForKey:_id];
+                
+                NSString *chat_id = [item objectForKey:@"chat_id"];
+                
+                NSString *multi_chat_message = [NSString stringWithFormat:@"toonchat_message/%@/", chat_id];
+                
+                [[ref child:multi_chat_message] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                    NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+                }];
+            }
+        }else if([snapshot.key isEqualToString:@"multi_chat"]){
+            
+            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+            [newDict removeObjectForKey:snapshot.key];
+            
+            [newDict setObject:snapshot.value forKey:snapshot.key];
+            
+            [[Configs sharedInstance] saveData:_DATA :newDict];
+            
+            for (NSString* _id in snapshot.value) {
+                NSDictionary* item = [snapshot.value objectForKey:_id];
+                
+                NSString *chat_id = [item objectForKey:@"chat_id"];
+                
+                NSString *multi_chat_message = [NSString stringWithFormat:@"toonchat_message/%@/", chat_id];
+                
+                [[ref child:multi_chat_message] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                    NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+                }];
+                
+                [[ref child:multi_chat_message] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                    NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+                }];
+            }
         }
         
         [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadData" object:self userInfo:@{}];
@@ -491,6 +555,7 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     }
     */
     
+    NSMutableDictionary *DATA = [[Configs sharedInstance] loadData:_DATA];
     NSMutableDictionary *friends = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"friends"];
     for (NSString* key in friends) {
         NSDictionary *item = [friends objectForKey:key];
@@ -583,6 +648,186 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
             [[[ref child:child_cmessage] child:snapshot.key] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
                 NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
             
+                /*
+                 ติดไว้ก่อนเราต้อง removeObaserver ออกด้วยโดยมีเงือ่น ? ตอนนี้ลบออกให้หมดก่อน
+                 */
+                [childObserver_Friends addObject:[ref child:child_cmessage]];
+                
+                // [ref removeAllObservers];
+                
+                // [ref removeObserverWithHandle:snapshot];
+            }];
+            
+        }];
+    }
+    
+    NSMutableDictionary *groups = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"groups"];
+    for (NSString* key in groups) {
+        NSDictionary *item = [groups objectForKey:key];
+        
+        NSLog(@"");
+        
+        // toonchat_message
+        NSString *child_cmessage = [NSString stringWithFormat:@"toonchat_message/%@/", [item objectForKey:@"chat_id"]];
+        //        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+        //            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+        //
+        //            [childObserver_Friends addObject:[ref child:child_cmessage]];
+        //        }];
+        
+        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+            
+            /*
+             @property (nonatomic, strong) NSString *chat_id;
+             @property (nonatomic, strong) NSString *object_id;
+             @property (nonatomic, strong) NSString *text;
+             @property (nonatomic, strong) NSString *type;
+             
+             @property (nonatomic, strong) NSString *sender_id;
+             @property (nonatomic, strong) NSString *receive_id;
+             
+             @property (nonatomic, strong) NSString *status;
+             @property (nonatomic, strong) NSString *create;
+             @property (nonatomic, strong) NSString *update;
+             */
+            MessageRepo* meRepo = [[MessageRepo alloc] init];
+            if(![meRepo check:snapshot.key]){
+                NSDictionary *value = snapshot.value;
+                
+                NSLog(@"");
+                /*
+                 
+                 */
+                
+                /*
+                 "chat_id" = r1ibtvtq9LJpOzoOkmpy;
+                 create = 1506680186063;
+                 "object_id" = "-KvC7lffIPOBZ574Y8yQ";
+                 "receive_id" = 1028;
+                 "sender_id" = 1023;
+                 status = send;
+                 text = Err;
+                 type = private;
+                 update = 1506680186063;
+                 */
+                
+                Message* m  = [[Message alloc] init];
+                m.chat_id   = snapshot.ref.parent.key;
+                m.object_id = snapshot.key;
+                
+                m.text      = [value objectForKey:@"text"];
+                m.type      = [value objectForKey:@"type"];
+                m.sender_id = [value objectForKey:@"sender_id"];
+                m.receive_id = [value objectForKey:@"receive_id"];
+                m.status    = [value objectForKey:@"status"];
+                m.create    = [value objectForKey:@"create"];
+                m.update    = [value objectForKey:@"update"];
+                
+                [meRepo insert:m];
+                
+                NSDictionary* userInfo = @{@"message":m};
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"ChatView_reloadData" object:self userInfo:userInfo];
+            }
+            
+            [childObserver_Friends addObject:[ref child:child_cmessage]];
+            
+            // NSString *_child = [NSString stringWithFormat:@"%@%@/", child_cmessage, snapshot.key];
+            [[[ref child:child_cmessage] child:snapshot.key] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+                
+                /*
+                 ติดไว้ก่อนเราต้อง removeObaserver ออกด้วยโดยมีเงือ่น ? ตอนนี้ลบออกให้หมดก่อน
+                 */
+                [childObserver_Friends addObject:[ref child:child_cmessage]];
+                
+                // [ref removeAllObservers];
+                
+                // [ref removeObserverWithHandle:snapshot];
+            }];
+            
+        }];
+    }
+    
+    NSMutableDictionary *multi_chat = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"multi_chat"];
+    for (NSString* key in multi_chat) {
+        NSDictionary *item = [multi_chat objectForKey:key];
+        
+        NSLog(@"");
+        
+        // toonchat_message
+        NSString *child_cmessage = [NSString stringWithFormat:@"toonchat_message/%@/", [item objectForKey:@"chat_id"]];
+        //        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+        //            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+        //
+        //            [childObserver_Friends addObject:[ref child:child_cmessage]];
+        //        }];
+        
+        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+        }];
+        
+        [[ref child:child_cmessage] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+            NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+            
+            /*
+             @property (nonatomic, strong) NSString *chat_id;
+             @property (nonatomic, strong) NSString *object_id;
+             @property (nonatomic, strong) NSString *text;
+             @property (nonatomic, strong) NSString *type;
+             
+             @property (nonatomic, strong) NSString *sender_id;
+             @property (nonatomic, strong) NSString *receive_id;
+             
+             @property (nonatomic, strong) NSString *status;
+             @property (nonatomic, strong) NSString *create;
+             @property (nonatomic, strong) NSString *update;
+             */
+            MessageRepo* meRepo = [[MessageRepo alloc] init];
+            if(![meRepo check:snapshot.key]){
+                NSDictionary *value = snapshot.value;
+                
+                NSLog(@"");
+                /*
+                 
+                 */
+                
+                /*
+                 "chat_id" = r1ibtvtq9LJpOzoOkmpy;
+                 create = 1506680186063;
+                 "object_id" = "-KvC7lffIPOBZ574Y8yQ";
+                 "receive_id" = 1028;
+                 "sender_id" = 1023;
+                 status = send;
+                 text = Err;
+                 type = private;
+                 update = 1506680186063;
+                 */
+                
+                Message* m  = [[Message alloc] init];
+                m.chat_id   = snapshot.ref.parent.key;
+                m.object_id = snapshot.key;
+                
+                m.text      = [value objectForKey:@"text"];
+                m.type      = [value objectForKey:@"type"];
+                m.sender_id = [value objectForKey:@"sender_id"];
+                m.receive_id = [value objectForKey:@"receive_id"];
+                m.status    = [value objectForKey:@"status"];
+                m.create    = [value objectForKey:@"create"];
+                m.update    = [value objectForKey:@"update"];
+                
+                [meRepo insert:m];
+                
+                NSDictionary* userInfo = @{@"message":m};
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"ChatView_reloadData" object:self userInfo:userInfo];
+            }
+            
+            [childObserver_Friends addObject:[ref child:child_cmessage]];
+            
+            // NSString *_child = [NSString stringWithFormat:@"%@%@/", child_cmessage, snapshot.key];
+            [[[ref child:child_cmessage] child:snapshot.key] observeEventType:FIRDataEventTypeChildChanged withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+                NSLog(@"%@, %@, %@",snapshot.ref.parent.key,snapshot.key, snapshot.value);
+                
                 /*
                  ติดไว้ก่อนเราต้อง removeObaserver ออกด้วยโดยมีเงือ่น ? ตอนนี้ลบออกให้หมดก่อน
                  */

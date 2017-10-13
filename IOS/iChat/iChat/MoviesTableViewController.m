@@ -374,6 +374,9 @@
         }
         case 6:{
             // @"Invite Multi Chat";
+            
+            return 0;
+            
             NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
             if ([invite_multi_chat count] == 0) {
                 return 0;
@@ -448,6 +451,8 @@
             }
         }
         case 6:{
+            
+            return 0;
             // @"Invite Multi Chat";
             NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
             if ([invite_multi_chat count] == 0) {
@@ -527,6 +532,8 @@
             }
         }
         case 6:{
+            
+            return 0;
             // @"Invite Multi Chat";
             NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
             if ([invite_multi_chat count] == 0) {
@@ -817,6 +824,7 @@
                 break;
             }
             case 5:{
+                
                 // @"Invite Group";
                 NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
                 
@@ -826,6 +834,8 @@
                 
                 
                 id item = [[Configs sharedInstance] loadData:key];
+                
+                if (item != [NSNull null]) {
                 
                 if ([item objectForKey:@"image_url"]) {
                     [cell.imgPerson clear];
@@ -851,14 +861,18 @@
                 UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
                 // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
                 
-                lpgr.userData = indexPath;
+                    lpgr.userData = indexPath;
                 // lpgr.minimumPressDuration = 1.0; //seconds
-                [cell addGestureRecognizer:lpgr];
+                    [cell addGestureRecognizer:lpgr];
                 
-                NSLog(@"");
+                    NSLog(@"");
+                }
+                
                 break;
             }
+                /*
             case 6:{
+                
                 // @"Invite Multi Chat";
                 NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
      
@@ -885,9 +899,11 @@
                 // lpgr.minimumPressDuration = 1.0; //seconds
                 [cell addGestureRecognizer:lpgr];
                 
+                
                 NSLog(@"");
                 break;
             }
+                */
             default:
                 break;
         }
@@ -1462,7 +1478,7 @@
         // @"Reject", @"Join"
         NSLog(@"");
         
-        NSMutableDictionary *item = alertView.userData;
+        NSIndexPath *indexPath = alertView.userData;
         switch (buttonIndex) {
             case 0:{
                 // Close
@@ -1488,6 +1504,52 @@
                 break;
             case 2:{
                 NSLog(@"Join");
+                
+                /*
+                 step การ Join
+                 1. ต้องดึงรายละเอียดของกลุ่มมาก่อนเพือนำไปส้รางเป็นกลุ่มของตัวเองโดย owner_id ={ผู้สร้าง}
+                 2. เอาข้อมูลที่ได้จากข้อ 1 ไปสร้างเป้น group
+                 
+                 3. วิ่งไป update toonchat/{owner_id}/group/{group_id}/members/{nod_id}/{status='access'}
+                 4. ลบ invite_group by group_id ออก
+                 */
+                
+                NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
+                
+                NSArray *keys = [invite_group allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                id _item = [invite_group objectForKey:key];
+                
+                id item = [[Configs sharedInstance] loadData:key];
+                
+                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@", [[Configs sharedInstance] getUIDU] , key];
+                
+                // #1, #2
+//                [[ref child:child] setValue:item withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+//                    NSLog(@"");
+//                    if (error == nil) {
+//
+//                    }
+//                }];
+                [[ref  child:child] setValue:item];
+                
+                // #3
+                __block NSString *iv_child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/members/%@/", [item objectForKey:@"owner_id"] , key, [_item objectForKey:@"node_id"]];
+                NSDictionary *childUpdates = @{[NSString stringWithFormat:@"%@/%@/", iv_child, @"status"]: @"access"};
+                // [ref updateChildValues:childUpdates];
+                
+                [ref updateChildValues:childUpdates withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                    if (error == nil) {
+                        NSString *rm_child = [NSString stringWithFormat:@"toonchat/%@/invite_group/%@/", [[Configs sharedInstance] getUIDU] , key];
+                        [[ref child:rm_child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                            NSLog(@"");
+                        }];
+                    }
+                }];
+                
+                // #4
+                
+                NSLog(@"");
             }
                 break;
         }

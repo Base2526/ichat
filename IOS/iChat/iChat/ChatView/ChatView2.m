@@ -324,13 +324,23 @@
     m.chat_id   = [friend objectForKey:@"chat_id"];
     m.object_id = object_id;
     m.text      = text;
-    m.type      = @"private";
+    
     m.sender_id = [[Configs sharedInstance] getUIDU];
-    m.receive_id = [friend objectForKey:@"friend_id"];
+    
+    
     m.status    = @"sending";
     m.reader    = @"";
     m.create    = [timeStampObj stringValue];
     m.update    = [timeStampObj stringValue];
+    
+    if ([self.typeChat isEqualToString:@"1"] || [self.typeChat isEqualToString:@"2"]) {
+        m.type      = @"private";
+        m.receive_id = [friend objectForKey:@"friend_id"];
+    }else if([self.typeChat isEqualToString:@"4"]){
+        // Multi Chat
+        m.type      = @"private";
+        m.receive_id = [friend objectForKey:@"members"];
+    }
     
     [self.messages addObject:m];
     
@@ -470,7 +480,7 @@
                                                    message:nil
                                                   delegate:self
                                          cancelButtonTitle:@"Close"
-                                         otherButtonTitles:@"Invite friend(เพิ่มเพื่อนใหม่เข้า Multi-Chat)", [NSString stringWithFormat:@"Members(%d)", [members count]], nil];
+                                         otherButtonTitles:@"Invite friend(เพิ่มเพื่อนใหม่เข้า Multi-Chat)", [NSString stringWithFormat:@"Members(%d)", [members count]], @"สร้าง Group Chat", nil];
         
         alert.userData = @"";
         alert.tag = 2;
@@ -538,6 +548,12 @@
                 [self.navigationController pushViewController:members animated:YES];
             }
                 break;
+                
+            case 3:{
+                // สร้าง Group Chat
+                NSLog(@"");
+            }
+                break;
         }
     }
 }
@@ -545,8 +561,6 @@
 -(void)scrollToBottom{
     [self.tableView scrollRectToVisible:CGRectMake(0, self.tableView.contentSize.height - self.tableView.bounds.size.height, self.tableView.bounds.size.width, self.tableView.bounds.size.height) animated:NO];
 }
-
-
 
 #pragma mark --  notification    Method
 - (void)keyBoardWillShow:(NSNotification *)noti{
