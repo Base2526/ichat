@@ -37,7 +37,7 @@
     if ([profiles objectForKey:@"image_url"]) {
         [imageV clear];
         [imageV showLoadingWheel];
-        [imageV setUrl:[NSURL URLWithString:[profiles objectForKey:@"image_url"]]];
+        [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [Configs sharedInstance].API_URL,[profiles objectForKey:@"image_url"]]]];
         [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
     }
     

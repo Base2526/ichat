@@ -1,1 +1,1 @@
-include ':app', ':expandablerecyclerview', ':expandablecheckrecyclerview'
+include ':app', ':chat-message-view', ':sectioned-recyclerview'

@@ -671,6 +671,7 @@ function update_picture_profile(){
 
   if (empty($_REQUEST['uid']) || empty($_REQUEST['image'])) {
     $result['result'] = FALSE;
+    $result['REQUEST'] = $_REQUEST;
     return $result;
   }
 
@@ -701,13 +702,13 @@ function update_picture_profile(){
   profile2_save($profile);
 
 
-  // url image profile
+  // url image profile 
   $url = file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']);
 
   // Firebase : update image url profile
   $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
   $data_update = array(
-      "image_url"  =>$url
+      "image_url"  =>substr(file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']), strlen($GLOBALS['base_url']))
   );
 
   $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);

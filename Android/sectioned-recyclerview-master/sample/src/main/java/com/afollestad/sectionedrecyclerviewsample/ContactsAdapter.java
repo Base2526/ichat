@@ -15,9 +15,7 @@ import com.afollestad.sectionedrecyclerview.SectionedRecyclerViewAdapter;
 import com.afollestad.sectionedrecyclerview.SectionedViewHolder;
 import com.chauthai.swipereveallayout.SwipeRevealLayout;
 import com.chauthai.swipereveallayout.ViewBinderHelper;
-
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,13 +29,14 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
 
   private Map<Integer, ArrayList<String>> data = new HashMap<Integer, ArrayList<String>>();
 
-  private final ViewBinderHelper binderHelper = new ViewBinderHelper();
+  private final ViewBinderHelper binderHelper;
 
   public ContactsAdapter(Context context) {
-    this.context = context;
+      this.context = context;
 
-    // uncomment if you want to open only one row at a time
-     binderHelper.setOpenOnlyOne(true);
+      binderHelper = new ViewBinderHelper();
+      // uncomment if you want to open only one row at a time
+      binderHelper.setOpenOnlyOne(true);
   }
 
   public void setData(Map<Integer, ArrayList<String>> data){
@@ -125,8 +124,6 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
       }
         break;
     }
-
-
   }
 
   @Override
@@ -165,7 +162,7 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
             holder.mainLayout.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View view) {
-                Toast.makeText(context, "mainLayout", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "mainLayout : Profile", Toast.LENGTH_LONG).show();
               }
             });
           }
@@ -194,11 +191,13 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
 
             holder.textArchive.setTag(R.string._parameter_1, section);
             holder.textArchive.setTag(R.string._parameter_2, relativePosition);
+            holder.textArchive.setTag(R.string._parameter_3, holder.swipeRevealLayout);
             holder.textArchive.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View view) {
                 int section = (int)view.getTag(R.string._parameter_1);
                 int index = (int)view.getTag(R.string._parameter_2);
+                SwipeRevealLayout swipeRevealLayout = (SwipeRevealLayout)view.getTag(R.string._parameter_3);
 
                 Iterator myVeryOwnIterator = data.keySet().iterator();
                 while(myVeryOwnIterator.hasNext()) {
@@ -208,6 +207,7 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
                     value.remove(index);
 
                     data.put(key, value);
+                    swipeRevealLayout.close(true);
                     notifyDataSetChanged();
                   }
                 }
@@ -216,11 +216,13 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
 
             holder.textDelete.setTag(R.string._parameter_1, section);
             holder.textDelete.setTag(R.string._parameter_2, relativePosition);
+            holder.textDelete.setTag(R.string._parameter_3, holder.swipeRevealLayout);
             holder.textDelete.setOnClickListener(new View.OnClickListener() {
               @Override
               public void onClick(View view) {
                 int section = (int)view.getTag(R.string._parameter_1);
                 int index = (int)view.getTag(R.string._parameter_2);
+                SwipeRevealLayout swipeRevealLayout = (SwipeRevealLayout)view.getTag(R.string._parameter_3);
 
                 Iterator myVeryOwnIterator = data.keySet().iterator();
                 while(myVeryOwnIterator.hasNext()) {
@@ -230,9 +232,17 @@ class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainV
                     value.remove(index);
 
                     data.put(key, value);
+                    swipeRevealLayout.close(true);
                     notifyDataSetChanged();
                   }
                 }
+              }
+            });
+
+            holder.mainLayout.setOnClickListener(new View.OnClickListener() {
+              @Override
+              public void onClick(View view) {
+                Toast.makeText(context, "mainLayout : xx", Toast.LENGTH_LONG).show();
               }
             });
           }

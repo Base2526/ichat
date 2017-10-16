@@ -86,7 +86,7 @@
 		6090A9201F89EEB4009B53AC /* ManageMultiChat.m in Sources */ = {isa = PBXBuildFile; fileRef = 6090A91F1F89EEB4009B53AC /* ManageMultiChat.m */; };
 		60988B941F85DAB700A3DD91 /* GroupInviteNewMembersThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60988B931F85DAB700A3DD91 /* GroupInviteNewMembersThread.m */; };
 		60988B971F85F6B500A3DD91 /* GroupDeleteMemberThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60988B961F85F6B500A3DD91 /* GroupDeleteMemberThread.m */; };
-		60CD1FD51F7D632C005CA3B4 /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 60CD1FD41F7D632C005CA3B4 /* db.sql */; };
+		60B52CBB1F90F40C000FA11E /* db.sql in Resources */ = {isa = PBXBuildFile; fileRef = 60CD1FD41F7D632C005CA3B4 /* db.sql */; };
 		60DAB2BF1F84BF8300C93606 /* DeleteGroupChatThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60DAB2BE1F84BF8300C93606 /* DeleteGroupChatThread.m */; };
 		60DE2A3C1F79605100F77FEB /* UpdatePictureProfileThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 60DE2A3B1F79605100F77FEB /* UpdatePictureProfileThread.m */; };
 		60E4A4FA1F7F546900536B58 /* GroupTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 60E4A4F81F7F546900536B58 /* GroupTableViewCell.m */; };
@@ -671,6 +671,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				60B52CBB1F90F40C000FA11E /* db.sql in Resources */,
 				6090A9121F87E4D1009B53AC /* chat_arrow.png in Resources */,
 				6090A9131F87E4D1009B53AC /* chat_arrow@2x.png in Resources */,
 				6090A9141F87E4D1009B53AC /* chat_arrow@3x.png in Resources */,
@@ -693,7 +694,6 @@
 				605ED4D71F794EEA00AD621C /* GoogleService-Info.plist in Resources */,
 				604A6FE41F7918E700807966 /* Assets.xcassets in Resources */,
 				603BB8B41F7A29D4006AC6D8 /* README.txt in Resources */,
-				60CD1FD51F7D632C005CA3B4 /* db.sql in Resources */,
 				605ED5001F79512200AD621C /* ProfileTableViewCell.xib in Resources */,
 				60EFBAD81F83E81A00EA11D9 /* FriendHeaderTableViewCell.xib in Resources */,
 			);

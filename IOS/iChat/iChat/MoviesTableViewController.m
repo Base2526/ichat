@@ -562,7 +562,7 @@
         if ([profiles objectForKey:@"image_url"]) {
             [cell.imgPerson clear];
             [cell.imgPerson showLoadingWheel];
-            [cell.imgPerson setUrl:[NSURL URLWithString:[profiles objectForKey:@"image_url"]]];
+            [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [Configs sharedInstance].API_URL,[profiles objectForKey:@"image_url"]]]];
             [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
         }else{}
 
@@ -1355,11 +1355,11 @@
          
             case 1:{
                 
-                NSMutableDictionary *friends = [data valueForKey:@"groups"];
+                NSMutableDictionary *group = [data valueForKey:@"groups"];
                 
-                NSArray *keys = [friends allKeys];
+                NSArray *keys = [group allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
-                NSMutableDictionary*  item = [friends objectForKey:key];
+                NSMutableDictionary*  item = [group objectForKey:key];
                 [item setValue:key forKey:@"group_id"];
                 
                 UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];

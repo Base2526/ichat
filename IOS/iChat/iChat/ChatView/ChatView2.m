@@ -338,7 +338,7 @@
         m.receive_id = [friend objectForKey:@"friend_id"];
     }else if([self.typeChat isEqualToString:@"4"]){
         // Multi Chat
-        m.type      = @"private";
+        m.type      = @"multi_chat";
         m.receive_id = [friend objectForKey:@"members"];
     }
     
