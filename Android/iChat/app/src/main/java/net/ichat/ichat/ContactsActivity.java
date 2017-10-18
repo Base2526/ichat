@@ -1,5 +1,6 @@
 package net.ichat.ichat;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +35,8 @@ import java.util.Map;
 public class ContactsActivity extends AppCompatActivity {
   private String TAG = ContactsActivity.class.getName();
 
+  public final int RESULT_PROFILE = 10;
+
   private ContactsAdapter contactsAdapter;
   private boolean hideEmpty  = false;
   private boolean showFooters = false;
@@ -47,11 +50,11 @@ public class ContactsActivity extends AppCompatActivity {
     @Override
     public void onReceive(Context context, Intent intent) {
       if (intent.getAction().equals(Configs.PROFILES)) {
-          contactsAdapter.notifyDataSetChanged();
+          reloadData();
       }else if (intent.getAction().equals(Configs.FRIENDS)) {
-          contactsAdapter.notifyDataSetChanged();
+          reloadData();
       }else if (intent.getAction().equals(Configs.GROUPS)) {
-          contactsAdapter.notifyDataSetChanged();
+          reloadData();
       }else if (intent.getAction().equals("Contacts_Reload")) {
           reloadData();
       }
@@ -280,6 +283,19 @@ public class ContactsActivity extends AppCompatActivity {
       unregisterReceiver(contactsListener);
     }catch (Exception ex){
       Log.e(TAG, ex.toString());
+    }
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    if (requestCode == 1) {
+      if(resultCode == Activity.RESULT_OK){
+        String result=data.getStringExtra("result");
+      }
+      if (resultCode == Activity.RESULT_CANCELED) {
+        //Write your code if there's no result
+      }
     }
   }
 }

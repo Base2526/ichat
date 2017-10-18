@@ -183,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
 
                         try {
                             JSONObject user = new JSONObject(appSharedPrefs.getString(Configs.USER, "")).getJSONObject("user");
-
                             setTitle("Contacts " + user.getString("uid"));
                             invalidateOptionsMenu();
                         }catch (Exception ex){
@@ -192,10 +191,11 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     }
                     case 1: {
-                        setTitle("Update");
+                        setTitle("Recent");
                         invalidateOptionsMenu();
                         break;
                     }
+                    /*
                     case 2: {
                         setTitle("Gallery");
                         invalidateOptionsMenu();
@@ -206,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
                         invalidateOptionsMenu();
                         break;
                     }
+                    */
                     default:
 
                         break;
@@ -754,13 +755,5 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (requestCode == CHANGE_FRIEND_NAME) {
-            if(resultCode == Activity.RESULT_OK){
-
-            }
-            if (resultCode == Activity.RESULT_CANCELED) {
-                //Write your code if there's no result
-            }
-        }
     }//
 }

@@ -43,10 +43,8 @@ import java.util.Map;
 public class DialogFriend extends DialogFragment implements AdapterView.OnItemClickListener {
     private String TAG = DialogFriend.class.getName();
 
-    private ArrayList<String> listitems;// = { "item01", "item02", "item03", "item04" };
-
+    private ArrayList<String> listitems;
     private ListView listView;
-
     private MainActivity mainActivity;
     private String type;
     private JSONObject data;
@@ -54,9 +52,7 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.dialog_friend, container, false);
-
         try {
-
             mainActivity = (MainActivity)getContext();
 
             Bundle mArgs = getArguments();
@@ -70,111 +66,19 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
                 listitems.add("Delete group");
                 listitems.add("Close");
             }else {
-                listitems.add("Favorite");
+                String favorite = "0";
+                if (data.has("favorite")){
+                    favorite = data.getString("favorite");
+                }
+
+                listitems.add("Favorite > " + favorite);
                 listitems.add("Change friend's name");
                 listitems.add("Hide");
                 listitems.add("Block");
                 listitems.add("Close");
             }
-
-
             listView = (ListView) rootView.findViewById(R.id.listView);
-
             getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-
-             /*
-            btnUTN      = (Button)rootView.findViewById(R.id.btnUTN);
-
-            Bundle mArgs = getArguments();
-            phoneNumber = mArgs.getString("phoneNumber");
-
-            if(mArgs.containsKey("email")){
-                email = mArgs.getString("email");
-            }
-            if (mArgs.containsKey("fid")){
-                fid = mArgs.getString("fid");
-            }
-
-            btnCancel.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    dismiss();
-                }
-            });
-
-            btnUTN.setTag(R.string._parameter_1, phoneNumber);
-            btnUTN.setTag(R.string._parameter_2, email);
-            btnUTN.setTag(R.string._parameter_3, fid);
-            btnUTN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // new ChangeTelThread(welcomeActivity, phoneNumber).start();
-
-
-                    Intent intent = new Intent(getContext(), Register.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("phoneNumber", (String)view.getTag(R.string._parameter_1));
-                    bundle.putString("email", (String)view.getTag(R.string._parameter_2));
-                    bundle.putString("fid", (String)view.getTag(R.string._parameter_3));
-
-                    intent.putExtras(bundle);
-
-                    startActivity(intent);
-
-                    dismiss();
-                }
-            });
-            */
-
-             /*
-            imageLoader.displayImage(uri_image, imageV);
-
-            btnAction.setText(textButton);
-            btnAction.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                    // String url = "http://www.example.com";
-                    Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse(uri_action));
-                    startActivity(i);
-                }
-            });
-
-
-            imgClose.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // new ChangeTelThread(welcomeActivity, phoneNumber).start();
-
-                    try {
-                        if (checkBox.isChecked()) {
-                            SharedPreferences mPrefs = getActivity().getSharedPreferences(Configs.MY_PREFS, MODE_PRIVATE);
-                            String diaryPopup = mPrefs.getString(Configs.DIARY_POPUP, "");
-
-                            if (!diaryPopup.equalsIgnoreCase("")) {
-
-                                JSONObject obj = new JSONObject(diaryPopup);
-
-                                JSONObject objNew = new JSONObject();
-                                objNew.put("current_date", obj.getString("current_date"));
-                                objNew.put("data", obj.getString("data"));
-                                objNew.put("flag", true);
-
-                                SharedPreferences.Editor editor = getActivity().getSharedPreferences(Configs.MY_PREFS, MODE_PRIVATE).edit();
-                                editor.putString(Configs.DIARY_POPUP, objNew.toString());
-                                editor.commit();
-                            }
-                        }
-
-                        dismiss();
-                    }catch (Exception ex){
-                        Toast.makeText(getActivity(), ex.toString(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-            */
-
         }catch (Exception ex){
             Log.e(TAG, ex.toString());
         }
@@ -193,18 +97,14 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
         if (type.equalsIgnoreCase(Configs.GROUPS)){
-
             switch (position) {
                 case 0: {
                     // Manage group
                     Intent intent = new Intent(mainActivity, ManageGroupActivity.class);
                     Bundle bundle = new Bundle();
                     bundle.putString("data", data.toString());
-
                     intent.putExtras(bundle);
-
                     mainActivity.startActivity(intent);
                 }
                 break;
@@ -220,13 +120,10 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
                 break;
             }
         }else {
-
             switch (position) {
                 case 0: {
                     // Favorite
-
                     try {
-
                         final FirebaseDatabase database = FirebaseDatabase.getInstance();
                         DatabaseReference myRef = database.getReference("toonchat/" + ((App) mainActivity.getApplication()).getUserId() + "/friends/" + data.getString("friend_id") + "/favorite");
 
@@ -245,21 +142,27 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
                                         childUpdates.put(path, "1");
 
                                         FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("favorite", "1");
                                     } else if (value.equalsIgnoreCase("1")) {
                                         Map<String, Object> childUpdates = new HashMap<>();
                                         childUpdates.put(path, "0");
 
                                         FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("favorite", "0");
                                     } else {
                                         Map<String, Object> childUpdates = new HashMap<>();
                                         childUpdates.put(path, "1");
 
                                         FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("favorite", "1");
                                     }
+                                    ((App)mainActivity.getApplication()).updateFriendsbyFriend(data);
 
                                     Intent i = new Intent("Contacts_Reload");
                                     Bundle bundle = new Bundle();
-
                                     i.putExtras(bundle);
                                     mainActivity.sendBroadcast(i);
                                 } catch (Exception ex) {
@@ -274,7 +177,6 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
                     }catch (Exception ex){
                         Log.e(TAG, ex.toString());
                     }
-
                 }
                 break;
 
@@ -284,10 +186,10 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
                         Intent intent = new Intent(mainActivity, ChangeFriendNameActivity.class);
 
                         Bundle bundle = new Bundle();
-                        bundle.putString("friend_id", data.getString("friend_id"));
+                        bundle.putString("data", data.toString());
                         intent.putExtras(bundle);
 
-                        mainActivity.startActivityForResult(intent, mainActivity.CHANGE_FRIEND_NAME);
+                        mainActivity.startActivity(intent);
                     }catch (Exception ex){
                         Log.e(TAG, ex.toString());
                     }
@@ -296,7 +198,6 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
 
                 case 2: {
                     // Hide
-
                     Toast.makeText(mainActivity, "Hide", Toast.LENGTH_SHORT).show();
                 }
                 break;

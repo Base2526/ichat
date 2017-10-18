@@ -190,7 +190,6 @@ public class App extends Application {
         }
     }
 
-
     /*
     * Update profiles
     * */
@@ -218,6 +217,31 @@ public class App extends Application {
             String strData = appSharedPrefs.getString(Configs.DATA, "");
             JSONObject jsonData = new JSONObject(strData);
             jsonData.put(Configs.FRIENDS, friends);
+
+            SharedPreferences.Editor prefsEditor = appSharedPrefs.edit();
+            prefsEditor.putString(Configs.DATA, jsonData.toString());
+            prefsEditor.commit();
+
+            return true;
+        }catch (Exception ex){
+            return false;
+        }
+    }
+
+    /*
+    * Update Friend ของแต่ละคน
+   * */
+    public Boolean updateFriendsbyFriend(JSONObject friend) {
+        try{
+
+            String strData = appSharedPrefs.getString(Configs.DATA, "");
+            JSONObject jsonData = new JSONObject(strData);
+
+            JSONObject _t =jsonData.getJSONObject(Configs.FRIENDS);
+
+            _t.put(friend.getString("friend_id"), friend);
+
+            jsonData.put(Configs.FRIENDS, _t);
 
             SharedPreferences.Editor prefsEditor = appSharedPrefs.edit();
             prefsEditor.putString(Configs.DATA, jsonData.toString());
@@ -262,9 +286,9 @@ public class App extends Application {
         }
     }
 
-        /*
-      * เพือ่นทั้งหมด
-      */
+    /*
+     *ดึงกลุ่มทั้งหมด
+     */
     public JSONObject getGroups() {
         try {
             String strData = appSharedPrefs.getString(Configs.DATA, "");
@@ -273,6 +297,36 @@ public class App extends Application {
             return jsonData.getJSONObject(Configs.GROUPS);
         }catch (Exception ex){
             return null;
+        }
+    }
+
+    /*
+    * เป้นการ update ข้อมูลเฉพาะกลุ่มเท่านั้น
+    * */
+    public Boolean updateGroupsByGroup(String group_id, String name, String image_url) {
+        try {
+            String strData = appSharedPrefs.getString(Configs.DATA, "");
+            JSONObject jsonData = new JSONObject(strData);
+
+
+            JSONObject _t =jsonData.getJSONObject(Configs.GROUPS);
+
+            JSONObject group = _t.getJSONObject(group_id);
+            group.put("name", name);
+            group.put("image_url", image_url);
+
+            _t.put(group_id, group);
+
+
+            jsonData.put(Configs.GROUPS, _t);
+
+            SharedPreferences.Editor prefsEditor = appSharedPrefs.edit();
+            prefsEditor.putString(Configs.DATA, jsonData.toString());
+            prefsEditor.commit();
+
+            return true;
+        }catch (Exception ex){
+            return false;
         }
     }
 
@@ -312,7 +366,6 @@ public class App extends Application {
             return false;
         }
     }
-
 
     /*
     * เป้นการลบ group ที่ firebase

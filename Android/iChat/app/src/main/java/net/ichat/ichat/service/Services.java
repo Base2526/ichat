@@ -1,10 +1,12 @@
 package net.ichat.ichat.service;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Base64;
@@ -114,30 +116,13 @@ public class Services {
             }
 
             // https://stackoverflow.com/questions/24233632/how-to-add-parameters-to-api-http-post-using-okhttp-library-in-android
-            /*
-            RequestBody formBody = new FormBody.Builder()
-                    .add("udid", udid)
-                    .add("platform", platform)
-                    .add("bundleidentifier", bundleidentifier)
-                    .add("version", version)
-                    .build();
-            */
-
-
-            /**
-             * OKHTTP3
-             */
-            // File sourceFile = new File("ImagePath");
-
 
             final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
             RequestBody formBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("image", JsonUtils.BitmapToString(bmp))
-                    // .addFormDataPart("result", "my_image")
                     .addFormDataPart("uid", ((App) context.getApplicationContext()).getUserId())
                     .build();
-
 
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
@@ -153,10 +138,16 @@ public class Services {
                 result[0] = true;
                 result[1] = jsonresult.getString("url");
 
-//                SharedPreferences appSharedPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-//                SharedPreferences.Editor prefsEditor = appSharedPrefs.edit();
-//                prefsEditor.putString(Configs.USER, jsonresult.getJSONObject("data").toString());
-//                prefsEditor.commit();
+                JSONObject jsonProfiles =((App)context.getApplicationContext()).getMyProfile();
+
+                jsonProfiles.put("image_url", jsonresult.getString("url"));
+                ((App)context.getApplicationContext()).updateMyProfiles(jsonProfiles);
+
+                Intent i = new Intent(Configs.PROFILES);
+                Bundle bundle = new Bundle();
+                i.putExtras(bundle);
+                context.sendBroadcast(i);
+
             } else {
                 result[0] = false;
             }
@@ -204,6 +195,17 @@ public class Services {
 
             if (jsonresult.getBoolean("result")) {
                 result[0] = true;
+
+                JSONObject jsonProfiles =((App)context.getApplicationContext()).getMyProfile();
+
+                jsonProfiles.put("name", name);
+                jsonProfiles.put("status_message", status_mss);
+                ((App)context.getApplicationContext()).updateMyProfiles(jsonProfiles);
+
+                Intent i = new Intent(Configs.PROFILES);
+                Bundle bundle = new Bundle();
+                i.putExtras(bundle);
+                context.sendBroadcast(i);
 
             } else {
                 result[0] = false;
@@ -312,11 +314,24 @@ public class Services {
 
             if (jsonresult.getBoolean("result")) {
                 result[0] = true;
-//                result[1] = jsonresult.getString("url");
+//                result[1] = jsonresult.getString("image_url");
+
+
+
 //                SharedPreferences appSharedPrefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 //                SharedPreferences.Editor prefsEditor = appSharedPrefs.edit();
 //                prefsEditor.putString(Configs.USER, jsonresult.getJSONObject("data").toString());
 //                prefsEditor.commit();
+
+
+                // updateGroupsByGroup
+                ((App)context.getApplicationContext()).updateGroupsByGroup(group_id, name, jsonresult.getString("image_url"));
+
+
+                Intent i = new Intent(Configs.GROUPS);
+                Bundle bundle = new Bundle();
+                i.putExtras(bundle);
+                context.sendBroadcast(i);
             } else {
                 result[0] = false;
             }

@@ -19,6 +19,7 @@ import com.chauthai.swipereveallayout.SwipeRevealLayout;
 import com.chauthai.swipereveallayout.ViewBinderHelper;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
+import net.ichat.ichat.ContactsActivity;
 import net.ichat.ichat.ProfileActivity;
 import net.ichat.ichat.R;
 import net.ichat.ichat.application.App;
@@ -37,14 +38,14 @@ import java.util.Map;
 public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapter.MainVH> {
     private String TAG = ContactsAdapter.class.getName();
 
-    private Context context;
+    private ContactsActivity contactsActivity;
 
     private Map<Integer, ArrayList<JSONObject>> data = new HashMap<Integer, ArrayList<JSONObject>>();
 
     private final ViewBinderHelper binderHelper;
 
-    public ContactsAdapter(Context context) {
-        this.context = context;
+    public ContactsAdapter(ContactsActivity contactsActivity) {
+        this.contactsActivity = contactsActivity;
 
         binderHelper = new ViewBinderHelper();
         // uncomment if you want to open only one row at a time
@@ -163,57 +164,110 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
 
     @Override
     public void onBindViewHolder(MainVH holder, int section, int relativePosition, int absolutePosition) {
-        // holder.title.setText(String.format("S:%d, P:%d, A:%d", section, relativePosition, absolutePosition));
-        //  holder.image.setBackgroundResource(R.drawable.a1_1_1);
-
-        // holder.image.setBackgroundResource(R.drawable.a1_1_1);
-
-        // holder.image.setBackground(context.getDrawable(R.drawable.a1_1_1));
-        // holder.image.setBackgroundResource(context.getDrawable(R.drawable.a1_1_1));
-
         try {
-
-            holder.swipeRevealLayout.close(true);
-            binderHelper.bind(holder.swipeRevealLayout, Integer.toString(section + relativePosition + absolutePosition));
-
             switch (section) {
                 case 0: {
-                    // holder.text_name.setText("Item Profile");
-                    //          holder.caret.setImageResource(0);
-                    //
-                    holder.swipeRevealLayout.setLockDrag(true);
+                    holder.main_content_profile.setVisibility(View.VISIBLE);
+                    holder.main_content_group.setVisibility(View.GONE);
+                    holder.main_content_friend.setVisibility(View.GONE);
 
-                    holder.swipeRevealLayout.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Toast.makeText(context, "swipeRevealLayout", Toast.LENGTH_LONG).show();
-                        }
-                    });
-                    holder.mainLayout.setOnClickListener(new View.OnClickListener() {
+                    JSONObject jsonProfiles =((App)contactsActivity.getApplicationContext()).getMyProfile();
+
+                    holder.text_name_content_profile.setText(jsonProfiles.getString("name"));
+                    holder.text_email_content_profile.setText(jsonProfiles.getString("mail"));
+
+                    holder.text_status_message_content_profile.setText("");
+                    if(jsonProfiles.has("status_message")){
+                        holder.text_status_message_content_profile.setText(jsonProfiles.getString("status_message"));
+                    }
+
+                    ImageLoader.getInstance().displayImage("", holder.image_content_profile);
+                    if(jsonProfiles.has("image_url")){
+                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonProfiles.getString("image_url"), holder.image_content_profile);
+                    }
+
+                    holder.main_content_profile.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             // Toast.makeText(context, "mainLayout : Profile", Toast.LENGTH_LONG).show();
-                            context.startActivity(new Intent(context, ProfileActivity.class));
+                            contactsActivity.startActivity(new Intent(contactsActivity, ProfileActivity.class));
                         }
                     });
+                }
+                break;
 
-                    JSONObject jsonProfiles =((App)context.getApplicationContext()).getMyProfile();
+                case 1:{
+                    // Group
+                    holder.main_content_profile.setVisibility(View.GONE);
+                    holder.main_content_group.setVisibility(View.VISIBLE);
+                    holder.main_content_friend.setVisibility(View.GONE);
 
-                    holder.text_name.setText(jsonProfiles.getString("name"));
-                    holder.text_email.setText(jsonProfiles.getString("mail"));
 
-                    ImageLoader.getInstance().displayImage("", holder.image_profile);
-                    if(jsonProfiles.has("image_url")){
-                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonProfiles.getString("image_url"), holder.image_profile);
-                    }
+                    // this.text_name_content_group = (TextView) itemView.findViewById(R.id.text_name_content_group);
 
-                    holder.text_status_messsage.setText("");
-                    if(jsonProfiles.has("status_message")){
-                        holder.text_status_messsage.setText(jsonProfiles.getString("status_message"));
+                    Iterator myVeryOwnIterator = data.keySet().iterator();
+                    while (myVeryOwnIterator.hasNext()) {
+                        Integer key = (Integer) myVeryOwnIterator.next();
+                        if (section == key) {
+                            ArrayList<JSONObject> value = (ArrayList<JSONObject>) data.get(key);
+                            // Toast.makeText(ctx, "Key: "+key+" Value: "+value, Toast.LENGTH_LONG).show();
+
+                            // emotionName
+                            // holder.title.setText(value.get(relativePosition).getString("path"));
+
+                            // ImageLoader imageLoader = ImageLoader.getInstance();
+                            // imageLoader.displayImage(value.get(relativePosition).getString("path"), holder.image);
+
+                            JSONObject jsonObject = value.get(relativePosition);
+
+                            if (jsonObject.has("title_section")) {
+
+                                if (jsonObject.getString("title_section").equalsIgnoreCase("Groups")) {
+
+                                    // members
+                                    if (jsonObject.has("members")){
+                                        JSONObject members= jsonObject.getJSONObject("members");
+
+                                        String name = jsonObject.getString("name");
+                                        holder.text_name_content_group.setText(name + "("+ members.length() +")");
+                                    }else{
+                                        String name = jsonObject.getString("name");
+                                        holder.text_name_content_group.setText(name);
+                                    }
+
+
+                                    ImageLoader.getInstance().displayImage("", holder.image_content_group);
+                                    if (jsonObject.has("image_url")) {
+                                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), holder.image_content_group);
+                                    }
+
+                                    holder.main_content_group.setTag(R.string._parameter_1, jsonObject);
+                                    holder.main_content_group.setOnLongClickListener(new View.OnLongClickListener() {
+                                        @Override
+                                        public boolean onLongClick(View view) {
+
+                                            JSONObject data = (JSONObject) view.getTag(R.string._parameter_1);
+                                            ((App) contactsActivity.getApplicationContext()).getMainActivity().showDialogFriend(Configs.GROUPS, data.toString());
+
+                                            return true;
+                                        }
+                                    });
+                                }
+                            }
+                            break;
+                        }
                     }
                 }
                 break;
+
                 default: {
+
+                    holder.main_content_profile.setVisibility(View.GONE);
+                    holder.main_content_group.setVisibility(View.GONE);
+                    holder.main_content_friend.setVisibility(View.VISIBLE);
+
+                    holder.swipeRevealLayout.close(true);
+                    binderHelper.bind(holder.swipeRevealLayout, Integer.toString(section + relativePosition + absolutePosition));
 
                     holder.swipeRevealLayout.setLockDrag(false);
 
@@ -250,7 +304,7 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                         public boolean onLongClick(View view) {
 
                                             JSONObject data = (JSONObject) view.getTag(R.string._parameter_1);
-                                            ((App)context.getApplicationContext()).getMainActivity().showDialogFriend(Configs.GROUPS, data.toString());
+                                            ((App)contactsActivity.getApplicationContext()).getMainActivity().showDialogFriend(Configs.GROUPS, data.toString());
 
                                             return true;
                                         }
@@ -258,8 +312,14 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                 }else if (jsonObject.getString("title_section").equalsIgnoreCase("Friends")){
                                     String friend_id = value.get(relativePosition).getString("friend_id");
 
-                                    JSONObject val = ((App)context.getApplicationContext()).getProfileFriend(friend_id);
-                                    val.put("friend_id", friend_id);
+//                                    String favorite = "0";
+//                                    if (value.get(relativePosition).has("favorite")){
+//                                        favorite = value.get(relativePosition).getString("favorite");
+//                                    }
+
+                                    JSONObject val = ((App)contactsActivity.getApplicationContext()).getProfileFriend(friend_id);
+                                    // val.put("friend_id", friend_id);
+                                    // val.put("favorite", favorite);
 
                                     holder.text_name.setText(val.getString("name") + " : " + value.get(relativePosition).getString("friend_id"));
                                     holder.text_email.setText(val.getString("mail"));
@@ -269,28 +329,35 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                         ImageLoader.getInstance().displayImage(Configs.API_URI + val.getString("image_url"), holder.image_profile);
                                     }
 
-                                    holder.text_status_messsage.setText("");
+                                    holder.text_change_friend_name.setText("-");
+                                    if(jsonObject.has("change_friends_name")){
+                                        holder.text_change_friend_name.setText("Change friends name : " + jsonObject.getString("change_friends_name"));
+                                    }
+
+                                    holder.text_status_messsage.setText("-");
                                     if(val.has("status_message")){
                                         holder.text_status_messsage.setText(val.getString("status_message"));
                                     }
 
-                                    holder.mainLayout.setTag(R.string._parameter_1, val);
+                                    holder.mainLayout.setTag(R.string._parameter_1, value.get(relativePosition));
                                     holder.mainLayout.setOnLongClickListener(new View.OnLongClickListener(){
                                         @Override
                                         public boolean onLongClick(View view) {
 
                                             JSONObject data = (JSONObject) view.getTag(R.string._parameter_1);
-                                            ((App)context.getApplicationContext()).getMainActivity().showDialogFriend(Configs.FRIENDS, data.toString());
+                                            ((App)contactsActivity.getApplicationContext()).getMainActivity().showDialogFriend(Configs.FRIENDS, data.toString());
 
                                             return true;
                                         }
                                     });
                                 }else if (jsonObject.getString("title_section").equalsIgnoreCase("Favorites")){
-
+                                    // {"change_friends_name":"y0u","chat_id":"zSlfdf6d9gBNAjhcTibm","status":"friend","favorite":"1","create":1505280310,"friend_id":"968","title_section":"Favorites"}
                                     String friend_id = value.get(relativePosition).getString("friend_id");
+                                    // String favorite = value.get(relativePosition).getString("favorite");
 
-                                    JSONObject val = ((App)context.getApplicationContext()).getProfileFriend(friend_id);
-                                    val.put("friend_id", friend_id);
+                                    JSONObject val = ((App)contactsActivity.getApplicationContext()).getProfileFriend(friend_id);
+                                    // val.put("friend_id", friend_id);
+                                    // val.put("favorite", favorite);
 
                                     holder.text_name.setText(val.getString("name") + " : " + value.get(relativePosition).getString("friend_id"));
                                     holder.text_email.setText(val.getString("mail"));
@@ -300,18 +367,23 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                         ImageLoader.getInstance().displayImage(Configs.API_URI + val.getString("image_url"), holder.image_profile);
                                     }
 
-                                    holder.text_status_messsage.setText("");
+                                    holder.text_change_friend_name.setText("-");
+                                    if(jsonObject.has("change_friends_name")){
+                                        holder.text_change_friend_name.setText("Change friends name : " + jsonObject.getString("change_friends_name"));
+                                    }
+
+                                    holder.text_status_messsage.setText("-");
                                     if(val.has("status_message")){
                                         holder.text_status_messsage.setText(val.getString("status_message"));
                                     }
 
-                                    holder.mainLayout.setTag(R.string._parameter_1, val);
+                                    holder.mainLayout.setTag(R.string._parameter_1, value.get(relativePosition));
                                     holder.mainLayout.setOnLongClickListener(new View.OnLongClickListener(){
                                         @Override
                                         public boolean onLongClick(View view) {
 
                                             JSONObject data = (JSONObject) view.getTag(R.string._parameter_1);
-                                            ((App)context.getApplicationContext()).getMainActivity().showDialogFriend(Configs.FAVORITES, data.toString());
+                                            ((App)contactsActivity.getApplicationContext()).getMainActivity().showDialogFriend(Configs.FAVORITES, data.toString());
 
                                             return true;
                                         }
@@ -379,7 +451,7 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                     holder.mainLayout.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            context.startActivity(new Intent(context, ChatView.class));
+                            contactsActivity.startActivity(new Intent(contactsActivity, ChatView.class));
                         }
                     });
 
@@ -408,8 +480,9 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
             case VIEW_TYPE_HEADER:
                 layout = R.layout.list_item_header;
                 break;
-            case VIEW_TYPE_ITEM:
+            case VIEW_TYPE_ITEM: {
                 layout = R.layout.list_item_main;
+            }
                 break;
             case VIEW_TYPE_FOOTER:
                 layout = R.layout.list_item_footer;
@@ -441,6 +514,20 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
     }
 
     static class MainVH extends SectionedViewHolder implements View.OnClickListener, View.OnLongClickListener {
+
+        private LinearLayout main_content_profile, main_content_group,main_content_friend;
+
+        // -- profile
+        private ImageView image_content_profile;
+        private TextView text_name_content_profile, text_email_content_profile, text_status_message_content_profile;
+        // -- profile
+
+        // -- group
+        private ImageView image_content_group;
+        private TextView text_name_content_group;
+        // -- group
+
+
         private SwipeRevealLayout swipeRevealLayout;
         private LinearLayout mainLayout;
         private TextView textArchive, textDelete;
@@ -452,11 +539,27 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
 
         //---- list_item_main
         private ImageView image_profile;
-        private TextView text_name, text_email, text_status_messsage;
+        private TextView text_name, text_email, text_status_messsage, text_change_friend_name;
         //---- list_item_main
 
         MainVH(View itemView, ContactsAdapter adapter, int viewType) {
             super(itemView);
+
+            this.main_content_profile = (LinearLayout)itemView.findViewById(R.id.main_content_profile);
+            this.main_content_group = (LinearLayout)itemView.findViewById(R.id.main_content_group);
+            this.main_content_friend = (LinearLayout)itemView.findViewById(R.id.main_content_friend);
+
+            // -- profile
+            this.image_content_profile = (ImageView)itemView.findViewById(R.id.image_content_profile);
+            this.text_name_content_profile = (TextView) itemView.findViewById(R.id.text_name_content_profile);
+            this.text_email_content_profile = (TextView) itemView.findViewById(R.id.text_email_content_profile);
+            this.text_status_message_content_profile = (TextView) itemView.findViewById(R.id.text_status_message_content_profile);
+            // -- profile
+
+            // -- group
+            this.image_content_group = (ImageView) itemView.findViewById(R.id.image_content_group);
+            this.text_name_content_group = (TextView) itemView.findViewById(R.id.text_name_content_group);
+            // -- group
 
             this.swipeRevealLayout = (SwipeRevealLayout)itemView.findViewById(R.id.swipe_layout);
             this.mainLayout = (LinearLayout) itemView.findViewById(R.id.main_layout);
@@ -471,6 +574,7 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
             //---- list_item_main
             this.image_profile = itemView.findViewById(R.id.image_profile);
             this.text_name = itemView.findViewById(R.id.text_name);
+            this.text_change_friend_name = itemView.findViewById(R.id.text_change_friend_name);
             this.text_email = itemView.findViewById(R.id.text_email);
             this.text_status_messsage = itemView.findViewById(R.id.text_status_messsage);
             //---- list_item_main

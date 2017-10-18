@@ -14,6 +14,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import net.ichat.ichat.application.App;
 import net.ichat.ichat.chatview.SingleViewActivity;
+import net.ichat.ichat.configs.Configs;
 
 import org.json.JSONObject;
 
@@ -27,7 +28,7 @@ public class ChangeFriendNameActivity extends AppCompatActivity {
     private EditText edt_name;
     private Button btn_save;
 
-    private String friend_id;
+    private JSONObject data;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,16 +42,17 @@ public class ChangeFriendNameActivity extends AppCompatActivity {
         edt_name = (EditText)findViewById(R.id.edt_name);
 
         Bundle bundle = getIntent().getExtras();
-        friend_id = bundle.getString("friend_id");
+
 
         try {
+            data = new JSONObject(bundle.getString("data"));
 
             JSONObject profileF = ((App) getApplication()).getFriends();
 
             Iterator<String> iter = profileF.keys();
             while (iter.hasNext()) {
                 String key = iter.next();
-                if (key.equalsIgnoreCase(friend_id)){
+                if (key.equalsIgnoreCase(data.getString("friend_id"))){
                     JSONObject js = profileF.getJSONObject(key);
                     if (js.has("change_friends_name")) {
                         edt_name.setText(js.getString("change_friends_name"));
@@ -58,21 +60,31 @@ public class ChangeFriendNameActivity extends AppCompatActivity {
                     break;
                 }
             }
-//
 
             ((Button) findViewById(R.id.btn_save)).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
 
-                    final FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    DatabaseReference myRef = database.getReference("toonchat/" + ((App) getApplication()).getUserId() + "/friends/");
+                    try {
+                        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+                        DatabaseReference myRef = database.getReference("toonchat/" + ((App) getApplication()).getUserId() + "/friends/");
 
-                    Map<String, Object> childUpdates = new HashMap<>();
-                    childUpdates.put("toonchat/" + ((App) getApplication()).getUserId() + "/friends/" + friend_id + "/change_friends_name/", edt_name.getText().toString().trim());
+                        Map<String, Object> childUpdates = new HashMap<>();
+                        childUpdates.put("toonchat/" + ((App) getApplication()).getUserId() + "/friends/" + data.getString("friend_id") + "/change_friends_name/", edt_name.getText().toString().trim());
 
-                    FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
 
-                    finish();
+                        ((App)ChangeFriendNameActivity.this.getApplication()).updateFriendsbyFriend(data);
+
+                        Intent i = new Intent(Configs.FRIENDS);
+                        Bundle bundle = new Bundle();
+                        i.putExtras(bundle);
+                        sendBroadcast(i);
+
+                        finish();
+                    }catch (Exception ex){
+
+                    }
                 }
             });
         }catch (Exception ex){

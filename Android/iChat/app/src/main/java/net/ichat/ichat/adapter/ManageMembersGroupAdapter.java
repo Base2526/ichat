@@ -78,7 +78,6 @@ public class ManageMembersGroupAdapter extends RecyclerView.Adapter{
                 holder.txt_name.setText(jsonObject.getString("change_friends_name")  + " : " + friend_id);
             }
 
-
             holder.txt_delete.setTag(R.string._parameter_1, manageMembersGroupActivity.jsonObject.getString("group_id"));
             holder.txt_delete.setTag(R.string._parameter_2, jsonObject.getString("node_id"));
             holder.txt_delete.setTag(R.string._parameter_3, position);
@@ -97,8 +96,6 @@ public class ManageMembersGroupAdapter extends RecyclerView.Adapter{
                     notifyItemRemoved(position);
 
                     ((App)manageMembersGroupActivity.getApplication()).deleteMemberForGroup(group_id, node_id);
-
-
                 }
             });
 

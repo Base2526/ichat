@@ -166,7 +166,11 @@ public class InviteFriendsActivity extends AppCompatActivity {
         JSONObject jObject = ((App)getApplication()).getFriends();
 
         try {
-            JSONObject jsonMembers = jsonObject.getJSONObject("members");
+            JSONObject jsonMembers = new JSONObject();
+
+            if (jsonObject.has("members")){
+                jsonMembers = jsonObject.getJSONObject("members");
+            }
 
             Iterator<String> iter = jObject.keys();
             while (iter.hasNext()) {

@@ -703,12 +703,12 @@ function update_picture_profile(){
 
 
   // url image profile 
-  $url = file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']);
+  $url = substr(file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']), strlen($GLOBALS['base_url']));
 
   // Firebase : update image url profile
   $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
   $data_update = array(
-      "image_url"  =>substr(file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']), strlen($GLOBALS['base_url']))
+      "image_url"  =>$url
   );
 
   $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);
@@ -897,11 +897,14 @@ function update_profile_group(){
     $wrapper->field_picture_group->set((array)$file);
     $wrapper->save();
 
+
+    $image_url = substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url']));
+
     $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
     $f_value = array(
       "update"   => time(),
       "name"     => $_REQUEST['name'],
-      "image_url"=> substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url']))
+      "image_url"=> $image_url
     );
 
     $firebase->update(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $_REQUEST['group_id'] .'/' , $f_value);
@@ -910,6 +913,7 @@ function update_profile_group(){
 
   $result['result'] = TRUE;  
   $result['_REQUEST'] = $_REQUEST;
+  $result['image_url'] = $image_url;
 
   return $result;
 

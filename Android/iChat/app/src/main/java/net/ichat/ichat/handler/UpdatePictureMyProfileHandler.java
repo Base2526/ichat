@@ -29,8 +29,10 @@ public class UpdatePictureMyProfileHandler extends Handler {
             if(msg.getData().getBoolean("status")){
                 // tabGallerys.reloadData(msg.getData().getString("data"));
                 // mActivity.UserLg();
+
+                // profileActivity.finish();
             }else{
-                // Toast.makeText(mActivity.getApplicationContext(), msg.getData().getString("message"), Toast.LENGTH_SHORT).show();
+                Toast.makeText(profileActivity.getApplicationContext(), msg.getData().getString("message"), Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
             // TODO: handle exception

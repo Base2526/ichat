@@ -3,8 +3,10 @@ package net.ichat.ichat;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -60,6 +62,7 @@ public class ManageGroupActivity extends AppCompatActivity {
         try {
             jsonObject = new JSONObject(bundle.getString("data"));
 
+
             edt_name_group.setText(jsonObject.getString("name"));
             ImageLoader.getInstance().displayImage("", image_profile_group);
             if(jsonObject.has("image_url")){
@@ -96,10 +99,8 @@ public class ManageGroupActivity extends AppCompatActivity {
                 }catch (Exception ex){
                     Log.e(TAG, ex.toString());
                 }
-
             }
             break;
-
         }
         return  true;
     }
@@ -124,7 +125,6 @@ public class ManageGroupActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-
     public void onMangeMembers(View v) {
 
         Intent intent = new Intent(this, ManageMembersGroupActivity.class);
@@ -137,7 +137,11 @@ public class ManageGroupActivity extends AppCompatActivity {
     }
 
     public void onInviteMembers(View v) {
-        Log.e(TAG, "");
+        Intent intent = new Intent(this, InviteFriendsActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString("data", jsonObject.toString());
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
     public void onDeleteGroup(View v) {

@@ -2,6 +2,6 @@
 <resources>
 
     <dimen name="content_inset_half">8dp</dimen>
-    <dimen name="content_inset">16dp</dimen>
+    <dimen name="content_inset">5dp</dimen>
 
 </resources>
