@@ -47,7 +47,9 @@
             android:name=".ManageGroupActivity"
             android:screenOrientation="portrait" />
         <activity android:name=".ManageMembersGroupActivity" />
-        <activity android:name=".InviteFriendsActivity"></activity>
+        <activity android:name=".InviteFriendsActivity" />
+        <activity android:name=".FriendHideActivity" />
+        <activity android:name=".FriendBlockActivity"></activity>
     </application>
 
 </manifest>

@@ -1,6 +1,5 @@
 package net.ichat.ichat;
 
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.LocalActivityManager;
 import android.app.ProgressDialog;
@@ -8,10 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
-import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,38 +20,24 @@ import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.Exclude;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
 
 import net.ichat.ichat.application.App;
-import net.ichat.ichat.chatview.ChatView;
 import net.ichat.ichat.configs.Configs;
 import net.ichat.ichat.configs.Messages;
 import net.ichat.ichat.configs.MessagesRepo;
 import net.ichat.ichat.dialog.DialogFriend;
 import net.ichat.ichat.handler.AnNmousUHandler;
 import net.ichat.ichat.thread.AnNmousUThread;
-import net.ichat.ichat.thread.UpdateMyProfileThread;
 import net.ichat.ichat.utils.JsonUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import static org.json.JSONObject.wrap;
 
 public class MainActivity extends AppCompatActivity {
     private String TAG = MainActivity.class.getName();
@@ -244,6 +228,16 @@ public class MainActivity extends AppCompatActivity {
             break;
             case R.id.create_group: {
                 startActivity(new Intent(this, CreateGroupActivity.class));
+            }
+            break;
+
+            case R.id.friend_hide:{
+                startActivity(new Intent(this, FriendHideActivity.class));
+            }
+            break;
+
+            case R.id.friend_block:{
+                startActivity(new Intent(this, FriendBlockActivity.class));
             }
             break;
         }

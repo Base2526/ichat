@@ -1,7 +1,6 @@
 package net.ichat.ichat.adapter;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,7 +16,7 @@ import com.afollestad.sectionedrecyclerview.SectionedRecyclerViewAdapter;
 import com.afollestad.sectionedrecyclerview.SectionedViewHolder;
 import com.chauthai.swipereveallayout.SwipeRevealLayout;
 import com.chauthai.swipereveallayout.ViewBinderHelper;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.squareup.picasso.Picasso;
 
 import net.ichat.ichat.ContactsActivity;
 import net.ichat.ichat.ProfileActivity;
@@ -181,9 +180,26 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                         holder.text_status_message_content_profile.setText(jsonProfiles.getString("status_message"));
                     }
 
-                    ImageLoader.getInstance().displayImage("", holder.image_content_profile);
+//                    ImageLoader.getInstance().displayImage("", holder.image_content_profile);
+//                    if(jsonProfiles.has("image_url")){
+//                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonProfiles.getString("image_url"), holder.image_content_profile);
+//                    }
+
+                    String image_uri = "";
                     if(jsonProfiles.has("image_url")){
-                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonProfiles.getString("image_url"), holder.image_content_profile);
+                        image_uri = Configs.API_URI + jsonProfiles.getString("image_url");
+                    }
+                    if (!image_uri.equalsIgnoreCase("")) {
+                        Picasso.with(contactsActivity)
+                                .load(image_uri)
+                                .placeholder(R.drawable.ic_placeholder)
+                                .into(holder.image_content_profile);
+                    }else{
+                        // .load(R.drawable.placeholder)
+                        Picasso.with(contactsActivity)
+                                .load(R.drawable.ic_placeholder)
+                                .placeholder(R.drawable.ic_placeholder)
+                                .into(holder.image_content_profile);
                     }
 
                     holder.main_content_profile.setOnClickListener(new View.OnClickListener() {
@@ -236,9 +252,26 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                     }
 
 
-                                    ImageLoader.getInstance().displayImage("", holder.image_content_group);
-                                    if (jsonObject.has("image_url")) {
-                                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), holder.image_content_group);
+//                                    ImageLoader.getInstance().displayImage("", holder.image_content_group);
+//                                    if (jsonObject.has("image_url")) {
+//                                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), holder.image_content_group);
+//                                    }
+
+                                    String image_uri = "";
+                                    if(jsonObject.has("image_url")){
+                                        image_uri = Configs.API_URI + jsonObject.getString("image_url");
+                                    }
+                                    if (!image_uri.equalsIgnoreCase("")) {
+                                        Picasso.with(contactsActivity)
+                                                .load(image_uri)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_content_group);
+                                    }else{
+                                        // .load(R.drawable.placeholder)
+                                        Picasso.with(contactsActivity)
+                                                .load(R.drawable.ic_placeholder)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_content_group);
                                     }
 
                                     holder.main_content_group.setTag(R.string._parameter_1, jsonObject);
@@ -293,9 +326,26 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                     String name = jsonObject.getString("name");
                                     holder.text_name.setText(name);
 
-                                    ImageLoader.getInstance().displayImage("", holder.image_profile);
+//                                    ImageLoader.getInstance().displayImage("", holder.image_profile);
+//                                    if(jsonObject.has("image_url")){
+//                                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), holder.image_profile);
+//                                    }
+
+                                    String image_uri = "";
                                     if(jsonObject.has("image_url")){
-                                        ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), holder.image_profile);
+                                        image_uri = Configs.API_URI + jsonObject.getString("image_url");
+                                    }
+                                    if (!image_uri.equalsIgnoreCase("")) {
+                                        Picasso.with(contactsActivity)
+                                                .load(image_uri)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_profile);
+                                    }else{
+                                        // .load(R.drawable.placeholder)
+                                        Picasso.with(contactsActivity)
+                                                .load(R.drawable.ic_placeholder)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_profile);
                                     }
 
                                     holder.mainLayout.setTag(R.string._parameter_1, jsonObject);
@@ -324,9 +374,26 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                     holder.text_name.setText(val.getString("name") + " : " + value.get(relativePosition).getString("friend_id"));
                                     holder.text_email.setText(val.getString("mail"));
 
-                                    ImageLoader.getInstance().displayImage("", holder.image_profile);
+                                    // ImageLoader.getInstance().displayImage("", holder.image_profile);
+
+
+                                    String image_uri = "";
                                     if(val.has("image_url")){
-                                        ImageLoader.getInstance().displayImage(Configs.API_URI + val.getString("image_url"), holder.image_profile);
+                                        //ImageLoader.getInstance().displayImage(Configs.API_URI + val.getString("image_url"), holder.image_profile);
+                                        image_uri = Configs.API_URI + val.getString("image_url");
+                                    }
+
+                                    if (!image_uri.equalsIgnoreCase("")) {
+                                        Picasso.with(contactsActivity)
+                                                .load(image_uri)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_profile);
+                                    }else{
+                                        // .load(R.drawable.placeholder)
+                                        Picasso.with(contactsActivity)
+                                                .load(R.drawable.ic_placeholder)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_profile);
                                     }
 
                                     holder.text_change_friend_name.setText("-");
@@ -362,10 +429,29 @@ public class ContactsAdapter extends SectionedRecyclerViewAdapter<ContactsAdapte
                                     holder.text_name.setText(val.getString("name") + " : " + value.get(relativePosition).getString("friend_id"));
                                     holder.text_email.setText(val.getString("mail"));
 
-                                    ImageLoader.getInstance().displayImage("", holder.image_profile);
+//                                    ImageLoader.getInstance().displayImage("", holder.image_profile);
+//                                    if(val.has("image_url")){
+//                                        ImageLoader.getInstance().displayImage(Configs.API_URI + val.getString("image_url"), holder.image_profile);
+//                                    }
+
+                                    String image_uri = "";
                                     if(val.has("image_url")){
-                                        ImageLoader.getInstance().displayImage(Configs.API_URI + val.getString("image_url"), holder.image_profile);
+                                        image_uri = Configs.API_URI + val.getString("image_url");
                                     }
+
+                                    if (!image_uri.equalsIgnoreCase("")){
+                                        Picasso.with(contactsActivity.getApplicationContext())
+                                                .load(image_uri)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_profile);
+                                    }else{
+                                        // .load(R.drawable.placeholder)
+                                        Picasso.with(contactsActivity)
+                                                .load(R.drawable.ic_placeholder)
+                                                .placeholder(R.drawable.ic_placeholder)
+                                                .into(holder.image_profile);
+                                    }
+
 
                                     holder.text_change_friend_name.setText("-");
                                     if(jsonObject.has("change_friends_name")){

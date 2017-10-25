@@ -7,13 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.squareup.picasso.Picasso;
 
 import net.ichat.ichat.R;
 import net.ichat.ichat.application.App;
@@ -68,10 +65,19 @@ public class CreateGroupAdapter extends RecyclerView.Adapter{
 
             holder.txt_name.setText(jsonFProfile.getString("name") + " : " + friend_id);
 
-            ImageLoader.getInstance().displayImage("", holder.image_profile);
+//            ImageLoader.getInstance().displayImage("", holder.image_profile);
+//            if(jsonFProfile.has("image_url")){
+//                ImageLoader.getInstance().displayImage(Configs.API_URI + jsonFProfile.getString("image_url"), holder.image_profile);
+//            }
+
+            String image_uri = "";
             if(jsonFProfile.has("image_url")){
-                ImageLoader.getInstance().displayImage(Configs.API_URI + jsonFProfile.getString("image_url"), holder.image_profile);
+                image_uri = Configs.API_URI + jsonFProfile.getString("image_url");
             }
+            Picasso.with(context)
+                    .load(image_uri)
+                    .placeholder(R.drawable.ic_placeholder)
+                    .into(holder.image_profile);
 
             // {"change_friends_name":"y0u","chat_id":"zSlfdf6d9gBNAjhcTibm","status":"friend","favorite":"1","create":1505280310,"friend_id":"968"}
             if (jsonObject.has("change_friends_name")) {

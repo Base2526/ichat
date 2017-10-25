@@ -13,4 +13,12 @@
         android:icon="@android:drawable/ic_menu_add"
         android:title="Create Group"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/friend_hide"
+        android:title="Friend hide"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/friend_block"
+        android:title="Friend block"
+        app:showAsAction="ifRoom" />
 </menu>

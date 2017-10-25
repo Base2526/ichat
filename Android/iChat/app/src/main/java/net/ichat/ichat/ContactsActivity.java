@@ -8,7 +8,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -104,9 +103,9 @@ public class ContactsActivity extends AppCompatActivity {
     ArrayList<JSONObject> friends = new ArrayList<>();
     ArrayList<JSONObject> groups  = new ArrayList<>();
     ArrayList<JSONObject> favorites = new ArrayList<>();
-    ArrayList<String> a5 = new ArrayList<>();
 
     try {
+      data.clear();
       String strData = appSharedPrefs.getString(Configs.DATA, "");
 
       if (!strData.equalsIgnoreCase("")) {
@@ -136,30 +135,38 @@ public class ContactsActivity extends AppCompatActivity {
         }
         data.put(1, groups);
 
-
         // #3 -- Friends
         JSONObject jsonFriends = ((App)getApplicationContext()).getFriends();
-        if (jsonGroups != null) {
+        if (jsonFriends != null) {
           Iterator<String> iter = jsonFriends.keys();
           while (iter.hasNext()) {
             String key = iter.next();
             try {
               JSONObject value = jsonFriends.getJSONObject(key);
 
-              value.put("friend_id", key);
 
-              value.put("title_section", "Friends");
-              friends.add(value);
+              /*
+              * เช็กว่า friend คนนี้โดน hide หรือ block หรือเปล่า
+              * */
+              if (!checkIsHide(value) && !checkIsBlock(value) ) {
+                /*
+                * แสดงว่า hide == 0, block == 0
+                * */
+                value.put("friend_id", key);
+                value.put("title_section", "Friends");
+                friends.add(value);
+                if (value.has("favorite")){
+                  if (value.getString("favorite").equalsIgnoreCase("1")){
 
-              if (value.has("favorite")){
-                if (value.getString("favorite").equalsIgnoreCase("1")){
+                    // clone JSONObject
+                    JSONObject _value = new JSONObject(value.toString());;
+                    _value.put("title_section", "Favorites");
 
-                  // clone JSONObject
-                  JSONObject _value = new JSONObject(value.toString());;
-                  _value.put("title_section", "Favorites");
-                  favorites.add(_value);
+                    favorites.add(_value);
+                  }
                 }
               }
+
             } catch (JSONException e) {
               // Something went wrong!
             }
@@ -168,36 +175,34 @@ public class ContactsActivity extends AppCompatActivity {
         data.put(2, favorites);
         data.put(3, friends);
 
-
-      /*
-      for (int i = 0; i < 6; i++) {
-        a2.add("x1 : " + i);
-      }
-
-      data.put(1, a2);
-
-      for (int i = 0; i < 1; i++) {
-        a3.add("x2 : " + i);
-      }
-
-      data.put(2, a3);
-
-      for (int i = 0; i < 0; i++) {
-        a4.add("x3 : " + i);
-      }
-
-      data.put(3, a4);
-
-      for (int i = 0; i < 4; i++) {
-        a5.add("x4 : " + i);
-      }
-
-      data.put(4, a5);
-      */
         contactsAdapter.setData(data);
       }
     }catch (Exception ex){
       Log.e(TAG, ex.toString());
+    }
+  }
+
+  private Boolean checkIsHide(JSONObject val) {
+    try {
+        if (val.getString("hide").equalsIgnoreCase("1")){
+          return true;
+        }else{
+          return false;
+        }
+    }catch (Exception ex){
+      return false;
+    }
+  }
+
+  private Boolean checkIsBlock(JSONObject val) {
+    try {
+      if (val.getString("block").equalsIgnoreCase("1")){
+        return true;
+      }else{
+        return false;
+      }
+    }catch (Exception ex){
+      return false;
     }
   }
 

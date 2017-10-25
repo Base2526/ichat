@@ -2,9 +2,7 @@ package net.ichat.ichat.dialog;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,7 +26,6 @@ import net.ichat.ichat.ManageGroupActivity;
 import net.ichat.ichat.R;
 import net.ichat.ichat.application.App;
 import net.ichat.ichat.configs.Configs;
-import net.ichat.ichat.utils.JsonUtils;
 
 import org.json.JSONObject;
 
@@ -198,13 +195,123 @@ public class DialogFriend extends DialogFragment implements AdapterView.OnItemCl
 
                 case 2: {
                     // Hide
-                    Toast.makeText(mainActivity, "Hide", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(mainActivity, "Hide", Toast.LENGTH_SHORT).show();
+
+                    try {
+                        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+                        DatabaseReference myRef = database.getReference("toonchat/" + ((App) mainActivity.getApplication()).getUserId() + "/friends/" + data.getString("friend_id") + "/hide");
+
+                        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot snapshot) {
+
+                                try {
+                                    Object key = snapshot.getKey();
+                                    String value = (String) snapshot.getValue();
+
+                                    String path = "toonchat/" + ((App) mainActivity.getApplication()).getUserId() + "/friends/" + data.getString("friend_id") + "/hide";
+
+                                    if (value == null) {
+                                        Map<String, Object> childUpdates = new HashMap<>();
+                                        childUpdates.put(path, "1");
+
+                                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("hide", "1");
+                                    } else if (value.equalsIgnoreCase("1")) {
+                                        Map<String, Object> childUpdates = new HashMap<>();
+                                        childUpdates.put(path, "0");
+
+                                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("hide", "0");
+                                    } else {
+                                        Map<String, Object> childUpdates = new HashMap<>();
+                                        childUpdates.put(path, "1");
+
+                                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("hide", "1");
+                                    }
+                                    ((App)mainActivity.getApplication()).updateFriendsbyFriend(data);
+
+                                    Intent i = new Intent("Contacts_Reload");
+                                    Bundle bundle = new Bundle();
+                                    i.putExtras(bundle);
+                                    mainActivity.sendBroadcast(i);
+                                } catch (Exception ex) {
+                                    Log.e(TAG, ex.toString());
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    }catch (Exception ex){
+                        Log.e(TAG, ex.toString());
+                    }
                 }
                 break;
 
                 case 3: {
                     // Block
-                    Toast.makeText(mainActivity, "Block", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(mainActivity, "Block", Toast.LENGTH_SHORT).show();
+
+                    try {
+                        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+                        DatabaseReference myRef = database.getReference("toonchat/" + ((App) mainActivity.getApplication()).getUserId() + "/friends/" + data.getString("friend_id") + "/block");
+
+                        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot snapshot) {
+
+                                try {
+                                    Object key = snapshot.getKey();
+                                    String value = (String) snapshot.getValue();
+
+                                    String path = "toonchat/" + ((App) mainActivity.getApplication()).getUserId() + "/friends/" + data.getString("friend_id") + "/block";
+
+                                    if (value == null) {
+                                        Map<String, Object> childUpdates = new HashMap<>();
+                                        childUpdates.put(path, "1");
+
+                                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("block", "1");
+                                    } else if (value.equalsIgnoreCase("1")) {
+                                        Map<String, Object> childUpdates = new HashMap<>();
+                                        childUpdates.put(path, "0");
+
+                                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("block", "0");
+                                    } else {
+                                        Map<String, Object> childUpdates = new HashMap<>();
+                                        childUpdates.put(path, "1");
+
+                                        FirebaseDatabase.getInstance().getReference().updateChildren(childUpdates);
+
+                                        data.put("block", "1");
+                                    }
+                                    ((App)mainActivity.getApplication()).updateFriendsbyFriend(data);
+
+                                    Intent i = new Intent("Contacts_Reload");
+                                    Bundle bundle = new Bundle();
+                                    i.putExtras(bundle);
+                                    mainActivity.sendBroadcast(i);
+                                } catch (Exception ex) {
+                                    Log.e(TAG, ex.toString());
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    }catch (Exception ex){
+                        Log.e(TAG, ex.toString());
+                    }
                 }
                 break;
 

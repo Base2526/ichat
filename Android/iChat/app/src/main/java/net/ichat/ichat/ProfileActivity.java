@@ -5,26 +5,17 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.squareup.picasso.Picasso;
 
 import net.ichat.ichat.application.App;
 import net.ichat.ichat.configs.Configs;
@@ -35,10 +26,6 @@ import net.ichat.ichat.thread.UpdatePictureMyProfileThread;
 import net.ichat.ichat.utils.imagepicker.ImagePicker;
 
 import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class ProfileActivity extends AppCompatActivity {
     private String TAG = ProfileActivity.class.getName();
@@ -90,10 +77,19 @@ public class ProfileActivity extends AppCompatActivity {
 //                ImageLoader.getInstance().displayImage( Configs.API_URI +  jsonProfiles.getString("image_url"), image_profile);
 //            }
 
-            ImageLoader.getInstance().displayImage("", image_profile);
+//            ImageLoader.getInstance().displayImage("", image_profile);
+//            if(jsonProfiles.has("image_url")){
+//                ImageLoader.getInstance().displayImage(Configs.API_URI + jsonProfiles.getString("image_url"), image_profile);
+//            }
+
+            String image_uri = "";
             if(jsonProfiles.has("image_url")){
-                ImageLoader.getInstance().displayImage(Configs.API_URI + jsonProfiles.getString("image_url"), image_profile);
+                image_uri = Configs.API_URI + jsonProfiles.getString("image_url");
             }
+            Picasso.with(this)
+                    .load(image_uri)
+                    .placeholder(R.drawable.ic_placeholder)
+                    .into(image_profile);
 
             edt_status_message.setText("");
             if(jsonProfiles.has("status_message")){

@@ -1,9 +1,7 @@
 package net.ichat.ichat.application;
 
 import android.app.Application;
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -12,24 +10,15 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
-import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.squareup.picasso.OkHttpDownloader;
+import com.squareup.picasso.Picasso;
 
 import net.ichat.ichat.MainActivity;
-import net.ichat.ichat.R;
 import net.ichat.ichat.configs.Configs;
 import net.ichat.ichat.utils.JsonUtils;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -47,7 +36,8 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        initImageLoader(getApplicationContext());
+        // initImageLoader(getApplicationContext());
+        setupPicasso();
 
         appSharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     }
@@ -60,6 +50,7 @@ public class App extends Application {
         return this.mainActivity;
     }
 
+    /*
     public void initImageLoader(Context context) {
         DisplayImageOptions defaultOptions = new DisplayImageOptions.Builder()
                 .cacheOnDisk(true).cacheInMemory(true)
@@ -84,6 +75,17 @@ public class App extends Application {
                 .build();
 
         ImageLoader.getInstance().init(config);
+    }
+    */
+
+    private void setupPicasso()
+    {
+        Picasso.Builder builder = new Picasso.Builder(this);
+        builder.downloader(new OkHttpDownloader(this,Integer.MAX_VALUE));
+        Picasso built = builder.build();
+        built.setIndicatorsEnabled(true);
+        built.setLoggingEnabled(true);
+        Picasso.setSingletonInstance(built);
     }
 
     /*

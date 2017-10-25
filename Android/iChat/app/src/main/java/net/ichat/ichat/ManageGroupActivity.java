@@ -3,12 +3,10 @@ package net.ichat.ichat;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,13 +14,11 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.nostra13.universalimageloader.core.ImageLoader;
+import com.squareup.picasso.Picasso;
 
 import net.ichat.ichat.configs.Configs;
 import net.ichat.ichat.handler.UpdateGroupHandler;
 import net.ichat.ichat.thread.UpdateGroupThread;
-import net.ichat.ichat.thread.UpdateMyProfileThread;
-import net.ichat.ichat.thread.UpdatePictureMyProfileThread;
 import net.ichat.ichat.utils.imagepicker.ImagePicker;
 
 import org.json.JSONObject;
@@ -64,10 +60,20 @@ public class ManageGroupActivity extends AppCompatActivity {
 
 
             edt_name_group.setText(jsonObject.getString("name"));
-            ImageLoader.getInstance().displayImage("", image_profile_group);
+//            ImageLoader.getInstance().displayImage("", image_profile_group);
+//            if(jsonObject.has("image_url")){
+//                ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), image_profile_group);
+//            }
+
+            String image_uri = "";
             if(jsonObject.has("image_url")){
-                ImageLoader.getInstance().displayImage(Configs.API_URI + jsonObject.getString("image_url"), image_profile_group);
+                image_uri = Configs.API_URI + jsonObject.getString("image_url");
             }
+            Picasso.with(this)
+                    .load(image_uri)
+                    .placeholder(R.drawable.ic_placeholder)
+                    .into(image_profile_group);
+
         }catch (Exception ex){
             Log.e(TAG, ex.toString());
         }
