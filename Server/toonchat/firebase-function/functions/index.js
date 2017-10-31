@@ -30,6 +30,7 @@ var API_URL 	= 'http://128.199.247.179';
 var END_POINT 	= '/api';
 
 var UPDATE_MY_PROFILE = '/update_my_profile';
+var UPDATE_DATA_PROFILE = '/update_data_group';
 
 
 var DELETE_GROUP_CHAT = "/delete_group_chat";
@@ -89,7 +90,9 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
         // console.log('Removed: send push notification');
     } else {
         // value edit & updated
-        console.log('Updated');
+        console.log('>Updated');
+        console.log(event.params.type);
+        console.log('<Updated');
     }
 
 	// console.log('#' + event.params.uid);
@@ -157,97 +160,102 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 			if (crnt.val() && !prev.val()) {
 		        // value created
 		        console.log('Created: groups');
+
+				event.data.forEach(function(childSnapshot) {
+			      // key will be "ada" the first time and "alan" the second time
+			      // var key = childSnapshot.key;
+			      // childData will be the actual contents of the child
+			      // var childData = childSnapshot.val();
+
+			      // console.log('# key : ' + key + ", childData : " + childData);
+
+					/*
+			      if (event.params.key == childSnapshot.key) {
+			      	var key = childSnapshot.key;
+			      	var childData = childSnapshot.val();
+					console.log('># key : ' + key + ", childData : " + childData);
+			      }else{
+			      	console.log(">###< | " + event.params.key + " & "+ childSnapshot.key);
+			      }
+			      */
+
+			      if(childSnapshot.key == 'members'){
+			      	// var members = JSON.parse(childSnapshot.val());
+
+			      	var members = childSnapshot.val();
+
+			      	
+			      	// members.forEach(function(childMembers) {
+			      	// 	console.log('>## childMembers :' + childMembers.key);
+			      	// });
+
+			  //     	for(let index in members){
+					//   var element = members[index];
+					//   console.log('>## element :' + element);
+					// }
+
+					// console.log('>## numChildren() :' + childSnapshot.numChildren());
+
+					var ref = db.ref(path);
+
+					childSnapshot.forEach(function (snapshot) {
+			           var obj = snapshot.val();
+			           if(obj.status == "pedding") {
+			               // console.log("uid : " + snapshot.key + ", status = " + obj.status);
+
+			               // เราต้อง เพิ่ม invite_group เพือ่นที่เรา invite ไปด้วย
+			               /*
+			               ref.child(snapshot.key).child("invite_group").child(event.params.key).set({
+			               	'owner_id':event.params.uid,
+			               	'status':obj.status
+			               });
+			               */
+
+			               ref.child(obj.friend_id).child("invite_group").child(event.params.key).set({
+			               	'node_id' : snapshot.key,
+			               	'owner_id':event.params.uid,
+			               	'status':obj.status
+			               });
+
+			               /*
+							ต้องวิ่งไป update ที่ api ด้วย
+			               */
+			           }
+			        });
+
+
+			      	// console.log(JSON.parse(JSON.stringify(childSnapshot.val())));
+			      	// console.log('>## KOK : #2 >');
+			      	// $.each(JSON.parse(JSON.stringify(childSnapshot.val())), function(index, valueA){
+			      	// 	console.log('>##>' + index);
+			      	// 	console.log('>##>>' + valueA);
+			      	// });
+
+			   //    	for (var keyM in members) {
+						// console.log('>## keyM : ' + keyM);
+			   //    	}
+
+			   //    	for (var ikey in members) {
+						// console.log('>## ikey : ' + ikey);
+			   //    	}
+					// members.forEach(function(childMember) {
+					// 	var _key = childMember.key;
+					// 	console.log('>## key : ' + _key);
+					// });
+			      }
+			  	});
 		    } else if (!crnt.val() && prev.val()) {
 		        // value removed
 		        // console.log('Removed: send push notification');
 		    } else {
 		        // value edit & updated
-		        console.log('Updated: groups');
+		        console.log('>>> Updated: key ' + event.params.key + ", val : " + JSON.stringify(event.data.current.val()));
+		    
+		        request.post({url:API_URL + END_POINT + UPDATE_DATA_PROFILE, form: {data:event.data.current.val()}}, function(err,httpResponse,body){ 
+						/* ... */ 
+						console.log(body);
+				});
 		    }
-
-			event.data.forEach(function(childSnapshot) {
-		      // key will be "ada" the first time and "alan" the second time
-		      // var key = childSnapshot.key;
-		      // childData will be the actual contents of the child
-		      // var childData = childSnapshot.val();
-
-		      // console.log('# key : ' + key + ", childData : " + childData);
-
-				/*
-		      if (event.params.key == childSnapshot.key) {
-		      	var key = childSnapshot.key;
-		      	var childData = childSnapshot.val();
-				console.log('># key : ' + key + ", childData : " + childData);
-		      }else{
-		      	console.log(">###< | " + event.params.key + " & "+ childSnapshot.key);
-		      }
-		      */
-
-		      if(childSnapshot.key == 'members'){
-		      	// var members = JSON.parse(childSnapshot.val());
-
-		      	var members = childSnapshot.val();
-
-		      	
-		      	// members.forEach(function(childMembers) {
-		      	// 	console.log('>## childMembers :' + childMembers.key);
-		      	// });
-
-		  //     	for(let index in members){
-				//   var element = members[index];
-				//   console.log('>## element :' + element);
-				// }
-
-				// console.log('>## numChildren() :' + childSnapshot.numChildren());
-
-				var ref = db.ref(path);
-
-				childSnapshot.forEach(function (snapshot) {
-		           var obj = snapshot.val();
-		           if(obj.status == "pedding") {
-		               // console.log("uid : " + snapshot.key + ", status = " + obj.status);
-
-		               // เราต้อง เพิ่ม invite_group เพือ่นที่เรา invite ไปด้วย
-		               /*
-		               ref.child(snapshot.key).child("invite_group").child(event.params.key).set({
-		               	'owner_id':event.params.uid,
-		               	'status':obj.status
-		               });
-		               */
-
-		               ref.child(obj.friend_id).child("invite_group").child(event.params.key).set({
-		               	'node_id' : snapshot.key,
-		               	'owner_id':event.params.uid,
-		               	'status':obj.status
-		               });
-
-		               /*
-						ต้องวิ่งไป update ที่ api ด้วย
-		               */
-		           }
-		        });
-
-
-		      	// console.log(JSON.parse(JSON.stringify(childSnapshot.val())));
-		      	// console.log('>## KOK : #2 >');
-		      	// $.each(JSON.parse(JSON.stringify(childSnapshot.val())), function(index, valueA){
-		      	// 	console.log('>##>' + index);
-		      	// 	console.log('>##>>' + valueA);
-		      	// });
-
-		   //    	for (var keyM in members) {
-					// console.log('>## keyM : ' + keyM);
-		   //    	}
-
-		   //    	for (var ikey in members) {
-					// console.log('>## ikey : ' + ikey);
-		   //    	}
-				// members.forEach(function(childMember) {
-				// 	var _key = childMember.key;
-				// 	console.log('>## key : ' + _key);
-				// });
-		      }
-		  	});
 		}
 		break;
 

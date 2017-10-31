@@ -129,34 +129,7 @@
 # pragma mark GKImagePicker Delegate Methods
 
 - (void)imagePicker:(GKImagePicker *)imagePicker pickedImage:(UIImage *)image{
-    
-    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
-    UpdatePictureProfileThread *uThread = [[UpdatePictureProfileThread alloc] init];
-    [uThread setCompletionHandler:^(NSString *data) {
-        
-        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
-        
-        [[Configs sharedInstance] SVProgressHUD_Dismiss];
-        
-        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
-          
-            [imageV clear];
-            [imageV showLoadingWheel];
-            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
-            
-            [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [Configs sharedInstance].API_URL,jsonDict[@"url"]]]];
-            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
-            
-            [self updateURI:jsonDict[@"url"]];
-        }
-        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
-    }];
-    
-    [uThread setErrorHandler:^(NSString *error) {
-        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
-    }];
-    [uThread start:image];
-    
+    [self updatePicture:image];
     
     if (UIUserInterfaceIdiomPad == UI_USER_INTERFACE_IDIOM()) {
         // [self.popoverController dismissPopoverAnimated:YES];
@@ -184,8 +157,9 @@
 }
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
-    UIImage *chosenImage = info[UIImagePickerControllerEditedImage];
+    UIImage *image = info[UIImagePickerControllerEditedImage];
     
+    /*
     [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
     UpdatePictureProfileThread *uThread = [[UpdatePictureProfileThread alloc] init];
     [uThread setCompletionHandler:^(NSString *data) {
@@ -209,6 +183,11 @@
         [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
     }];
     [uThread start:chosenImage];
+    */
+    
+    
+    
+    [self updatePicture:image];
 //
 //    img = chosenImage;
 //    // [self hideImagePicker];
@@ -317,5 +296,47 @@
     [newDict setObject:profiles forKey:@"profiles"];
     
     [[Configs sharedInstance] saveData:_DATA :newDict];
+}
+
+-(void)updatePicture:(UIImage *)image{
+    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
+    UpdatePictureProfileThread *uThread = [[UpdatePictureProfileThread alloc] init];
+    [uThread setCompletionHandler:^(NSString *data) {
+        
+        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
+        
+        [[Configs sharedInstance] SVProgressHUD_Dismiss];
+        
+        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
+            
+            [imageV clear];
+            [imageV showLoadingWheel];
+            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
+            
+            [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [Configs sharedInstance].API_URL,jsonDict[@"url"]]]];
+            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
+            
+            // [self updateURI:jsonDict[@"url"]];
+            
+            NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+            [profiles setValue:jsonDict[@"url"] forKey:@"image_url"];
+            
+            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+            // เราต้อง addEntriesFromDictionary ก่อน ถึงจะสามารถลบได้ แ้วค่อย update ข้อมูล
+            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+            //  ลบข้อมูล key profiles ออกไป
+            [newDict removeObjectForKey:@"profiles"];
+            
+            [newDict setObject:profiles forKey:@"profiles"];
+            
+            [[Configs sharedInstance] saveData:_DATA :newDict];
+        }
+        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+    }];
+    
+    [uThread setErrorHandler:^(NSString *error) {
+        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
+    }];
+    [uThread start:image];
 }
 @end

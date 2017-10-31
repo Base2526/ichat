@@ -412,11 +412,30 @@ function toonchat_services_resources()
         ),
       ),
     ),
-
-     'update_picture_group'=>array(
+    'update_picture_group'=>array(
       'create' =>array(
         'help'=>'Update Profile Group : group_id, picture',
         'callback'=>'update_picture_group',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+    'update_data_group'=>array(
+      'create' =>array(
+        'help'=>'Update Data Group : json',
+        'callback'=>'update_data_group',
         'access callback' => 'user_access',
         'access arguments' => array('access content'),
         'access arguments append' => FALSE,
@@ -929,6 +948,45 @@ function update_picture_group(){ // UPDATE_PICTURE_GROUP
 
   return $result;
 
+}
+
+/*
+
+"data": {
+      "chat_id": "V30Xvdwcdu5X32dox2jU",
+      "create": "1507643897",
+      "group_id": "1937",
+      "image_url": "/sites/default/files/20171030_515639613.png",
+      "members": {
+        "1938": {
+          "friend_id": "1011",
+          "status": "pedding"
+        },
+        "1939": {
+          "friend_id": "1028",
+          "status": "access"
+        }
+      },
+      "name": "ok-005",
+      "owner_id": "1023",
+      "status": "active",
+      "update": "1509377361"
+    }
+*/
+function update_data_group(){
+  $result = array();
+
+  $result['result'] = TRUE;  
+  // $result['function'] = 'update_data_group';
+  // $result['_REQUEST'] = $_REQUEST;
+  // $result['_REQUEST_type'] = gettype($_REQUEST['data']);
+
+  $data = $_REQUEST['data']; // json_decode($json, true);
+
+  $chat_id = $data['chat_id'];
+  $result['chat_id'] = $chat_id;
+
+  return $result;
 }
 
 function delete_group_chat(){
