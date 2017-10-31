@@ -6,13 +6,12 @@
 //  Copyright © 2560 klovers.org. All rights reserved.
 //
 
-#import "UpdateProfileGroupThread.h"
+#import "UpdatePictureGroupThread.h"
 #import "Configs.h"
 #import "AppConstant.h"
 
-@implementation UpdateProfileGroupThread
-
--(void)start :(NSString *)group_id :(NSString *)name : (UIImage *)image
+@implementation UpdatePictureGroupThread
+-(void)start :(NSString *)group_id : (UIImage *)image
 {
     //if there is a connection going on just cancel it.
     [self.connection cancel];
@@ -22,7 +21,7 @@
     // [data release];
     
     // http://localhost/test-parse/gen_qrcode.php?user=52So6zp2om
-    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@.json",  [Configs sharedInstance].API_URL, [Configs sharedInstance].UPDATE_PROFLIE_GROUP ]];
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@.json",  [Configs sharedInstance].API_URL, [Configs sharedInstance].UPDATE_PICTURE_GROUP ]];
     
     //initialize a request from url
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:[Configs sharedInstance].timeOut];;//[NSMutableURLRequest requestWithURL:[url standardizedURL]];
@@ -40,7 +39,7 @@
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     
     UIDevice *deviceInfo = [UIDevice currentDevice];
-    NSString *dataToSend = [[NSString alloc] initWithFormat:@"uid=%@&group_id=%@&name=%@&image=%@", [[Configs sharedInstance] getUIDU], group_id, name, imgString];
+    NSString *dataToSend = [[NSString alloc] initWithFormat:@"uid=%@&group_id=%@&image=%@", [[Configs sharedInstance] getUIDU], group_id, imgString];
     [request setHTTPBody:[dataToSend dataUsingEncoding:NSUTF8StringEncoding]];
     
     //initialize a connection from request

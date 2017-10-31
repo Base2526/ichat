@@ -142,7 +142,7 @@
         
         self.MUTI_CHAT_INVITE_NEW_MEMBERS       = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/muti_chat_invite_new_members"];
         
-        self.UPDATE_PROFLIE_GROUP   = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/update_profile_group"];
+        self.UPDATE_PICTURE_GROUP   = [NSString stringWithFormat:@"%@%@", self.END_POINT, @"/update_picture_group"];
     
         self.kBarHeight = 50.0f;
         

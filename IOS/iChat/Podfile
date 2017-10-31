@@ -21,4 +21,6 @@ target 'iChat' do
 
   pod 'JSQMessagesViewController'
 
+  # https://github.com/scalessec/Toast
+  # pod 'Toast', '~> 3.1.0'
 end

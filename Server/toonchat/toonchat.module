@@ -413,10 +413,10 @@ function toonchat_services_resources()
       ),
     ),
 
-     'update_profile_group'=>array(
+     'update_picture_group'=>array(
       'create' =>array(
-        'help'=>'Update Profile Group : name, picture',
-        'callback'=>'update_profile_group',
+        'help'=>'Update Profile Group : group_id, picture',
+        'callback'=>'update_picture_group',
         'access callback' => 'user_access',
         'access arguments' => array('access content'),
         'access arguments append' => FALSE,
@@ -733,12 +733,20 @@ function update_my_profile(){
 
   // Load Profile ขึ้นมาเพือจะทำการแก้ไข
   $profile = profile2_by_uid_load($_REQUEST['uid'], 'main');
-  $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
-  $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
-  $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['status_message'];
+
+  if (!empty($_REQUEST['name'])) {
+    # code...
+    $profile->field_profile_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+    $profile->field_profile_display_name[LANGUAGE_NONE][0]['value'] = $_REQUEST['name'];
+  }
+  
+  if (!empty($_REQUEST['status_message'])) {
+    $profile->field_profile_status_message[LANGUAGE_NONE][0]['value'] = $_REQUEST['status_message'];
+  }
 
   profile2_save($profile);
 
+  /*
   // Firebase : udate name, status message
   $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
   $data_update = array(
@@ -748,6 +756,7 @@ function update_my_profile(){
 
   $firebase->update(FIREBASE_DEFAULT_PATH . FIREBASE_LOGIN_PATH .  $_REQUEST['uid'] ."/profiles/", $data_update);
   // Firebase : udate name, status message
+  */
 
 
   $result['result'] = TRUE;
@@ -859,7 +868,7 @@ function create_group_chat(){
   return  $result;
 }
 
-function update_profile_group(){
+function update_picture_group(){ // UPDATE_PICTURE_GROUP
   $result = array();
 
   if (empty($_REQUEST['uid']) || empty($_REQUEST['group_id']) || empty($_REQUEST['image'])) {
@@ -893,21 +902,24 @@ function update_profile_group(){
     $data = field_collection_item_load($_REQUEST['group_id']);
     $wrapper = entity_metadata_wrapper('field_collection_item', $data);
       
-    $wrapper->field_name_group->set($_REQUEST['name']);
+    // $wrapper->field_name_group->set($_REQUEST['name']);
     $wrapper->field_picture_group->set((array)$file);
     $wrapper->save();
 
+    // // url image profile 
+    // $url = substr(file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']), strlen($GLOBALS['base_url']));
 
     $image_url = substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url']));
 
+   
     $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
     $f_value = array(
       "update"   => time(),
-      "name"     => $_REQUEST['name'],
       "image_url"=> $image_url
     );
 
     $firebase->update(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $_REQUEST['group_id'] .'/' , $f_value);
+    
   }
 
 

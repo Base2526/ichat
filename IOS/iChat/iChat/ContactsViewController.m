@@ -1,58 +1,81 @@
 //
-//  MoviesTableViewController.m
-//  CustomizingTableViewCell
+//  ContactsViewController.m
+//  iChat
+//
+//  Created by Somkid on 25/10/2560 BE.
+//  Copyright © 2560 klovers.org. All rights reserved.
 
-
-#import "MoviesTableViewController.h"
-#import "MoviesTableViewCell.h"
-#import "Movie.h"
-#import "ChatView.h"
-#import "Changefriendsname.h"
-#import "MyProfile.h"
-#import "UserDataUILongPressGestureRecognizer.h"
-#import "AnNmousUThread.h"
-#import "Configs.h"
-#import "UserDataUIAlertView.h"
-#import "AppDelegate.h"
+#import "ContactsViewController.h"
+#import "ViewControllerCell.h"
+#import "ViewControllerCellHeader.h"
 #import "ProfileTableViewCell.h"
 #import "FriendTableViewCell.h"
 #import "GroupTableViewCell.h"
+#import "CreateGroup.h"
+#include <stdlib.h>
+#import "Configs.h"
+#import "AppConstant.h"
+#import "AnNmousUThread.h"
+#import "AppDelegate.h"
+#import "UserDataUILongPressGestureRecognizer.h"
+#import "UserDataUIAlertView.h"
 
-#import "ChatView2.h"
-#import "GroupChatView.h"
+#import "MyProfile.h"
+#import "Changefriendsname.h"
 #import "ManageGroup.h"
-#import "ManageMultiChat.h"
 
-//#import "MultiChatView.h"
+#define __count 5
 
-@interface MoviesTableViewController (){
-    NSMutableDictionary *data;
+@interface ContactsViewController ()<UITableViewDataSource, UITableViewDelegate>{
+    IBOutlet UITableView *tblView;
+    NSMutableArray *arrSelectedSectionIndex;
+    BOOL isMultipleExpansionAllowed;
+    NSMutableDictionary *all_data;
 }
-@property (nonatomic,strong) NSMutableDictionary *all_data;
 @end
 
-@implementation MoviesTableViewController
-// @synthesize marrMovies;
-
+@implementation ContactsViewController
 @synthesize ref;
 
-- (void)viewDidLoad {
+#pragma mark - View Life Cycle
+- (void)viewDidLoad{
     [super viewDidLoad];
     
-    // MessageRepo *mRepo = [[MessageRepo alloc] init];
-    // [mRepo insert:nil];
-    
-    self.title = [NSString stringWithFormat:@"Contacts-%@", [[Configs sharedInstance] getUIDU]];
-    
     ref = [[FIRDatabase database] reference];
+    all_data = [[NSMutableDictionary alloc] init];
     
-    data = [[NSMutableDictionary alloc] init];
-
-    [self.tableView registerNib:[UINib nibWithNibName:@"ProfileTableViewCell" bundle:nil] forCellReuseIdentifier:@"ProfileTableViewCell"];
-    [self.tableView registerNib:[UINib nibWithNibName:@"FriendTableViewCell" bundle:nil] forCellReuseIdentifier:@"FriendTableViewCell"];
+    /*
+     // 0 : Profile
+     // 1 : Groups
+     // 2 : Favorites
+     // 3 : Friends
+    */
+    // [all_data setObject:@[@"profile-Red"] forKey:@"profile"];
+    // [all_data setObject:@[@"groups-Red", @"groups-Yellow"] forKey:@"groups"];
+    // [all_data setObject:@[@"favorites-Red", @"favorites-Yellow"] forKey:@"favorites"];
+    // [all_data setObject:@[@"friends-Red", @"friends-Yellow", @"friends-Yellow", @"friends-Yellow"] forKey:@"friends"];
     
-     [self.tableView registerNib:[UINib nibWithNibName:@"GroupTableViewCell" bundle:nil] forCellReuseIdentifier:@"GroupTableViewCell"];
+    //Set isMultipleExpansionAllowed = true is multiple expanded sections to be allowed at a time. Default is NO.
+    isMultipleExpansionAllowed = YES;
+    
+    arrSelectedSectionIndex = [[NSMutableArray alloc] init];
+    
+    // if (!isMultipleExpansionAllowed) {
+    //    [arrSelectedSectionIndex addObject:[NSNumber numberWithInt:count+2]];
+    // }
+    
+    for (int i=0; i< __count; i++) {
+        // เป็นการจะให้ section ได้ open โดยเราจะต้อง add section index
+        [arrSelectedSectionIndex addObject:[NSNumber numberWithInt:i]];
+    }
+    
+    [tblView registerNib:[UINib nibWithNibName:@"ProfileTableViewCell" bundle:nil] forCellReuseIdentifier:@"ProfileTableViewCell"];
+    [tblView registerNib:[UINib nibWithNibName:@"FriendTableViewCell" bundle:nil] forCellReuseIdentifier:@"FriendTableViewCell"];
+    [tblView registerNib:[UINib nibWithNibName:@"GroupTableViewCell" bundle:nil] forCellReuseIdentifier:@"GroupTableViewCell"];
 
+    // NSDictionary *_data =  [[Configs sharedInstance] loadData:_DATA];
+    // NSLog(@"");
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(reloadData:)
                                                  name:@"MoviesTableViewController_reloadData"
@@ -67,7 +90,7 @@
 -(void)viewWillAppear:(BOOL)animated{
     if (![[Configs sharedInstance] isLogin]){
         
-        [self.tableView setHidden:YES];
+        [tblView setHidden:YES];
         
         [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Wait."];
         
@@ -150,6 +173,8 @@
         [(AppDelegate *)[[UIApplication sharedApplication] delegate] observeEventType];
         
         [self reloadData:nil];
+        
+        // [tblView reloadData];
     }
 }
 
@@ -162,12 +187,9 @@
     [(AppDelegate *)[[UIApplication sharedApplication] delegate] observeEventType];
     
     [self reloadData:nil];
+    // [tblView reloadData];
     
-    [self.tableView setHidden:NO];
-}
-
-- (void)didReceiveMemoryWarning{
-    [super didReceiveMemoryWarning];
+    [tblView setHidden:NO];
 }
 
 /*
@@ -185,13 +207,16 @@
  */
 -(void)reloadData:(NSNotification *) notification{
     
-    NSMutableDictionary *all_data = [[Configs sharedInstance] loadData:_DATA];
-    NSMutableDictionary *friends = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"friends"];
+    [all_data removeAllObjects];
+    
+    NSMutableDictionary *data = [[Configs sharedInstance] loadData:_DATA];
+    NSMutableDictionary *friends = [data objectForKey:@"friends"];
     
     // #1 profile
-    [data setValue:nil forKey:@"profile"];
-    if ([all_data objectForKey:@"profiles"]) {
-        [data setValue:[all_data objectForKey:@"profiles"] forKey:@"profile"];
+    NSMutableDictionary *dic_profile= [[NSMutableDictionary alloc] init];
+    [all_data setValue:nil forKey:@"profiles"];
+    if ([data objectForKey:@"profiles"]) {
+        [all_data setValue:[data objectForKey:@"profiles"]  forKey:@"profiles"];
     }
     // #1 profile
     
@@ -206,366 +231,165 @@
             }
         }
     }
-    [data setValue:favorites forKey:@"favorite"];
+    [all_data setValue:favorites forKey:@"favorite"];
     // #2 favorite
     
     // #3 friends
     /*
-    NSMutableArray *_f = [[NSMutableArray alloc] init];
-    for (NSString* key in friends) {
-        
-        NSMutableDictionary *item =[friends objectForKey:key];
-        [item setObject:key forKey:@"friend_id"];
-        [item setObject:@"friend" forKey:@"type"];
-        
-        [_f addObject:item];
-    }
+     NSMutableArray *_f = [[NSMutableArray alloc] init];
+     for (NSString* key in friends) {
+     
+     NSMutableDictionary *item =[friends objectForKey:key];
+     [item setObject:key forKey:@"friend_id"];
+     [item setObject:@"friend" forKey:@"type"];
+     
+     [_f addObject:item];
+     }
+     
+     [data setValue:_f forKey:@"friends"];
+     */
     
-    [data setValue:_f forKey:@"friends"];
-    */
-    
-    [data setValue:friends forKey:@"friends"];
+    [all_data setValue:friends forKey:@"friends"];
     // #3 friends
     
     // #4 groups
     NSMutableDictionary *groups = [[NSMutableDictionary alloc] init];
-    [data setValue:groups forKey:@"groups"];
-    if ([all_data objectForKey:@"groups"]) {
-        [data setValue:[all_data objectForKey:@"groups"] forKey:@"groups"];
+    [all_data setValue:groups forKey:@"groups"];
+    if ([data objectForKey:@"groups"]) {
+        [all_data setValue:[data objectForKey:@"groups"] forKey:@"groups"];
     }
     
     // #4 groups
     
     // #5 multi_chat
+    /*
     NSMutableDictionary *multi_chat = [[NSMutableDictionary alloc] init];
-    [data setValue:multi_chat forKey:@"multi_chat"];
-    if ([all_data objectForKey:@"multi_chat"]) {
-        [data setValue:[all_data objectForKey:@"multi_chat"] forKey:@"multi_chat"];
+    [all_data setValue:multi_chat forKey:@"multi_chat"];
+    if ([data objectForKey:@"multi_chat"]) {
+        [all_data setValue:[data objectForKey:@"multi_chat"] forKey:@"multi_chat"];
     }
+    */
     
     // #5 multi_chat
     
     // #6 invite_group
+    /*
     NSMutableDictionary *invite_group = [[NSMutableDictionary alloc] init];
-    [data setValue:invite_group forKey:@"invite_group"];
-    if ([all_data objectForKey:@"invite_group"]) {
-        [data setValue:[all_data objectForKey:@"invite_group"] forKey:@"invite_group"];
+    [all_data setValue:invite_group forKey:@"invite_group"];
+    if ([data objectForKey:@"invite_group"]) {
+        [all_data setValue:[data objectForKey:@"invite_group"] forKey:@"invite_group"];
     }
+    */
     
     // #6 invite_group
     
     // #7 invite_multi_chat
+    /*
     NSMutableDictionary *invite_multi_chat = [[NSMutableDictionary alloc] init];
-    [data setValue:invite_multi_chat forKey:@"invite_multi_chat"];
-    if ([all_data objectForKey:@"invite_multi_chat"]) {
-        [data setValue:[all_data objectForKey:@"invite_multi_chat"] forKey:@"invite_multi_chat"];
+    [all_data setValue:invite_multi_chat forKey:@"invite_multi_chat"];
+    if ([data objectForKey:@"invite_multi_chat"]) {
+        [all_data setValue:[data objectForKey:@"invite_multi_chat"] forKey:@"invite_multi_chat"];
     }
+    */
     
     // #7 invite_multi_chat
     
     
-//    if (notification != nil) {
-//        if ([notification.name isEqualToString:@"MoviesTableViewController_reloadDataUpdateFriendProfile"]) {
+    //    if (notification != nil) {
+    //        if ([notification.name isEqualToString:@"MoviesTableViewController_reloadDataUpdateFriendProfile"]) {
+    //
+    //        }
+    //    }else{
+    //        [(AppDelegate *)[[UIApplication sharedApplication] delegate] observeEventType];
+    //    }
+    
+    // [tblView reloadData];
+    
+    /*
+     Updating data for UITableView in background breaks animations
+     https://stackoverflow.com/questions/10831313/updating-data-for-uitableview-in-background-breaks-animations
+     */
+    [tblView performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:NO];
+}
+
+#pragma mark - TableView methods
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    return all_data.count;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:section]]){
+        /* กรณีที่เรา click open section แล้วจะ return จำนวน item */
+        switch (section) {
+                // profile
+            case 0:{
+                return 1;
+            }
+                // groups
+            case 1:{
+                NSMutableArray *groups = [all_data valueForKey:@"groups"];
+                return  [groups count];
+                
+            }
+                // favorites
+            case 2:{
+                NSMutableArray *favorite = [all_data valueForKey:@"favorite"];
+                return  [favorite count];
+            }
+                // friends
+            case 3:{
+                NSMutableArray *friends = [all_data valueForKey:@"friends"];
+                return  [friends count];
+            }
+                default:
+                return 0;
+        }
+    }else{
+        /* กรณีที่เรา click close section แล้วจะ return 0 */
+        return 0;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+//    ViewControllerCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ViewControllerCell"];
+//    if (cell ==nil){
+//        [tblView registerClass:[ViewControllerCell class] forCellReuseIdentifier:@"ViewControllerCell"];
+//        cell = [tblView dequeueReusableCellWithIdentifier:@"ViewControllerCell"];
+//    }
 //
+//    switch (indexPath.section) {
+//        case 0:{
+//            cell.selectionStyle = UITableViewCellSelectionStyleNone;
 //        }
-//    }else{
-//        [(AppDelegate *)[[UIApplication sharedApplication] delegate] observeEventType];
+//            break;
+//
+//        default:{
+//            cell.selectionStyle = UITableViewCellSelectionStyleDefault;
+//        }
+//            break;
 //    }
+//
+//    cell.lblName.text = [NSString stringWithFormat:@"%ld", (long)indexPath.row];
+//    cell.backgroundColor = indexPath.row%2==0?[UIColor lightTextColor]:[[UIColor lightTextColor] colorWithAlphaComponent:0.5f];
+//    return cell;
     
-    [self.tableView reloadData];
-}
-
-#pragma mark - Table view data source
-- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
-    /*
-    if (section == 0) {
-        return @"Profile";
-    }
-    NSMutableArray *friends = [data valueForKey:@"friends"];
-    return [NSString stringWithFormat:@"Friends (%lu) + Group + Multi", (unsigned long)[friends count]];
-    */
-    
-    switch (section) {
-        case 0:{
-            return @"Profile";
-        }
-        case 1:{
-            NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
-            return [NSString stringWithFormat:@"Favorite %d", [favorites count]];
-        }
-        case 2:{
-            NSMutableDictionary *friends = [data objectForKey:@"friends"];
-            return [NSString stringWithFormat:@"Friends %d", [friends count]];
-        }
-        case 3:{
-            NSMutableDictionary *groups = [data objectForKey:@"groups"];
-            return [NSString stringWithFormat:@"Groups %d", [groups count]];
-        }
-        case 4:{
-            NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
-            return [NSString stringWithFormat:@"Multi Chat %d", [multi_chat count]];
-        }
-        case 5:{
-            NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
-            return [NSString stringWithFormat:@"Invite Group %d", [invite_group count]];
-        }
-        case 6:{
-            NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
-            return [NSString stringWithFormat:@"Invite Multi Chat %d", [invite_multi_chat count]];
-        }
-        default:
-            break;
-    }
-    return @"";
-}
-
-/*
- ความสูงขอแต่ละ section กรณีไม่มีข้อมูลเราจะให้ return 0
- */
--(CGFloat)tableView:(UITableView*)tableView heightForHeaderInSection:(NSInteger)section {
-    switch (section) {
-        case 0:{
-            return 30.0f;
-        }
-        case 1:{
-            // @"Favorite"
-            NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
-            if ([favorites count] == 0) {
-                return 0;
-            }else{
-                return 30.0f;
-            }
-        }
-        case 2:{
-            // @"Friends";
-            NSMutableDictionary *friends = [data objectForKey:@"friends"];
-            if ([friends count] == 0) {
-                return 0;
-            }else{
-                return 30.0f;
-            }
-        }
-        case 3:{
-            // @"Groups";
-            NSMutableDictionary *groups = [data objectForKey:@"groups"];
-            if ([groups count] == 0) {
-                return 0;
-            }else{
-                return 30.0f;
-            }
-        }
-        case 4:{
-            // @"Multi Chat";
-            NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
-            if ([multi_chat count] == 0) {
-                return 0;
-            }else{
-                return 30.0f;
-            }
-        }
-        case 5:{
-            // @"Invite Group";
-            NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
-            if ([invite_group count] == 0) {
-                return 0;
-            }else{
-                return 30.0f;
-            }
-        }
-        case 6:{
-            // @"Invite Multi Chat";
-            
-            return 0;
-            
-            NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
-            if ([invite_multi_chat count] == 0) {
-                return 0;
-            }else{
-                return 30.0f;
-            }
-        }
-        default:
-            break;
-    }
-    
-    return 0;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-//    if (indexPath.section == 0) {
-//        return 100;
-//    }else {
-//        return 180.0f;
-//    }
-    
-    switch (indexPath.section) {
-        case 0:{
-            return 100.0f;
-        }
-        case 1:{
-            // @"Favorite"
-            NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
-            if ([favorites count] == 0) {
-               return 0;
-            }else{
-               return 180.0f;
-            }
-        }
-        case 2:{
-            // @"Friends";
-            
-            // return 0;
-            
-            NSMutableDictionary *friends = [data objectForKey:@"friends"];
-            if ([friends count] == 0) {
-                return 0;
-            }else{
-                return 180.0f;
-            }
-        }
-        case 3:{
-            // @"Groups";
-            NSMutableDictionary *groups = [data objectForKey:@"groups"];
-            if ([groups count] == 0) {
-                return 0;
-            }else{
-                return 180.0f;
-            }
-        }
-        case 4:{
-            // @"Multi Chat";
-            NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
-            if ([multi_chat count] == 0) {
-                return 0;
-            }else{
-                return 180.0f;
-            }
-        }
-        case 5:{
-            // @"Invite Group";
-            NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
-            if ([invite_group count] == 0) {
-                return 0;
-            }else{
-                return 180.0f;
-            }
-        }
-        case 6:{
-            
-            return 0;
-            // @"Invite Multi Chat";
-            NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
-            if ([invite_multi_chat count] == 0) {
-                return 0;
-            }else{
-                return 180.0f;
-            }
-        }
-        default:
-            break;
-    }
-    
-    return 0;
-}
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
-    int count = [data count];
-    return [data count];
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
-    /*
-    if (section == 0) {
-        return 1;
-    }else {
-        NSMutableArray *friends = [data valueForKey:@"friends"];
-        return [friends count];
-    }
-    */
-    switch (section) {
-        case 0:{
-            return 1;
-        }
-        case 1:{
-            // @"Favorite"
-            NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
-            if ([favorites count] == 0) {
-                return 0;
-            }else{
-                return [favorites count];
-            }
-        }
-        case 2:{
-            // @"Friends";
-            NSMutableDictionary *friends = [data objectForKey:@"friends"];
-            if ([friends count] == 0) {
-                return 0;
-            }else{
-                return [friends count];
-            }
-        }
-        case 3:{
-            // @"Groups";
-            NSMutableDictionary *groups = [data objectForKey:@"groups"];
-            if ([groups count] == 0) {
-                return 0;
-            }else{
-                return [groups count];
-            }
-        }
-        case 4:{
-            // @"Multi Chat";
-            NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
-            if ([multi_chat count] == 0) {
-                return 0;
-            }else{
-                return [multi_chat count];
-            }
-        }
-        case 5:{
-            // @"Invite Group";
-            NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
-            if ([invite_group count] == 0) {
-                return 0;
-            }else{
-                return [invite_group count];
-            }
-        }
-        case 6:{
-            
-            return 0;
-            // @"Invite Multi Chat";
-            NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
-            if ([invite_multi_chat count] == 0) {
-                return 0;
-            }else{
-                return [invite_multi_chat count];
-            }
-        }
-        default:
-            break;
-    }
-    
-    return 0;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
-    
+    // NSDictionary *data = [[Configs sharedInstance] loadData:_DATA];
     if (indexPath.section == 0) {
         
         ProfileTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"ProfileTableViewCell"];
         if (!cell){
             cell = [tableView dequeueReusableCellWithIdentifier:@"ProfileTableViewCell"];
         }
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
         
-        NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+        NSMutableDictionary *profiles = [all_data objectForKey:@"profiles"];
         if ([profiles objectForKey:@"image_url"]) {
             [cell.imgPerson clear];
             [cell.imgPerson showLoadingWheel];
             [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [Configs sharedInstance].API_URL,[profiles objectForKey:@"image_url"]]]];
             [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
         }else{}
-
+        
         cell.lblName.text = [profiles objectForKey:@"name"];
         
         if ([profiles objectForKey:@"status_message"]) {
@@ -583,26 +407,82 @@
         [cell addGestureRecognizer:lpgr];
         
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-        
+       
         return cell;
     }else{
-
+        
+        /*
         FriendTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"FriendTableViewCell"];
-         // if (!cell){
+        if (!cell){
             cell = [tableView dequeueReusableCellWithIdentifier:@"FriendTableViewCell"];
-         // }
-    
+        }
+        
+        cell.selectionStyle = UITableViewCellSelectionStyleDefault;
+        return cell;
+        */
+        FriendTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:@"FriendTableViewCell"];
+        // if (!cell){
+        cell = [tableView dequeueReusableCellWithIdentifier:@"FriendTableViewCell"];
+        // }
+        
         switch (indexPath.section) {
             case 1:{
+                // @"Groups";
+                // GroupTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"GroupTableViewCell"];
+                
+                
+                NSMutableDictionary *groups = [all_data objectForKey:@"groups"];
+                
+                NSArray *keys = [groups allKeys];
+                id key = [keys objectAtIndex:indexPath.row];
+                id item = [groups objectForKey:key];
+                
+                
+                // imgPerson
+                
+                // NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+                if ([item objectForKey:@"image_url"]) {
+                    [cell.imgPerson clear];
+                    [cell.imgPerson showLoadingWheel]; // API_URL
+                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                }else{
+                    [cell.imgPerson clear];
+                }
+                
+                
+                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], key] ;
+                // cell.lblMember.text = [NSString stringWithFormat:@"%@", [(NSDictionary *)[item objectForKey:@"members"] count] ] ;
+                NSDictionary * member= [item objectForKey:@"members"];
+                
+                cell.lblChangeFriendsName.text = [NSString stringWithFormat:@"%d people", [member count] ] ;
+                cell.lblType.text = @"";
+                cell.lblIsFavorites.text = @"";
+                cell.lblIsHide.text = @"";
+                cell.lblIsBlock.text = @"";
+                cell.lblOnline.text = @"";
+                
+                // UserDataUILongPressGestureRecognizer
+                UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
+                
+                lpgr.userData = indexPath;
+                // lpgr.minimumPressDuration = 1.0; //seconds
+                [cell addGestureRecognizer:lpgr];
+                
+                // return cell;
+                break;
+            }
+            case 2:{
                 // @"Favorite"
-                NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
+                NSMutableDictionary *favorite = [all_data objectForKey:@"favorite"];
                 
                 // NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[item objectForKey:@"friend_id"]];
-                NSArray *keys = [favorites allKeys];
+                NSArray *keys = [favorite allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
-                id item = [favorites objectForKey:key];
+                id item = [favorite objectForKey:key];
                 
-            
+                
                 NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:key];
                 
                 if ([f objectForKey:@"image_url"]) {
@@ -664,10 +544,10 @@
                 [cell addGestureRecognizer:lpgr];
                 break;
             }
-            case 2:{
+            case 3:{
                 
                 // @"Friends";
-                NSMutableDictionary *friends = [data objectForKey:@"friends"];
+                NSMutableDictionary *friends = [all_data objectForKey:@"friends"];
                 
                 NSArray *keys = [friends allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
@@ -733,6 +613,7 @@
                 [cell addGestureRecognizer:lpgr];
                 break;
             }
+                /*
             case 3:{
                 // @"Groups";
                 // GroupTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"GroupTableViewCell"];
@@ -743,12 +624,7 @@
                 NSArray *keys = [groups allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 id item = [groups objectForKey:key];
-                /*
-                 - owner_id
-                 - is_owner
-                 - name
-                 - members
-                 */
+                
                 
                 // imgPerson
                 
@@ -830,77 +706,44 @@
                 
                 NSArray *keys = [invite_group allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
-//                id item = [invite_group objectForKey:key];
+                //                id item = [invite_group objectForKey:key];
                 
                 
                 id item = [[Configs sharedInstance] loadData:key];
                 
                 if (item != [NSNull null]) {
-                
-                if ([item objectForKey:@"image_url"]) {
-                    [cell.imgPerson clear];
-                    [cell.imgPerson showLoadingWheel]; // API_URL
-                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
-                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
-                }else{
-                    [cell.imgPerson clear];
-                }
-                
-                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], key] ;
-                
-                NSDictionary * member= [item objectForKey:@"members"];
-                
-                cell.lblChangeFriendsName.text = [NSString stringWithFormat:@"%d people", [member count] ] ;
-                cell.lblType.text = @"";
-                cell.lblIsFavorites.text = @"";
-                cell.lblIsHide.text = @"";
-                cell.lblIsBlock.text = @"";
-                cell.lblOnline.text = @"";
-                
-                // UserDataUILongPressGestureRecognizer
-                UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
-                
+                    
+                    if ([item objectForKey:@"image_url"]) {
+                        [cell.imgPerson clear];
+                        [cell.imgPerson showLoadingWheel]; // API_URL
+                        [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
+                        [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                    }else{
+                        [cell.imgPerson clear];
+                    }
+                    
+                    cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], key] ;
+                    
+                    NSDictionary * member= [item objectForKey:@"members"];
+                    
+                    cell.lblChangeFriendsName.text = [NSString stringWithFormat:@"%d people", [member count] ] ;
+                    cell.lblType.text = @"";
+                    cell.lblIsFavorites.text = @"";
+                    cell.lblIsHide.text = @"";
+                    cell.lblIsBlock.text = @"";
+                    cell.lblOnline.text = @"";
+                    
+                    // UserDataUILongPressGestureRecognizer
+                    UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+                    // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
+                    
                     lpgr.userData = indexPath;
-                // lpgr.minimumPressDuration = 1.0; //seconds
+                    // lpgr.minimumPressDuration = 1.0; //seconds
                     [cell addGestureRecognizer:lpgr];
-                
+                    
                     NSLog(@"");
                 }
                 
-                break;
-            }
-                /*
-            case 6:{
-                
-                // @"Invite Multi Chat";
-                NSMutableDictionary *invite_multi_chat = [data objectForKey:@"invite_multi_chat"];
-     
-                NSArray *keys = [invite_multi_chat allKeys];
-                id key = [keys objectAtIndex:indexPath.row];
-                id item = [invite_multi_chat objectForKey:key];
-                
-                [cell.imgPerson clear];
-                
-                cell.lblName.text = [NSString stringWithFormat:@"%@", key] ;
-                
-                cell.lblChangeFriendsName.text = @"";
-                cell.lblType.text = @"";
-                cell.lblIsFavorites.text = @"";
-                cell.lblIsHide.text = @"";
-                cell.lblIsBlock.text = @"";
-                cell.lblOnline.text = @"";
-                
-                // UserDataUILongPressGestureRecognizer
-                UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
-                
-                lpgr.userData = indexPath;
-                // lpgr.minimumPressDuration = 1.0; //seconds
-                [cell addGestureRecognizer:lpgr];
-                
-                
-                NSLog(@"");
                 break;
             }
                 */
@@ -908,116 +751,171 @@
                 break;
         }
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    
+        
         return cell;
     }
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    
-    UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-
-    if (indexPath.section == 0) {
-        MyProfile* profile = [storybrd instantiateViewControllerWithIdentifier:@"MyProfile"];
-        [self.navigationController pushViewController:profile animated:YES];
-    }else{
-        switch (indexPath.section) {
-            case 1:{
-                // @"Favorite"
-                NSMutableDictionary *favorites = [data objectForKey:@"favorite"];
-                
-                // NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[item objectForKey:@"friend_id"]];
-                NSArray *keys = [favorites allKeys];
-                id key = [keys objectAtIndex:indexPath.row];
-                NSMutableDictionary* item = [favorites objectForKey:key];
-                [item setValue:key forKey:@"friend_id"];
-                
-//                ChatView *chatView = [storybrd instantiateViewControllerWithIdentifier:@"ChatView"];
-//                chatView.friend =item;//[friends objectAtIndex:indexPath.row];
-//                [self.navigationController pushViewController:chatView animated:YES];
-                
-                ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
-                chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
-                chatView2.typeChat =@"1";
-                [self.navigationController pushViewController:chatView2 animated:YES];
-            }
-                break;
-            case 2:{
-                // Friends
-                
-                NSMutableDictionary *friends = [data valueForKey:@"friends"];
-                
-                NSArray *keys = [friends allKeys];
-                id key = [keys objectAtIndex:indexPath.row];
-                NSMutableDictionary*  item = [friends objectForKey:key];
-                [item setValue:key forKey:@"friend_id"];
-                
-//                ChatView *chatView = [storybrd instantiateViewControllerWithIdentifier:@"ChatView"];
-//                chatView.friend =item;//[friends objectAtIndex:indexPath.row];
-//                [self.navigationController pushViewController:chatView animated:YES];
-                
-                ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
-                chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
-                chatView2.typeChat =@"2";
-                [self.navigationController pushViewController:chatView2 animated:YES];
-            }
-                break;
-                
-            case 3:{
-                // Groups
-                NSMutableDictionary *groups = [data valueForKey:@"groups"];
-                
-                NSArray *keys = [groups allKeys];
-                id key = [keys objectAtIndex:indexPath.row];
-                NSMutableDictionary*  item = [groups objectForKey:key];
-                [item setValue:key forKey:@"group_id"];
-  
-                GroupChatView *groupChatView = [storybrd instantiateViewControllerWithIdentifier:@"GroupChatView"];
-                groupChatView.group =item;//[friends objectAtIndex:indexPath.row];
-   
-                [self.navigationController pushViewController:groupChatView animated:YES];
-            }
-                break;
-                
-            case 4:{
-                // Multi Chat
-                NSMutableDictionary *groups = [data valueForKey:@"multi_chat"];
-                
-                NSArray *keys = [groups allKeys];
-                id key = [keys objectAtIndex:indexPath.row];
-                NSMutableDictionary*  item = [groups objectForKey:key];
-                [item setValue:key forKey:@"multi_chat_id"];
-                
-//                MultiChatView *groupChatView = [storybrd instantiateViewControllerWithIdentifier:@"MultiChatView"];
-//                groupChatView.group =item;//[friends objectAtIndex:indexPath.row];
-//
-//                [self.navigationController pushViewController:groupChatView animated:YES];
-                
-                
-                ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
-                chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
-                chatView2.typeChat =@"4";
-                [self.navigationController pushViewController:chatView2 animated:YES];
-            }
-                break;
-                
-            case 5:{
-                // Invite Group
-                NSLog(@"");
-            }
-                break;
-            case 6:{
-                // @"Invite Multi Chat";
-                NSLog(@"");
-            }
-                
-                break;
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    if (section == 0) {
+        return 44.0f;
+    }else if(section == 1){
+        NSMutableArray *groups = [all_data valueForKey:@"groups"];
+        if([groups count] == 0){
+            return 0;
         }
+    }else if(section == 2){
+        NSMutableArray *favorite = [all_data valueForKey:@"favorite"];
+        if([favorite count] == 0){
+            return 0;
+        }
+    }else if(section == 3){
+        NSMutableArray *friends = [all_data valueForKey:@"friends"];
+        if([friends count] == 0){
+            return 0;
+        }
+    }
+    return 44.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    switch (indexPath.section) {
+        case 0:
+            return 100.0f;
+        default:
+            return 180.0f;
+    }
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    ViewControllerCellHeader *headerView = [tableView dequeueReusableCellWithIdentifier:@"ViewControllerCellHeader"];
+    if (headerView ==nil){
+        [tblView registerClass:[ViewControllerCellHeader class] forCellReuseIdentifier:@"ViewControllerCellHeader"];
+        headerView = [tableView dequeueReusableCellWithIdentifier:@"ViewControllerCellHeader"];
+    }
+    
+    switch (section) {
+            // 0 : Profile
+        case 0:{
+            headerView.lbTitle.text = @"Profile";
+            if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:section]]){
+                headerView.btnShowHide.selected = YES;
+            }
+            [[headerView btnShowHide] setTag:section];
+            [[headerView btnShowHide] addTarget:self action:@selector(btnTapShowHideSection:) forControlEvents:UIControlEventTouchUpInside];
+            
+            [[headerView btnShowHide] setHidden:YES];
+            
+            [headerView.contentView setBackgroundColor:section%2==0?[UIColor groupTableViewBackgroundColor]:[[UIColor groupTableViewBackgroundColor] colorWithAlphaComponent:0.5f]];
+        }
+            break;
+            
+            // 1 : Groups
+            // 2 : Favorites
+            // 3 : Friends
+        case 1:{
+            
+            NSMutableArray *groups = [all_data valueForKey:@"groups"];
+            
+            headerView.lbTitle.text = [NSString stringWithFormat:@"Groups %ld", [groups count]];
+            if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:section]]){
+                headerView.btnShowHide.selected = YES;
+            }
+            [[headerView btnShowHide] setTag:section];
+            [[headerView btnShowHide] addTarget:self action:@selector(btnTapShowHideSection:) forControlEvents:UIControlEventTouchUpInside];
+            [headerView.contentView setBackgroundColor:section%2==0?[UIColor groupTableViewBackgroundColor]:[[UIColor groupTableViewBackgroundColor] colorWithAlphaComponent:0.5f]];
+        }
+            break;
+        case 2:{
+            
+            NSMutableArray *favorite = [all_data valueForKey:@"favorite"];
+            headerView.lbTitle.text = [NSString stringWithFormat:@"Favorites %ld", [favorite count]];
+            if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:section]]){
+                headerView.btnShowHide.selected = YES;
+            }
+            [[headerView btnShowHide] setTag:section];
+            [[headerView btnShowHide] addTarget:self action:@selector(btnTapShowHideSection:) forControlEvents:UIControlEventTouchUpInside];
+            [headerView.contentView setBackgroundColor:section%2==0?[UIColor groupTableViewBackgroundColor]:[[UIColor groupTableViewBackgroundColor] colorWithAlphaComponent:0.5f]];
+        }
+            break;
+            
+        case 3:{
+            NSMutableArray *friends = [all_data valueForKey:@"friends"];
+            headerView.lbTitle.text = [NSString stringWithFormat:@"Friends %ld", [friends count]];
+            if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:section]]){
+                headerView.btnShowHide.selected = YES;
+            }
+            [[headerView btnShowHide] setTag:section];
+            [[headerView btnShowHide] addTarget:self action:@selector(btnTapShowHideSection:) forControlEvents:UIControlEventTouchUpInside];
+            [headerView.contentView setBackgroundColor:section%2==0?[UIColor groupTableViewBackgroundColor]:[[UIColor groupTableViewBackgroundColor] colorWithAlphaComponent:0.5f]];
+        }
+            break;
+        default:{
+            headerView.lbTitle.text = [NSString stringWithFormat:@"Section %ld", (long)section];
+            if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:section]]){
+                headerView.btnShowHide.selected = YES;
+            }
+            [[headerView btnShowHide] setTag:section];
+            [[headerView btnShowHide] addTarget:self action:@selector(btnTapShowHideSection:) forControlEvents:UIControlEventTouchUpInside];
+            [headerView.contentView setBackgroundColor:section%2==0?[UIColor groupTableViewBackgroundColor]:[[UIColor groupTableViewBackgroundColor] colorWithAlphaComponent:0.5f]];
+        }
+            break;
+    }
+    return headerView.contentView;
+}
+
+-(IBAction)btnTapShowHideSection:(UIButton*)sender{
+    if (!sender.selected){
+        if (!isMultipleExpansionAllowed) {
+            [arrSelectedSectionIndex replaceObjectAtIndex:0 withObject:[NSNumber numberWithInteger:sender.tag]];
+        }else {
+            [arrSelectedSectionIndex addObject:[NSNumber numberWithInteger:sender.tag]];
+        }
+        sender.selected = YES;
+    }else{
+        sender.selected = NO;
+        if ([arrSelectedSectionIndex containsObject:[NSNumber numberWithInteger:sender.tag]])
+        {
+            [arrSelectedSectionIndex removeObject:[NSNumber numberWithInteger:sender.tag]];
+        }
+    }
+    if (!isMultipleExpansionAllowed) {
+        [tblView reloadData];
+    }else {
+        [tblView reloadSections:[NSIndexSet indexSetWithIndex:sender.tag] withRowAnimation:UITableViewRowAnimationAutomatic];
+    }
+}
+
+#pragma mark - Memory Warning
+- (void)didReceiveMemoryWarning{
+    [super didReceiveMemoryWarning];
+}
+
+-(NSArray *)tableView:(UITableView *)tableView editActionsForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewRowAction *btnBlock = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Block" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath){
+        NSLog(@"Block");
+    }];
+    btnBlock.backgroundColor = [UIColor redColor];
+    UITableViewRowAction *btnHide = [UITableViewRowAction rowActionWithStyle:UITableViewRowActionStyleDefault title:@"Hide" handler:^(UITableViewRowAction *action, NSIndexPath *indexPath){
+        NSLog(@"Hide");
+    }];
+    btnHide.backgroundColor = [UIColor grayColor];
+    return @[btnBlock, btnHide];
+}
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath{
+    switch (indexPath.section) {
+        case 0:{
+            return NO;
+        }
+        default:
+            return YES;
     }
 }
 
 -(void)handleLongPress:(UserDataUILongPressGestureRecognizer *)longPress{
-
+    
     NSIndexPath * section = longPress.userData;
     
     if (section.section == 0) {
@@ -1028,37 +926,61 @@
         
         UserDataUIAlertView *alert =nil;
         switch (section.section) {
-            case 1:
+            case 1:{
+                // Group
+                //Do Whatever You want on End of Gesture
+                alert = [[UserDataUIAlertView alloc] initWithTitle:nil
+                                                           message:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:@"Close"
+                                                 otherButtonTitles:@"Manage group", @"Delete Group", nil];
+                
+                alert.userData = section;
+                alert.tag = 2;
+                [alert show];
+                break;
+            }
             case 2:
+            case 3:{
+                
                 // Favorite & Friends
+                
+                NSMutableDictionary *idata = [[NSMutableDictionary alloc] init];
+                switch (section.section) {
+                    case 2:
+                        idata = [all_data objectForKey:@"favorite"];
+                        break;
+                    case 3:
+                        idata = [all_data valueForKey:@"friends"];
+                        break;
+                        
+                    default:
+                        break;
+                }
+                
+                NSArray *keys = [idata allKeys];
+                id key = [keys objectAtIndex:section.row];
+                NSDictionary* item = [idata objectForKey:key];
+                
+                NSString*isFav = @"0";
+                if ([item objectForKey:@"favorite"]) {
+                    isFav = [item valueForKey:@"favorite"];
+                }
+                // [2]    (null)    @"favorite" : @"1"
                 
                 //Do Whatever You want on End of Gesture
                 alert = [[UserDataUIAlertView alloc] initWithTitle:nil
-                                                                                message:nil
-                                                                               delegate:self
-                                                                      cancelButtonTitle:@"Close"
-                                                                      otherButtonTitles:@"Favorite", @"Change friend's name", @"Hide", @"Block", nil];
+                                                           message:nil
+                                                          delegate:self
+                                                 cancelButtonTitle:@"Close"
+                                                 otherButtonTitles:[NSString stringWithFormat:@"Favorite : %@", isFav], @"Change friend's name", @"Hide", @"Block", nil];
                 
                 alert.userData = section;
                 alert.tag = 1;
                 [alert show];
                 
                 break;
-                
-            case 3:
-                // Group
-                
-                //Do Whatever You want on End of Gesture
-                alert = [[UserDataUIAlertView alloc] initWithTitle:nil
-                                                                                message:nil
-                                                                               delegate:self
-                                                                      cancelButtonTitle:@"Close"
-                                                                      otherButtonTitles:@"Manage group", @"Delete Group", nil];
-                
-                alert.userData = section;
-                alert.tag = 2;
-                [alert show];
-                break;
+            }
                 
             case 4:{
                 // Multi Chat
@@ -1111,6 +1033,14 @@
     }
 }
 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    if (indexPath.section == 0) {
+        MyProfile* profile = [storybrd instantiateViewControllerWithIdentifier:@"MyProfile"];
+        [self.navigationController pushViewController:profile animated:YES];
+    }
+}
+
 - (void)alertView:(UserDataUIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
     // the user clicked one of the OK/Cancel buttons
     if (alertView.tag == 1) {
@@ -1119,7 +1049,7 @@
         
         switch (buttonIndex) {
             case 0:{
-            // Close
+                // Close
                 NSLog(@"Close");
             }
                 break;
@@ -1129,11 +1059,11 @@
                 
                 NSMutableDictionary *idata = [[NSMutableDictionary alloc] init];
                 switch (indexPath.section) {
-                    case 1:
-                        idata = [data objectForKey:@"favorite"];
-                        break;
                     case 2:
-                        idata = [data valueForKey:@"friends"];
+                        idata = [all_data objectForKey:@"favorite"];
+                        break;
+                    case 3:
+                        idata = [all_data valueForKey:@"friends"];
                         break;
                         
                     default:
@@ -1146,7 +1076,7 @@
                 NSArray *keys = [idata allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 id item = [idata objectForKey:key];
-            
+                
                 NSLog(@"Hide : section = %ld, row = %ld, friend id : %@", (long)indexPath.section, (long)indexPath.row, key);
                 
                 __block NSString *child = [NSString stringWithFormat:@"toonchat/%@/friends/%@/", [[Configs sharedInstance] getUIDU], key];
@@ -1187,17 +1117,17 @@
                 }];
             }
                 break;
-            
+                
             case 2:{
                 // Change friend's name
                 
                 NSMutableDictionary *idata = [[NSMutableDictionary alloc] init];
                 switch (indexPath.section) {
                     case 1:
-                        idata = [data objectForKey:@"favorite"];
+                        idata = [all_data objectForKey:@"favorite"];
                         break;
                     case 2:
-                        idata = [data valueForKey:@"friends"];
+                        idata = [all_data valueForKey:@"friends"];
                         break;
                         
                     default:
@@ -1210,7 +1140,7 @@
                 
                 UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
                 Changefriendsname *changeFN = [storybrd instantiateViewControllerWithIdentifier:@"Changefriendsname"];
-            
+                
                 changeFN.friend_id = key;//[item objectForKey:@"friend_id"];
                 [self.navigationController pushViewController:changeFN animated:YES];
             }
@@ -1222,10 +1152,10 @@
                 NSMutableDictionary *idata = [[NSMutableDictionary alloc] init];
                 switch (indexPath.section) {
                     case 1:
-                        idata = [data objectForKey:@"favorite"];
+                        idata = [all_data objectForKey:@"favorite"];
                         break;
                     case 2:
-                        idata = [data valueForKey:@"friends"];
+                        idata = [all_data valueForKey:@"friends"];
                         break;
                         
                     default:
@@ -1274,7 +1204,7 @@
                         [ref updateChildValues:childUpdates];
                     }
                 }];
-
+                
             }
                 break;
                 
@@ -1284,10 +1214,10 @@
                 NSMutableDictionary *idata = [[NSMutableDictionary alloc] init];
                 switch (indexPath.section) {
                     case 1:
-                        idata = [data objectForKey:@"favorite"];
+                        idata = [all_data objectForKey:@"favorite"];
                         break;
                     case 2:
-                        idata = [data valueForKey:@"friends"];
+                        idata = [all_data valueForKey:@"friends"];
                         break;
                         
                     default:
@@ -1340,7 +1270,7 @@
                 break;
                 
             default:
-            break;
+                break;
         }
         
     }else if (alertView.tag == 2) {
@@ -1352,10 +1282,10 @@
                 NSLog(@"Close");
             }
                 break;
-         
+                
             case 1:{
                 
-                NSMutableDictionary *group = [data valueForKey:@"groups"];
+                NSMutableDictionary *group = [all_data valueForKey:@"groups"];
                 
                 NSArray *keys = [group allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
@@ -1371,7 +1301,7 @@
                 break;
             case 2:{
                 
-                NSMutableDictionary *friends = [data valueForKey:@"groups"];
+                NSMutableDictionary *friends = [all_data valueForKey:@"groups"];
                 
                 NSArray *keys = [friends allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
@@ -1379,11 +1309,11 @@
                 [item setValue:key forKey:@"group_id"];
                 
                 UserDataUIAlertView *alert = [[UserDataUIAlertView alloc] initWithTitle:@"Delete group"
-                                                           message:@"Are you sure delete group?"
-                                                          delegate:self
-                                                 cancelButtonTitle:@"Close"
-                                                 otherButtonTitles:@"Delete", nil];
-            
+                                                                                message:@"Are you sure delete group?"
+                                                                               delegate:self
+                                                                      cancelButtonTitle:@"Close"
+                                                                      otherButtonTitles:@"Delete", nil];
+                
                 alert.userData = item;
                 alert.tag = 3;
                 [alert show];
@@ -1427,30 +1357,31 @@
             case 1:{
                 // Manage Multi Chat
                 
-                
+                /*
                 NSMutableDictionary *groups = [data valueForKey:@"multi_chat"];
                 
                 NSArray *keys = [groups allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 NSMutableDictionary*  item = [groups objectForKey:key];
                 [item setValue:key forKey:@"multi_chat_id"];
-             
+                
                 // ChatView2 *chatView2 = [storybrd instantiateViewControllerWithIdentifier:@"ChatView2"];
                 // chatView2.friend =item;//[friends objectAtIndex:indexPath.row];
                 // chatView2.typeChat =@"4";
-
+                
                 UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
                 ManageMultiChat *manageMultiChat = [storybrd instantiateViewControllerWithIdentifier:@"ManageMultiChat"];
                 manageMultiChat.friend =item;
                 manageMultiChat.typeChat =@"4";
                 
                 [self.navigationController pushViewController:manageMultiChat animated:YES];
+                */
             }
                 break;
             case 2:{
                 
+                /*
                 NSMutableDictionary *multi_chat = [data objectForKey:@"multi_chat"];
-                
                 NSArray *keys = [multi_chat allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 id item = [multi_chat objectForKey:key];
@@ -1458,17 +1389,18 @@
                 NSLog(@"Delete Multi Chat");
                 NSString *child = [NSString stringWithFormat:@"toonchat/%@/multi_chat/%@/", [[Configs sharedInstance] getUIDU], key];
                 [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
-
+                    
                     if (error == nil) {
                         // [ref parent]
                         //NSString* parent = ref.parent.key;
-
+                        
                         // จะได้ Group id
                         NSString* key = [ref key];
-
+                        
                         NSLog(@"");
                     }
                 }];
+                */
             }
                 break;
         }
@@ -1514,6 +1446,7 @@
                  4. ลบ invite_group by group_id ออก
                  */
                 
+                /*
                 NSMutableDictionary *invite_group = [data objectForKey:@"invite_group"];
                 
                 NSArray *keys = [invite_group allKeys];
@@ -1525,12 +1458,12 @@
                 NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@", [[Configs sharedInstance] getUIDU] , key];
                 
                 // #1, #2
-//                [[ref child:child] setValue:item withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
-//                    NSLog(@"");
-//                    if (error == nil) {
-//
-//                    }
-//                }];
+                //                [[ref child:child] setValue:item withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+                //                    NSLog(@"");
+                //                    if (error == nil) {
+                //
+                //                    }
+                //                }];
                 [[ref  child:child] setValue:item];
                 
                 // #3
@@ -1546,6 +1479,7 @@
                         }];
                     }
                 }];
+                */
                 
                 // #4
                 
@@ -1591,8 +1525,13 @@
     }
 }
 
-- (IBAction)onLogout:(id)sender {
-    [[Configs sharedInstance] removeData:_USER];
-    [self viewWillAppear:false];
+- (IBAction)onRefresh:(id)sender {
+    [self reloadData:nil];
+}
+
+- (IBAction)onCreateGroup:(id)sender {
+    UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    CreateGroup* createGroup = [storybrd instantiateViewControllerWithIdentifier:@"CreateGroup"];
+    [self.navigationController pushViewController:createGroup animated:YES];
 }
 @end

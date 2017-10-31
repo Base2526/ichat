@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@interface UpdateProfileGroupThread  : NSObject<NSURLConnectionDataDelegate>{
+@interface UpdatePictureGroupThread  : NSObject<NSURLConnectionDataDelegate>{
     id <NSObject /*, Soap_LottoDateDelegate */> delegate;
     
     // parse xml
@@ -24,7 +24,7 @@
 @property (nonatomic, copy) void (^completionHandler)(NSString *);
 @property (nonatomic, copy) void (^errorHandler)(NSString *);
 
--(void)start :(NSString *)group_id :(NSString *)name : (UIImage *)image;
+-(void)start :(NSString *)group_id : (UIImage *)image;
 -(void)cancel;
 
 @end

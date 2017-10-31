@@ -110,8 +110,10 @@
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
                 
                 self.popoverController = [[UIPopoverController alloc] initWithContentViewController:self.imagePicker.imagePickerController];
-                [self.popoverController presentPopoverFromRect:self.view.frame inView:self.view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-                
+                [self.popoverController presentPopoverFromRect:CGRectMake(100, 500, 10, 10)
+                                    inView:self.view
+                  permittedArrowDirections:UIPopoverArrowDirectionAny
+                                  animated:YES];
             } else {
                 [self presentModalViewController:self.imagePicker.imagePickerController animated:YES];
             }
@@ -141,6 +143,8 @@
             [imageV clear];
             [imageV showLoadingWheel];
             [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
+            
+            [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [Configs sharedInstance].API_URL,jsonDict[@"url"]]]];
             [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
             
             [self updateURI:jsonDict[@"url"]];
@@ -155,7 +159,9 @@
     
     
     if (UIUserInterfaceIdiomPad == UI_USER_INTERFACE_IDIOM()) {
-        [self.popoverController dismissPopoverAnimated:YES];
+        // [self.popoverController dismissPopoverAnimated:YES];
+
+        [self.popoverController dismissPopoverAnimated:NO];
     } else {
         [self.imagePicker.imagePickerController dismissViewControllerAnimated:YES completion:nil];
     }
@@ -165,14 +171,14 @@
 # pragma mark UIImagePickerDelegate Methods
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo{
-//    img = image;
-//
-//    if (UIUserInterfaceIdiomPad == UI_USER_INTERFACE_IDIOM()) {
-//        [self.popoverController dismissPopoverAnimated:YES];
-//    } else {
-//        [picker dismissViewControllerAnimated:YES completion:nil];
-//    }
-//    [self reloadData:nil];
+    // img = image;
+
+    if (UIUserInterfaceIdiomPad == UI_USER_INTERFACE_IDIOM()) {
+        [self.popoverController dismissPopoverAnimated:YES];
+    } else {
+        [picker dismissViewControllerAnimated:YES completion:nil];
+    }
+    // [self reloadData:nil];
     
     NSLog(@"");
 }
@@ -213,7 +219,7 @@
 
 - (IBAction)onSave:(id)sender {
     // UpdateMyProfileThread
-    
+    /*
     [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
     UpdateMyProfileThread *uMPThread = [[UpdateMyProfileThread alloc] init];
     [uMPThread setCompletionHandler:^(NSString *data) {
@@ -234,12 +240,67 @@
             [[Configs sharedInstance] saveData:_DATA :newDict];
         }
         [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+        
+        [self.navigationController popViewControllerAnimated:NO];
     }];
     
     [uMPThread setErrorHandler:^(NSString *error) {
         [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
     }];
     [uMPThread start:txtFName.text :txtFStatus.text];
+    */
+    
+    /*
+    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
+    __block NSString *child = [NSString stringWithFormat:@"toonchat/%@/profiles/", [[Configs sharedInstance] getUIDU]];
+    
+    [[ref child:child] observeSingleEventOfType:FIRDataEventTypeValue withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+        
+        NSMutableDictionary *values = snapshot.value;
+        
+        NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+        [newDict addEntriesFromDictionary:values];
+        [newDict removeObjectForKey:@"name"];
+        [newDict removeObjectForKey:@"status_message"];
+        
+        [newDict setValue:txtFName.text forKey:@"name"];
+        [newDict setValue:txtFStatus.text forKey:@"status_message"];
+        
+        NSDictionary *childUpdates = @{[NSString stringWithFormat:@"%@/", child]: newDict};
+        
+        [ref updateChildValues:childUpdates withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+            if (error == nil) {
+                [[Configs sharedInstance] SVProgressHUD_Dismiss];
+                
+                [self.navigationController popViewControllerAnimated:NO];
+            }else{
+            }
+        }];
+    }];
+    */
+    
+    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
+    
+    NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
+    NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+    [newDict addEntriesFromDictionary:profiles];
+    [newDict removeObjectForKey:@"name"];
+    [newDict removeObjectForKey:@"status_message"];
+    
+    [newDict setValue:txtFName.text forKey:@"name"];
+    [newDict setValue:txtFStatus.text forKey:@"status_message"];
+    
+    NSString *child = [NSString stringWithFormat:@"toonchat/%@/profiles/", [[Configs sharedInstance] getUIDU]];
+    NSDictionary *childUpdates = @{[NSString stringWithFormat:@"%@/", child]: newDict};
+    
+    [ref updateChildValues:childUpdates withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+        if (error == nil) {
+            [[Configs sharedInstance] SVProgressHUD_Dismiss];
+            
+            [self.navigationController popViewControllerAnimated:NO];
+        }else{
+        }
+    }];
 }
 
 -(void)updateURI:(NSString *)uri{
@@ -248,7 +309,9 @@
     [profiles setValue:uri forKey:@"image_url"];
     
     NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+    // เราต้อง addEntriesFromDictionary ก่อน ถึงจะสามารถลบได้ แ้วค่อย update ข้อมูล
     [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+    //  ลบข้อมูล key profiles ออกไป
     [newDict removeObjectForKey:@"profiles"];
     
     [newDict setObject:profiles forKey:@"profiles"];

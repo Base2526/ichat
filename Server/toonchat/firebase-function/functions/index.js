@@ -28,6 +28,10 @@ var path_message = 'toonchat_message';
 
 var API_URL 	= 'http://128.199.247.179';
 var END_POINT 	= '/api';
+
+var UPDATE_MY_PROFILE = '/update_my_profile';
+
+
 var DELETE_GROUP_CHAT = "/delete_group_chat";
 var GROUP_DELETE_MEMBERS = "/group_delete_members"; 
 
@@ -115,6 +119,30 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 	switch(event.params.type) {
 		case 'profiles':{
 			console.log('#1 : profiles');
+			// console.log(event.params.key);
+			// console.log(event.data.current.val());
+			// console.log(event.data);
+			// console.log('#2 : profiles');
+			/*
+			กรณีแก้ใขข้อมูลจาก firebase โดยตรงจึงเป้นต้องวิ่งไป update ข้อมูลที่ drupal ด้วย
+			*/
+			switch(event.params.key){
+				case 'name':{
+					// uid
+					request.post({url:API_URL + END_POINT + UPDATE_MY_PROFILE, form: {uid:event.params.uid, name:event.data.current.val()}}, function(err,httpResponse,body){ 
+						/* ... */ 
+						console.log(body);
+					});
+				}
+				break;
+				case 'status_message':{
+					request.post({url:API_URL + END_POINT + UPDATE_MY_PROFILE, form: {uid:event.params.uid, status_message:event.data.current.val()}}, function(err,httpResponse,body){ 
+						/* ... */ 
+						console.log(body);
+					});
+				}
+				break;
+			}
 		}
 		break;
 
@@ -124,7 +152,18 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 		break;
 
 		case 'groups':{
-			// console.log('#3 : groups');
+			console.log('#3 : groups');
+
+			if (crnt.val() && !prev.val()) {
+		        // value created
+		        console.log('Created: groups');
+		    } else if (!crnt.val() && prev.val()) {
+		        // value removed
+		        // console.log('Removed: send push notification');
+		    } else {
+		        // value edit & updated
+		        console.log('Updated: groups');
+		    }
 
 			event.data.forEach(function(childSnapshot) {
 		      // key will be "ada" the first time and "alan" the second time

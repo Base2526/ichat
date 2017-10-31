@@ -54,7 +54,7 @@
 @property(nonatomic)NSString* MUTI_CHAT_INVITE_NEW_MEMBERS;
 
 // update_picture_group
-@property(nonatomic)NSString* UPDATE_PROFLIE_GROUP;
+@property(nonatomic)NSString* UPDATE_PICTURE_GROUP;
 
 @property(nonatomic)NSString* EDIT_PHONE;
 @property(nonatomic)NSString* EDIT_MULTI_PHONE;

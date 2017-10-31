@@ -9,7 +9,7 @@
 #import "ManageGroup.h"
 #import "Configs.h"
 #import "AppDelegate.h"
-#import "UpdateProfileGroupThread.h"
+#import "UpdatePictureGroupThread.h"
 #import "GroupMembers.h"
 #import "GroupInvite.h"
 #import "UserDataUIAlertView.h"
@@ -43,7 +43,6 @@
     }else{
         [imageV clear];
     }
-    
     self.txtGroupName.text = [self.group objectForKey:@"name"];
 }
 
@@ -118,6 +117,9 @@
 # pragma mark -
 # pragma mark GKImagePicker Delegate Methods
 
+/*
+ กรณีเลือกรูปจาก gallery ในเครื่อง
+ */
 - (void)imagePicker:(GKImagePicker *)imagePicker pickedImage:(UIImage *)image{
     
 //    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
@@ -145,7 +147,9 @@
 //    }];
 //    [uThread start:[self.group objectForKey:@"group_id"] :image];
     
-    [self.imageV setImage:image];
+    // [self.imageV setImage:image];
+    
+    [self UpdatePicture:image];
     
     if (UIUserInterfaceIdiomPad == UI_USER_INTERFACE_IDIOM()) {
         [self.popoverController dismissPopoverAnimated:YES];
@@ -158,62 +162,60 @@
 # pragma mark UIImagePickerDelegate Methods
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo{
-    //    img = image;
-    //
-    //    if (UIUserInterfaceIdiomPad == UI_USER_INTERFACE_IDIOM()) {
-    //        [self.popoverController dismissPopoverAnimated:YES];
-    //    } else {
-    //        [picker dismissViewControllerAnimated:YES completion:nil];
-    //    }
-    //    [self reloadData:nil];
-    
     NSLog(@"");
 }
 
+/*
+ กรณีถ่ายรูปจาก camera
+ */
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
-    UIImage *chosenImage = info[UIImagePickerControllerEditedImage];
+    UIImage *image = info[UIImagePickerControllerEditedImage];
+    [self UpdatePicture:image];
     
-    [self.imageV setImage:chosenImage];
-    
-   
-    
-    //
-    //    img = chosenImage;
-    //    // [self hideImagePicker];
-    //
-    //    [self reloadData:nil];
     [picker dismissViewControllerAnimated:YES completion:NULL];
 }
 
 - (IBAction)onSave:(id)sender {
-    // UpdateMyProfileThread
 
     [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
-    UpdateProfileGroupThread *uThread = [[UpdateProfileGroupThread alloc] init];
-    [uThread setCompletionHandler:^(NSString *data) {
-        
-        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
-        
-        [[Configs sharedInstance] SVProgressHUD_Dismiss];
-        
-        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
-            
-            //            [imageV clear];
-            //            [imageV showLoadingWheel];
-            //            [imageV setUrl:[NSURL URLWithString:jsonDict[@"url"]]];
-            //            [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV ];
-            //
-            //            [self updateURI:jsonDict[@"url"]];
-            
-            [self.navigationController popViewControllerAnimated:YES];
-        }
-        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
-    }];
     
-    [uThread setErrorHandler:^(NSString *error) {
-        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
+    /*
+     Update name ของ group
+     */
+    NSMutableDictionary *tgroup = [[NSMutableDictionary alloc] init];
+    [tgroup addEntriesFromDictionary:self.group];
+    [tgroup removeObjectForKey:@"name"];
+    [tgroup setObject:self.txtGroupName.text forKey:@"name"];
+    
+    /*
+     Update group ของ groups
+     */
+    NSMutableDictionary *newGroups = [[NSMutableDictionary alloc] init];
+    [newGroups addEntriesFromDictionary:[[[Configs sharedInstance] loadData:_DATA] objectForKey:@"groups"]];
+    [newGroups removeObjectForKey:[tgroup objectForKey:@"group_id"]];
+    [newGroups setValue:tgroup forKey:[tgroup objectForKey:@"group_id"]];
+    
+    /*
+     Update groups ของ DATA
+     */
+    NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+    [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+    [newDict removeObjectForKey:@"groups"];
+    [newDict setObject:newGroups forKey:@"groups"];
+    
+    [[Configs sharedInstance] saveData:_DATA :newDict];
+    
+    NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [tgroup objectForKey:@"group_id"]];
+    NSDictionary *childUpdates = @{[NSString stringWithFormat:@"%@", child]: tgroup};
+    
+    [ref updateChildValues:childUpdates withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
+        if (error == nil) {
+            [[Configs sharedInstance] SVProgressHUD_Dismiss];
+            
+            [self.navigationController popViewControllerAnimated:NO];
+        }else{
+        }
     }];
-    [uThread start:[self.group objectForKey:@"group_id"] :self.txtGroupName.text : [imageV image]];
 }
 
 - (IBAction)onManageMembers:(id)sender {
@@ -285,18 +287,54 @@
     }
 }
 
--(void)updateURI:(NSString *)uri{
+-(void)UpdatePicture:(UIImage *)image{
     
-    NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
-    [profiles setValue:uri forKey:@"image_url"];
+    [[Configs sharedInstance] SVProgressHUD_ShowWithStatus:@"Update"];
+    UpdatePictureGroupThread *uThread = [[UpdatePictureGroupThread alloc] init];
+    [uThread setCompletionHandler:^(NSString *data) {
+        
+        NSDictionary *jsonDict= [NSJSONSerialization JSONObjectWithData:data  options:kNilOptions error:nil];
+        
+        [[Configs sharedInstance] SVProgressHUD_Dismiss];
+        
+        if ([jsonDict[@"result"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
+            
+            /*
+             Update image_url ของ group
+             */
+            NSMutableDictionary *tgroup = [[NSMutableDictionary alloc] init];
+            [tgroup addEntriesFromDictionary:self.group];
+            [tgroup removeObjectForKey:@"image_url"];
+            [tgroup setObject:jsonDict[@"image_url"] forKey:@"image_url"];
+            
+            /*
+             Update group ของ groups
+             */
+            NSMutableDictionary *groups = [[NSMutableDictionary alloc] init];
+            [groups addEntriesFromDictionary:[[[Configs sharedInstance] loadData:_DATA] valueForKey:@"groups"]];
+            [groups removeObjectForKey:[tgroup objectForKey:@"group_id"]];
+            [groups setObject:tgroup forKey:[tgroup objectForKey:@"group_id"]];
+            
+            /*
+             Update groups ของ DATA
+             */
+            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+            [newDict removeObjectForKey:@"groups"];
+            [newDict setObject:groups forKey:@"groups"];
+            
+            [[Configs sharedInstance] saveData:_DATA :newDict];
+            
+            //  Update UIImageView
+            [imageV setImage:image];
+        }
+        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+    }];
     
-    NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
-    [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
-    [newDict removeObjectForKey:@"profiles"];
-    
-    [newDict setObject:profiles forKey:@"profiles"];
-    
-    [[Configs sharedInstance] saveData:_DATA :newDict];
+    [uThread setErrorHandler:^(NSString *error) {
+        [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
+    }];
+    [uThread start:[self.group objectForKey:@"group_id"] : image];
 }
 
 @end

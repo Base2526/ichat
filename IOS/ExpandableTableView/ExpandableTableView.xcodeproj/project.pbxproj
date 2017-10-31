@@ -32,10 +32,10 @@
 		F13D8EC51CDB631E00CB287F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F13D8EC81CDB631E00CB287F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F13D8ECA1CDB631E00CB287F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		F13D8ED01CDB70F200CB287F /* ViewControllerCellHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewControllerCellHeader.h; sourceTree = "<group>"; };
-		F13D8ED11CDB70F200CB287F /* ViewControllerCellHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewControllerCellHeader.m; sourceTree = "<group>"; };
-		F13D8ED31CDB755C00CB287F /* ViewControllerCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewControllerCell.h; sourceTree = "<group>"; };
-		F13D8ED41CDB755C00CB287F /* ViewControllerCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewControllerCell.m; sourceTree = "<group>"; };
+		F13D8ED01CDB70F200CB287F /* ViewControllerCellHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewControllerCellHeader.h; path = ../../iChat/iChat/ViewControllerCellHeader.h; sourceTree = "<group>"; };
+		F13D8ED11CDB70F200CB287F /* ViewControllerCellHeader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewControllerCellHeader.m; path = ../../iChat/iChat/ViewControllerCellHeader.m; sourceTree = "<group>"; };
+		F13D8ED31CDB755C00CB287F /* ViewControllerCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ViewControllerCell.h; path = ../../iChat/iChat/ViewControllerCell.h; sourceTree = "<group>"; };
+		F13D8ED41CDB755C00CB287F /* ViewControllerCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ViewControllerCell.m; path = ../../iChat/iChat/ViewControllerCell.m; sourceTree = "<group>"; };
 		F1C6A42C1ED8431400B0EDED /* collapsed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = collapsed.png; sourceTree = "<group>"; };
 		F1C6A42D1ED8431400B0EDED /* expanded.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = expanded.png; sourceTree = "<group>"; };
 		F1C6A4301ED8499400B0EDED /* Preview_multipleExpanded.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Preview_multipleExpanded.png; sourceTree = "<group>"; };
