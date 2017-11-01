@@ -327,8 +327,12 @@
             
             //  Update UIImageView
             [imageV setImage:image];
+            
+            [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+        }else{
+            [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update Erorr."];
         }
-        [[Configs sharedInstance] SVProgressHUD_ShowSuccessWithStatus:@"Update success."];
+        
     }];
     
     [uThread setErrorHandler:^(NSString *error) {

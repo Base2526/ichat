@@ -890,6 +890,7 @@ function create_group_chat(){
 function update_picture_group(){ // UPDATE_PICTURE_GROUP
   $result = array();
 
+
   if (empty($_REQUEST['uid']) || empty($_REQUEST['group_id']) || empty($_REQUEST['image'])) {
     $result['result'] = FALSE;
     return $result;
@@ -919,26 +920,32 @@ function update_picture_group(){ // UPDATE_PICTURE_GROUP
 
 
     $data = field_collection_item_load($_REQUEST['group_id']);
-    $wrapper = entity_metadata_wrapper('field_collection_item', $data);
-      
-    // $wrapper->field_name_group->set($_REQUEST['name']);
-    $wrapper->field_picture_group->set((array)$file);
-    $wrapper->save();
 
-    // // url image profile 
-    // $url = substr(file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']), strlen($GLOBALS['base_url']));
+    if ($data) {
+      $wrapper = entity_metadata_wrapper('field_collection_item', $data);
+        
+      // $wrapper->field_name_group->set($_REQUEST['name']);
+      $wrapper->field_picture_group->set((array)$file);
+      $wrapper->save();
 
-    $image_url = substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url']));
+      // // url image profile 
+      // $url = substr(file_create_url($profile->field_profile_image[LANGUAGE_NONE][0]['uri']), strlen($GLOBALS['base_url']));
 
-   
-    $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
-    $f_value = array(
-      "update"   => time(),
-      "image_url"=> $image_url
-    );
+      $image_url = substr(file_create_url($image_url['uri']), strlen($GLOBALS['base_url']));
 
-    $firebase->update(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $_REQUEST['group_id'] .'/' , $f_value);
-    
+     
+      $firebase = new \Firebase\FirebaseLib(FIREBASE_DEFAULT_URL);
+      $f_value = array(
+        "update"   => time(),
+        "image_url"=> $image_url
+      );
+
+      $firebase->update(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_GROUPS . '/' . $_REQUEST['group_id'] .'/' , $f_value);
+    }else{
+      $result['result'] = FALSE;
+      $result['message'] = 'Empty : field_collection_item_load = false';
+      return $result;
+    }
   }
 
 

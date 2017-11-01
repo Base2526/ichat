@@ -203,7 +203,6 @@
  -invite_multi_chat  : กรณีมี เพื่อนเชิญเราเข้าสนทนา
  
  -recents            :  เก็บข้อมูลล่าสุดที่เราคุย กับเพือน กลุ่ม หรือ multi chat
- 
  */
 -(void)reloadData:(NSNotification *) notification{
     
@@ -256,7 +255,9 @@
     NSMutableDictionary *groups = [[NSMutableDictionary alloc] init];
     [all_data setValue:groups forKey:@"groups"];
     if ([data objectForKey:@"groups"]) {
-        [all_data setValue:[data objectForKey:@"groups"] forKey:@"groups"];
+        groups = [data objectForKey:@"groups"];
+
+        [all_data setValue: groups forKey:@"groups"];
     }
     
     // #4 groups
@@ -428,62 +429,75 @@
         switch (indexPath.section) {
             case 1:{
                 // @"Groups";
-                // GroupTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"GroupTableViewCell"];
-                
+                GroupTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"GroupTableViewCell"];
+                cell = [tableView dequeueReusableCellWithIdentifier:@"GroupTableViewCell"];
                 
                 NSMutableDictionary *groups = [all_data objectForKey:@"groups"];
                 
-                NSArray *keys = [groups allKeys];
-                id key = [keys objectAtIndex:indexPath.row];
-                id item = [groups objectForKey:key];
+                ////---sort เราต้องการเรียงก่อนแสดงผล
+                NSArray *myKeys = [groups allKeys];
+                NSArray *sortedKeys = [myKeys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                    return [(NSString *)obj1 compare:(NSString *)obj2 options:NSNumericSearch];
+                }];
                 
+                NSMutableArray *sortedValues = [[NSMutableArray alloc] init] ;
+                for(id key in sortedKeys) {
+                    id object = [groups objectForKey:key];
+                    [sortedValues addObject:object];
+                }
+                NSDictionary *item = [sortedValues objectAtIndex:indexPath.row];
+                ////---sort
                 
-                // imgPerson
+                // NSArray *keys = [groups allKeys];
+                // id key = [keys objectAtIndex:indexPath.row];
+                // id item = [groups objectForKey:key];
                 
-                // NSMutableDictionary *profiles = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"profiles"];
                 if ([item objectForKey:@"image_url"]) {
-                    [cell.imgPerson clear];
-                    [cell.imgPerson showLoadingWheel]; // API_URL
-                    [cell.imgPerson setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
-                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imgPerson ];
+                    [cell.imageV clear];
+                    [cell.imageV showLoadingWheel]; // API_URL
+                    [cell.imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [item objectForKey:@"image_url"]]]];
+                    [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:cell.imageV ];
                 }else{
-                    [cell.imgPerson clear];
+                    [cell.imageV clear];
                 }
                 
-                
-                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], key] ;
+                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [item objectForKey:@"name"], [sortedKeys objectAtIndex:indexPath.row] ] ;
                 // cell.lblMember.text = [NSString stringWithFormat:@"%@", [(NSDictionary *)[item objectForKey:@"members"] count] ] ;
                 NSDictionary * member= [item objectForKey:@"members"];
+                cell.lblMember.text = [NSString stringWithFormat:@"%d people", [member count]];
                 
-                cell.lblChangeFriendsName.text = [NSString stringWithFormat:@"%d people", [member count] ] ;
-                cell.lblType.text = @"";
-                cell.lblIsFavorites.text = @"";
-                cell.lblIsHide.text = @"";
-                cell.lblIsBlock.text = @"";
-                cell.lblOnline.text = @"";
-                
-                // UserDataUILongPressGestureRecognizer
                 UserDataUILongPressGestureRecognizer *lpgr = [[UserDataUILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-                // NSLog(@"not access tag >%d", [(UIGestureRecognizer *)gestureRecognizer view].tag);
-                
                 lpgr.userData = indexPath;
-                // lpgr.minimumPressDuration = 1.0; //seconds
                 [cell addGestureRecognizer:lpgr];
                 
-                // return cell;
-                break;
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                return cell;
             }
             case 2:{
                 // @"Favorite"
                 NSMutableDictionary *favorite = [all_data objectForKey:@"favorite"];
                 
-                // NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[item objectForKey:@"friend_id"]];
+                ////---sort เราต้องการเรียงก่อนแสดงผล
+                NSArray *myKeys = [favorite allKeys];
+                NSArray *sortedKeys = [myKeys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                    return [(NSString *)obj1 compare:(NSString *)obj2 options:NSNumericSearch];
+                }];
+                
+                NSMutableArray *sortedValues = [[NSMutableArray alloc] init] ;
+                for(id key in sortedKeys) {
+                    id object = [favorite objectForKey:key];
+                    [sortedValues addObject:object];
+                }
+                NSDictionary *item = [sortedValues objectAtIndex:indexPath.row];
+                ////---sort
+                
+                /*
                 NSArray *keys = [favorite allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 id item = [favorite objectForKey:key];
+                 */
                 
-                
-                NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:key];
+                NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[sortedKeys objectAtIndex:indexPath.row]];
                 
                 if ([f objectForKey:@"image_url"]) {
                     [cell.imgPerson clear];
@@ -494,7 +508,7 @@
                     [cell.imgPerson clear];
                 }
                 
-                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], key] ;
+                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], [sortedKeys objectAtIndex:indexPath.row]] ;
                 
                 cell.lblChangeFriendsName.text = @"";
                 if ([item objectForKey:@"change_friends_name"]) {
@@ -549,11 +563,27 @@
                 // @"Friends";
                 NSMutableDictionary *friends = [all_data objectForKey:@"friends"];
                 
+                /*
                 NSArray *keys = [friends allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 id item = [friends objectForKey:key];
+                */
                 
-                NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:key];
+                ////---sort เราต้องการเรียงก่อนแสดงผล
+                NSArray *myKeys = [friends allKeys];
+                NSArray *sortedKeys = [myKeys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                    return [(NSString *)obj1 compare:(NSString *)obj2 options:NSNumericSearch];
+                }];
+                
+                NSMutableArray *sortedValues = [[NSMutableArray alloc] init] ;
+                for(id key in sortedKeys) {
+                    id object = [friends objectForKey:key];
+                    [sortedValues addObject:object];
+                }
+                NSDictionary *item = [sortedValues objectAtIndex:indexPath.row];
+                ////---sort
+                
+                NSMutableDictionary *f = [[(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] objectForKey:[sortedKeys objectAtIndex:indexPath.row]];
                 
                 if ([f objectForKey:@"image_url"]) {
                     [cell.imgPerson clear];
@@ -564,7 +594,7 @@
                     [cell.imgPerson clear];
                 }
                 
-                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], key] ;
+                cell.lblName.text = [NSString stringWithFormat:@"%@-%@", [f objectForKey:@"name"], [sortedKeys objectAtIndex:indexPath.row]] ;
                 
                 cell.lblChangeFriendsName.text = @"";
                 if ([item objectForKey:@"change_friends_name"]) {
@@ -782,6 +812,7 @@
     
     switch (indexPath.section) {
         case 0:
+        case 1:
             return 100.0f;
         default:
             return 180.0f;
@@ -1285,12 +1316,28 @@
                 
             case 1:{
                 
-                NSMutableDictionary *group = [all_data valueForKey:@"groups"];
+                NSMutableDictionary *groups = [all_data valueForKey:@"groups"];
                 
+                /*
                 NSArray *keys = [group allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 NSMutableDictionary*  item = [group objectForKey:key];
                 [item setValue:key forKey:@"group_id"];
+                */
+                ////---sort เราต้องการเรียงก่อนแสดงผล
+                NSArray *myKeys = [groups allKeys];
+                NSArray *sortedKeys = [myKeys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                    return [(NSString *)obj1 compare:(NSString *)obj2 options:NSNumericSearch];
+                }];
+                
+                NSMutableArray *sortedValues = [[NSMutableArray alloc] init] ;
+                for(id key in sortedKeys) {
+                    id object = [groups objectForKey:key];
+                    [sortedValues addObject:object];
+                }
+                NSMutableDictionary *item = [sortedValues objectAtIndex:indexPath.row];
+                [item setValue:[sortedKeys objectAtIndex:indexPath.row] forKey:@"group_id"];
+                ////---sort
                 
                 UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
                 ManageGroup *manageGroup = [storybrd instantiateViewControllerWithIdentifier:@"ManageGroup"];
@@ -1301,12 +1348,29 @@
                 break;
             case 2:{
                 
-                NSMutableDictionary *friends = [all_data valueForKey:@"groups"];
+                NSMutableDictionary *groups = [all_data valueForKey:@"groups"];
                 
+                /*
                 NSArray *keys = [friends allKeys];
                 id key = [keys objectAtIndex:indexPath.row];
                 NSMutableDictionary*  item = [friends objectForKey:key];
                 [item setValue:key forKey:@"group_id"];
+                */
+                
+                ////---sort เราต้องการเรียงก่อนแสดงผล
+                NSArray *myKeys = [groups allKeys];
+                NSArray *sortedKeys = [myKeys sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                    return [(NSString *)obj1 compare:(NSString *)obj2 options:NSNumericSearch];
+                }];
+                
+                NSMutableArray *sortedValues = [[NSMutableArray alloc] init] ;
+                for(id key in sortedKeys) {
+                    id object = [groups objectForKey:key];
+                    [sortedValues addObject:object];
+                }
+                NSMutableDictionary *item = [sortedValues objectAtIndex:indexPath.row];
+                [item setValue:[sortedKeys objectAtIndex:indexPath.row] forKey:@"group_id"];
+                ////---sort
                 
                 UserDataUIAlertView *alert = [[UserDataUIAlertView alloc] initWithTitle:@"Delete group"
                                                                                 message:@"Are you sure delete group?"
@@ -1321,6 +1385,7 @@
                 break;
         }
     }else if(alertView.tag == 3){
+        // Delete Group
         NSMutableDictionary *item = alertView.userData;
         switch (buttonIndex) {
             case 0:{
@@ -1329,6 +1394,8 @@
             }
                 break;
             case 1:{
+                
+                NSMutableDictionary *__groups = [[[Configs sharedInstance] loadData:_DATA] valueForKey:@"groups"];
                 NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [item objectForKey:@"group_id"]];
                 [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
                     
@@ -1339,7 +1406,29 @@
                         // จะได้ Group id
                         NSString* key = [ref key];
                         
-                        NSLog(@"");
+                        NSMutableDictionary *groups = [[[Configs sharedInstance] loadData:_DATA] valueForKey:@"groups"];
+                        
+                        /*
+                         เช็ดก่อนว่ามี group_id นี้หรือเปล่าเพราะบางที่อาจโดนลบไปแล้ว ก็ได้จาก main control (firebase อาจ return มาเร็วมาก)
+                         */
+                        if ([groups objectForKey:key]) {
+                            /*
+                             Update group ของ groups
+                             */
+                            NSMutableDictionary *newGroups = [[NSMutableDictionary alloc] init];
+                            [newGroups addEntriesFromDictionary:groups];
+                            [newGroups removeObjectForKey:key];
+                            
+                            /*
+                             Update groups ของ DATA
+                             */
+                            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+                            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+                            [newDict removeObjectForKey:@"groups"];
+                            [newDict setObject:groups forKey:@"groups"];
+                            
+                            [[Configs sharedInstance] saveData:_DATA :newDict];
+                        }
                     }
                 }];
             }
