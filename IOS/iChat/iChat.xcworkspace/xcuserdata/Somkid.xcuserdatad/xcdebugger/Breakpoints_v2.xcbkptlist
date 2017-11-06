@@ -9,13 +9,13 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "iChat/ContactsViewController.m"
-            timestampString = "531192187.722826"
+            filePath = "iChat/AppDelegate.m"
+            timestampString = "531624187.519938"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1381"
-            endingLineNumber = "1381"
-            landmarkName = "-alertView:clickedButtonAtIndex:"
+            startingLineNumber = "432"
+            endingLineNumber = "432"
+            landmarkName = "-observeEventType"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

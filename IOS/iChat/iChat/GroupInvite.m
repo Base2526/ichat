@@ -12,7 +12,9 @@
 #import "HJManagedImageV.h"
 #import "GroupInviteNewMembersThread.h"
 
-@interface GroupInvite ()
+@interface GroupInvite (){
+    NSMutableDictionary *group;
+}
 
 @property(nonatomic, strong)NSMutableDictionary *friends;
 
@@ -32,12 +34,22 @@
 
     friends = [[[[Configs sharedInstance] loadData:_DATA] objectForKey:@"friends"] mutableCopy];
     
-    NSDictionary * members = [self.group objectForKey:@"members"];
+    barBtnInvite.enabled = NO;
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    // group_id
+    NSMutableDictionary *groups = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"groups"];
+    
+    group = [groups objectForKey:self.group_id];
+    
+    NSDictionary * members = [group objectForKey:@"members"];
     for (NSString *item_id in members) {
         NSDictionary *val = [members objectForKey:item_id];
         [friends removeObjectForKey:[val objectForKey:@"friend_id"]];
     }
-    barBtnInvite.enabled = NO;
+    
+    NSLog(@"");
 }
 
 - (void)didReceiveMemoryWarning {
@@ -111,9 +123,7 @@
 
 - (void) tableView:(UITableView *)tableView didSelectRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
     if (selectedIndex[indexPath] == nil) {
-        // NSMutableDictionary *friends = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"friends"];
         NSArray *keys = [friends allKeys];
-        
         [selectedIndex setObject:[keys objectAtIndex:indexPath.row] forKey:indexPath];
         [[tableView cellForRowAtIndexPath:indexPath] setAccessoryType:UITableViewCellAccessoryCheckmark];
     }else{
@@ -155,6 +165,6 @@
     [groupINMT setErrorHandler:^(NSString *error) {
         [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
     }];
-    [groupINMT start:[self.group objectForKey:@"group_id"] : members];
+    [groupINMT start:self.group_id : members];
 }
 @end

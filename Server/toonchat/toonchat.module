@@ -557,6 +557,27 @@ function toonchat_services_resources()
       ),
     ),
 
+    'delete_friend_from_user'=>array(
+      'create' =>array(
+        'help'=>'Services ลบเพื่อน : param uid, friend_id',
+        'callback'=>'delete_friend_from_user',
+        'access callback' => 'user_access',
+        'access arguments' => array('access content'),
+        'access arguments append' => FALSE,
+        /* กรณีที่เราต้องการ pass parameter */
+        'args' => array(
+          array(
+           'name' => 'parameters',
+           'type' => 'array',
+           'description' => '',
+           'source' => 'param',
+           'optional' => TRUE,
+           'default value' => array(),
+          ),
+        ),
+      ),
+    ),
+
     'multi_chat_delete_members'=>array(
       'create' =>array(
         'help'=>'Services ลบสมาชิก Multi Chat : param uid, member_id',
@@ -948,13 +969,11 @@ function update_picture_group(){ // UPDATE_PICTURE_GROUP
     }
   }
 
-
   $result['result'] = TRUE;  
   $result['_REQUEST'] = $_REQUEST;
   $result['image_url'] = $image_url;
 
   return $result;
-
 }
 
 /*
@@ -1069,14 +1088,13 @@ function group_invite_new_members(){
 
   $result['result'] = TRUE;
   $result['data']   = $_REQUEST; 
-  $result['members']= $members;
 
   return  $result;
 }
 
 /*
-        'help'=>'Services การลบ member ใน Group : param uid, group_id, member_id',
-        'callback'=>'group_delete_members',
+  'help'=>'Services การลบ member ใน Group : param uid, group_id, member_id',
+  'callback'=>'group_delete_members',
 */
 function group_delete_members(){
   $result = array();
@@ -1096,14 +1114,12 @@ function group_delete_members(){
     $result['gettype'] = gettype($_REQUEST['text_array']);
   }
 
-
   entity_delete_multiple('field_collection_item', array($_REQUEST['member_id']));
 
   $result['result'] = TRUE;
   $result['data']   = $_REQUEST; 
 
   return  $result;
-
 }
 
 function create_muti_chat(){
@@ -1180,7 +1196,6 @@ function create_muti_chat(){
 
   $firebase->set(FIREBASE_LOGIN_PATH . $_REQUEST['uid'] . '/' . PATH_MULTI_CHAT . '/' . $field_entity->item_id  . '/' , $fvalue);
 
-
   $result['result'] = TRUE;
   // $result['data']   = $_REQUEST; 
   return  $result;
@@ -1238,9 +1253,32 @@ function muti_chat_invite_new_members(){
 }
 
 /*
-    'multi_chat_delete_members'=>array(
-      'create' =>array(
-        'help'=>'Services ลบสมาชิก Multi Chat : param uid, member_id',
+  เป็นการที่ user ลบเพือน
+  1. uid       = user id
+  2. friend_id = id ของเพือนที่เราต้องลบ
+*/
+function delete_friend_from_user(){
+  $result = array();
+
+  if (empty($_REQUEST['uid']) || empty($_REQUEST['friend_id'])) {
+    $result['result'] = FALSE;
+    $result['data']   = $_REQUEST; 
+    $result['message']    = "uid | friend_id.";
+    return $result;
+  }
+
+  entity_delete_multiple('field_collection_item', array($_REQUEST['friend_id']));
+
+  $result['result'] = TRUE;
+  $result['data']   = $_REQUEST; 
+
+  return  $result;
+}
+
+/*
+  'multi_chat_delete_members'=>array(
+    'create' =>array(
+      'help'=>'Services ลบสมาชิก Multi Chat : param uid, member_id',
 */
 function multi_chat_delete_members(){
   $result = array();
@@ -1260,14 +1298,12 @@ function multi_chat_delete_members(){
     $result['gettype'] = gettype($_REQUEST['text_array']);
   }
 
-
   entity_delete_multiple('field_collection_item', array($_REQUEST['member_id']));
 
   $result['result'] = TRUE;
   $result['data']   = $_REQUEST; 
 
   return  $result;
-
 }
 
 function delete_multi_chat(){
@@ -1288,6 +1324,5 @@ function delete_multi_chat(){
   if(!empty($_REQUEST['text_array'])){
     $result['gettype'] = gettype($_REQUEST['text_array']);
   }
-
   return  $result;
 }

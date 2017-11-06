@@ -106,10 +106,10 @@
 {
     if ([segue.identifier isEqualToString:@"GroupMembers"]) {
         GroupMembers *members = (GroupMembers*)segue.destinationViewController;
-        members.group = self.group;
+        members.group_id = [self.group objectForKey:@"group_id"];
     }else if([segue.identifier isEqualToString:@"GroupInvite"]){
         GroupInvite *invite = (GroupInvite*)segue.destinationViewController;
-        invite.group = self.group;
+        invite.group_id = [self.group objectForKey:@"group_id"];
     }
 }
 

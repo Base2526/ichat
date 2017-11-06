@@ -11,8 +11,8 @@
 #import "HJManagedImageV.h"
 #import "GroupInvite.h"
 
-@interface GroupMembers ()
-{
+@interface GroupMembers (){
+    NSMutableDictionary *group;
     NSMutableDictionary *members;
     NSMutableDictionary *friendsProfile;
 }
@@ -27,8 +27,22 @@
     // Do any additional setup after loading the view.
     
     ref = [[FIRDatabase database] reference];
-    members = [self.group objectForKey:@"members"];
+    
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    NSLog(@"");
+    
+    NSMutableDictionary *groups = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"groups"];
+    
+    group = [groups objectForKey:self.group_id];
+    
+    members = [group objectForKey:@"members"];
     friendsProfile = [(AppDelegate *)[[UIApplication sharedApplication] delegate] friendsProfile] ;
+    
+    self.title = [NSString stringWithFormat:@"Group Members(%d)", [members count]];
+    
+    [self.tableView reloadData];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -49,7 +63,7 @@
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender{
     if([segue.identifier isEqualToString:@"GroupInvite"]){
         GroupInvite *groupInvite = (GroupInvite*)segue.destinationViewController;
-        groupInvite.group = self.group;
+        groupInvite.group_id = self.group_id;
     }
 }
 
@@ -104,7 +118,7 @@
         id key = [keys objectAtIndex:indexPath.row];
         
         
-        NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/members/%@", [[Configs sharedInstance] getUIDU], [self.group objectForKey:@"group_id"], key];
+        NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/members/%@", [[Configs sharedInstance] getUIDU], [group objectForKey:@"group_id"], key];
         [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
 
             if (error == nil) {

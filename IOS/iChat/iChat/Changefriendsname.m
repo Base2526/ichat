@@ -56,16 +56,30 @@
 */
 
 - (IBAction)onSave:(id)sender {
-    NSString *text_name = [txtName.text stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
-    
+    __block NSString *text_name = [txtName.text stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceCharacterSet]];
     if (![text_name isEqualToString:@""] && [text_name length] > 0) {
-        NSLog(@">> %@", text_name);
-
         __block NSString *child = [NSString stringWithFormat:@"toonchat/%@/friends/", [[Configs sharedInstance] getUIDU]];
-        
+ 
         NSDictionary *childUpdates = @{[NSString stringWithFormat:@"%@%@/change_friends_name/", child, friend_id]: text_name};
         [ref updateChildValues:childUpdates withCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
             if (error == nil) {
+
+                NSMutableDictionary *friends = [[[Configs sharedInstance] loadData:_DATA] valueForKey:@"friends"];
+                
+                /*
+                 ดึงเพือนตาม friend_id แล้ว set change_friends_name
+                 */
+                NSMutableDictionary *friend  = [friends objectForKey:friend_id];
+                [friend setValue:text_name forKey:@"change_friends_name"];
+                
+                // Update friends ของ DATA
+                NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+                [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+                [newDict removeObjectForKey:@"friends"];
+                [newDict setObject:friends forKey:@"friends"];
+                
+                [[Configs sharedInstance] saveData:_DATA :newDict];
+                
                 [self.navigationController popViewControllerAnimated:YES];
             }
         }];

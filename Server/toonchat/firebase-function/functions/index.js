@@ -33,11 +33,16 @@ var UPDATE_MY_PROFILE = '/update_my_profile';
 var UPDATE_DATA_PROFILE = '/update_data_group';
 
 
-var DELETE_GROUP_CHAT = "/delete_group_chat";
-var GROUP_DELETE_MEMBERS = "/group_delete_members"; 
+/*
+ เป็นการลบเพือน กรณีเราลบโดยตรงจาก firebase แล้วจะมีการวิ่งไปลบ ที drupal ให้ด้วย
+*/
+var DELETE_FRIEND_FROM_USER 	= "/delete_friend_from_user";
 
-var MULTI_CHAT_DELETE_MEMBERS = "/multi_chat_delete_members"; 
-var DELETE_MULTI_CHAT         = "/delete_multi_chat";
+var DELETE_GROUP_CHAT    		= "/delete_group_chat";
+var GROUP_DELETE_MEMBERS 		= "/group_delete_members"; 
+
+var MULTI_CHAT_DELETE_MEMBERS 	= "/multi_chat_delete_members"; 
+var DELETE_MULTI_CHAT         	= "/delete_multi_chat";
 // ----------> PATH CONFIG
 
 
@@ -351,7 +356,7 @@ exports.tiggerUser = functions.database.ref(path + '/{uid}/{type}/{key}/').onWri
 */
 exports.tiggerDeleteGroupAndMutiChat = functions.database.ref(path + '/{uid}/{type}/{key}/').onDelete(event => {
 
-	console.log('#x : tiggerUserDelete');
+	console.log('#x : tiggerDeleteGroupAndMutiChat');
 	console.log('#x1 : ' + event.params.uid);
 	// console.log('#x2 : ' + event.params.type);
 	console.log('#x3 : ' + event.params.key);
@@ -370,8 +375,6 @@ exports.tiggerDeleteGroupAndMutiChat = functions.database.ref(path + '/{uid}/{ty
 	nodejs
 	*/
 	
-
-	
 	switch(event.params.type) {
 		case 'profiles':{
 			console.log('#1 : profiles');
@@ -379,7 +382,11 @@ exports.tiggerDeleteGroupAndMutiChat = functions.database.ref(path + '/{uid}/{ty
 		break;
 
 		case 'friends':{
-			console.log('#2 : friends');
+			console.log('#tiggerDeleteGroupAndMutiChat : delete friend from user.');
+			request.post({url:API_URL + END_POINT + DELETE_FRIEND_FROM_USER, form: {uid:event.params.uid, friend_id:event.params.key}}, function(err,httpResponse,body){ 
+				/* ... */ 
+				console.log(body);
+			});
 		}
 		break;
 

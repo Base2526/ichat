@@ -24,7 +24,7 @@
 @property (strong, nonatomic) FIRDatabaseReference *ref;
 @property (weak, nonatomic) IBOutlet UITextField *txtGroupName;
 
-@property (strong, nonatomic) NSDictionary *group;
+@property (strong, nonatomic) NSString *group_id;
 
 - (IBAction)onSave:(id)sender;
 - (IBAction)onManageMembers:(id)sender;

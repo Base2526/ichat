@@ -14,7 +14,9 @@
 #import "GroupInvite.h"
 #import "UserDataUIAlertView.h"
 
-@interface ManageGroup ()
+@interface ManageGroup (){
+    NSDictionary *group;
+}
 
 @end
 
@@ -34,16 +36,28 @@
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                           action:@selector(dismissKeyboard)];
     [self.view addGestureRecognizer:tap];
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    NSLog(@"");
     
-    if ([self.group objectForKey:@"image_url"]) {
+    NSMutableDictionary *groups = [[[Configs sharedInstance] loadData:_DATA] objectForKey:@"groups"];
+    
+    group = [groups objectForKey:self.group_id];
+    
+    if ([group objectForKey:@"image_url"]) {
         [imageV clear];
         [imageV showLoadingWheel]; // API_URL
-        [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [self.group objectForKey:@"image_url"]]]];
+        [imageV setUrl:[NSURL URLWithString:[NSString stringWithFormat:@"%@/%@", [Configs sharedInstance].API_URL, [group objectForKey:@"image_url"]]]];
         [[(AppDelegate*)[[UIApplication sharedApplication] delegate] obj_Manager ] manage:imageV];
     }else{
         [imageV clear];
     }
-    self.txtGroupName.text = [self.group objectForKey:@"name"];
+    self.txtGroupName.text = [group objectForKey:@"name"];
+    
+    NSDictionary *members = [group objectForKey:@"members"];
+    self.title = [NSString stringWithFormat:@"Manage Group(%d)", [members count] ];
+    NSLog(@"");
 }
 
 -(void)dismissKeyboard {
@@ -80,8 +94,7 @@
 -(void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
     
     switch (buttonIndex) {
-        case 0:
-        {
+        case 0:{
             UIImagePickerController *picker = [[UIImagePickerController alloc] init];
             picker.delegate = self;
             picker.allowsEditing = YES;
@@ -90,10 +103,7 @@
             [self presentViewController:picker animated:YES completion:NULL];
         }
             break;
-            
-        case 1:
-        {
-            NSLog(@"");
+        case 1:{
             self.imagePicker = [[GKImagePicker alloc] init];
             self.imagePicker.cropSize = CGSizeMake(280, 280);
             self.imagePicker.delegate = self;
@@ -108,7 +118,6 @@
             }
         }
             break;
-            
         default:
             break;
     }
@@ -183,7 +192,7 @@
      Update name ของ group
      */
     NSMutableDictionary *tgroup = [[NSMutableDictionary alloc] init];
-    [tgroup addEntriesFromDictionary:self.group];
+    [tgroup addEntriesFromDictionary:group];
     [tgroup removeObjectForKey:@"name"];
     [tgroup setObject:self.txtGroupName.text forKey:@"name"];
     
@@ -219,10 +228,9 @@
 }
 
 - (IBAction)onManageMembers:(id)sender {
-    
     UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     GroupMembers *members = [storybrd instantiateViewControllerWithIdentifier:@"GroupMembers"];
-    members.group = self.group;
+    members.group_id = self.group_id;
     
     [self.navigationController pushViewController:members animated:YES];
 }
@@ -231,7 +239,7 @@
     
     UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     GroupInvite *invite = [storybrd instantiateViewControllerWithIdentifier:@"GroupInvite"];
-    invite.group = self.group;
+    invite.group_id = self.group_id;
     
     [self.navigationController pushViewController:invite animated:YES];
 }
@@ -266,7 +274,7 @@
                 // Close
                 NSLog(@"Delete");
                 
-                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], [self.group objectForKey:@"group_id"]];
+                NSString *child = [NSString stringWithFormat:@"toonchat/%@/groups/%@/", [[Configs sharedInstance] getUIDU], self.group_id];
                 [[ref child:child] removeValueWithCompletionBlock:^(NSError * _Nullable error, FIRDatabaseReference * _Nonnull ref) {
                     
                     if (error == nil) {
@@ -276,7 +284,29 @@
                         // จะได้ Group id
                         NSString* key = [ref key];
                         
-                        NSLog(@"");
+                        NSMutableDictionary *groups = [[[Configs sharedInstance] loadData:_DATA] valueForKey:@"groups"];
+                        
+                        /*
+                         เช็ดก่อนว่ามี group_id นี้หรือเปล่าเพราะบางที่อาจโดนลบไปแล้ว ก็ได้จาก main control (firebase อาจ return มาเร็วมาก)
+                         */
+                        if ([groups objectForKey:key]) {
+                            /*
+                             Update group ของ groups
+                             */
+                            NSMutableDictionary *newGroups = [[NSMutableDictionary alloc] init];
+                            [newGroups addEntriesFromDictionary:groups];
+                            [newGroups removeObjectForKey:key];
+                            
+                            /*
+                             Update groups ของ DATA
+                             */
+                            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+                            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+                            [newDict removeObjectForKey:@"groups"];
+                            [newDict setObject:groups forKey:@"groups"];
+                            
+                            [[Configs sharedInstance] saveData:_DATA :newDict];
+                        }
                         
                         [self.navigationController popViewControllerAnimated:YES];
                     }
@@ -303,7 +333,7 @@
              Update image_url ของ group
              */
             NSMutableDictionary *tgroup = [[NSMutableDictionary alloc] init];
-            [tgroup addEntriesFromDictionary:self.group];
+            [tgroup addEntriesFromDictionary:group];
             [tgroup removeObjectForKey:@"image_url"];
             [tgroup setObject:jsonDict[@"image_url"] forKey:@"image_url"];
             
@@ -338,7 +368,7 @@
     [uThread setErrorHandler:^(NSString *error) {
         [[Configs sharedInstance] SVProgressHUD_ShowErrorWithStatus:error];
     }];
-    [uThread start:[self.group objectForKey:@"group_id"] : image];
+    [uThread start:[group objectForKey:@"group_id"] : image];
 }
 
 @end

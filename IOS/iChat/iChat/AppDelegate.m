@@ -371,9 +371,34 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
     
     // Observers
     childObserver_Friends = [[NSMutableArray alloc] init];
-    
-    
     NSString *child = [NSString stringWithFormat:@"toonchat/%@/", [[Configs sharedInstance] getUIDU]];
+    
+    [[[ref child:child] child:@"friends"] observeEventType:FIRDataEventTypeChildAdded withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+        NSLog(@"%@, %@", snapshot.key, snapshot.value);
+    }];
+    
+    /*
+     กรณีมีการ ลบเพือน
+     */
+    [[[ref child:child] child:@"friends"] observeEventType:FIRDataEventTypeChildRemoved withBlock:^(FIRDataSnapshot * _Nonnull snapshot) {
+        NSLog(@"%@, %@", snapshot.key, snapshot.value);
+        
+        NSMutableDictionary *friends = [[[Configs sharedInstance] loadData:_DATA] valueForKey:@"friends"];
+        
+        /* Update friend ของ friends */
+        NSMutableDictionary *newFriends = [[NSMutableDictionary alloc] init];
+        [newFriends addEntriesFromDictionary:friends];
+        [newFriends removeObjectForKey:snapshot.key];
+        
+        /* Update friends ของ DATA */
+        NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+        [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+        [newDict removeObjectForKey:@"friends"];
+        [newDict setObject:newFriends forKey:@"friends"];
+        [[Configs sharedInstance] saveData:_DATA :newDict];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"MoviesTableViewController_reloadData" object:self userInfo:@{}];
+    }];
     /*
      กรณี friend_id มีการ change data เช่น online, offline
      */
@@ -393,13 +418,21 @@ fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
 
         if ([snapshot.key isEqualToString:@"profiles"] || [snapshot.key isEqualToString:@"friends"]) {
             
-            NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
-            [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
-            [newDict removeObjectForKey:snapshot.key];
-            
-            [newDict setObject:snapshot.value forKey:snapshot.key];
-            
-            [[Configs sharedInstance] saveData:_DATA :newDict];
+            dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                //load your data here.
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //update UI in main thread.
+                    
+                    NSMutableDictionary *newDict = [[NSMutableDictionary alloc] init];
+                    [newDict addEntriesFromDictionary:[[Configs sharedInstance] loadData:_DATA]];
+                    [newDict removeObjectForKey:snapshot.key];
+                    
+                    [newDict setObject:snapshot.value forKey:snapshot.key];
+                    
+                    [[Configs sharedInstance] saveData:_DATA :newDict];
+                    
+                });
+            });
             
         }else if([snapshot.key isEqualToString:@"invite_group"]){
             

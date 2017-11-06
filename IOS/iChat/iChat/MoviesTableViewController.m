@@ -1364,7 +1364,7 @@
                 
                 UIStoryboard *storybrd = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
                 ManageGroup *manageGroup = [storybrd instantiateViewControllerWithIdentifier:@"ManageGroup"];
-                manageGroup.group =item;//[friends objectAtIndex:indexPath.row];
+                // manageGroup.group =item;//[friends objectAtIndex:indexPath.row];
                 
                 [self.navigationController pushViewController:manageGroup animated:YES];
             }

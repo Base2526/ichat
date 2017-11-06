@@ -14,7 +14,7 @@
 @interface GroupMembers : UIViewController<UITableViewDelegate, UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
-@property(nonatomic)NSDictionary *group;
+@property(nonatomic)NSString *group_id;
 @property (strong, nonatomic) FIRDatabaseReference *ref;
 - (IBAction)onEdit:(id)sender;
 @end

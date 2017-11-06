@@ -14,7 +14,8 @@
 @interface GroupInvite : UIViewController<UITableViewDelegate, UITableViewDataSource>
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *barBtnInvite;
-@property(nonatomic)NSDictionary *group;
+
+@property(nonatomic)NSString *group_id;
 
 @property (strong, nonatomic) FIRDatabaseReference *ref;
 
